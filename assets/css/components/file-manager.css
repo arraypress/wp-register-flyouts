@@ -1,0 +1,371 @@
+/**
+ * WP Flyout - File Manager Component
+ * Modern card-based design with smooth interactions
+ */
+
+.wp-flyout-file-manager {
+    margin: 20px 0;
+}
+
+/* Header */
+.file-manager-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+    padding: 0 4px;
+}
+
+.file-manager-title {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    color: #1e1e1e;
+}
+
+.file-manager-title .dashicons {
+    font-size: 18px;
+    width: 18px;
+    height: 18px;
+    color: #646970;
+}
+
+.file-count {
+    font-weight: normal;
+    color: #646970;
+    font-size: 13px;
+}
+
+/* Add button */
+.file-manager-add {
+    display: inline-flex !important;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 12px !important;
+    height: 32px !important;
+    min-height: 32px !important;
+    font-size: 13px !important;
+}
+
+.file-manager-add .dashicons {
+    font-size: 16px;
+    width: 16px;
+    height: 16px;
+    margin: 0 !important;
+}
+
+/* List container */
+.file-manager-list {
+    background: #f6f7f7;
+    border: 1px solid #dcdcde;
+    border-radius: 8px;
+    position: relative;
+}
+
+/* Items container */
+.file-manager-items {
+    display: block;
+}
+
+/* Empty state - shown when is-empty class is present */
+.file-manager-empty {
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 40px 20px;
+    text-align: center;
+    color: #646970;
+}
+
+.file-manager-list.is-empty .file-manager-empty {
+    display: flex;
+}
+
+.file-manager-list.is-empty .file-manager-items {
+    display: none;
+}
+
+.file-manager-empty .dashicons {
+    font-size: 48px;
+    width: 48px;
+    height: 48px;
+    color: #c3c4c7;
+    margin-bottom: 12px;
+}
+
+.file-manager-empty p {
+    margin: 0;
+    font-size: 14px;
+}
+
+/* File item card */
+.file-manager-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 16px;
+    background: #fff;
+    border-bottom: 1px solid #f0f0f1;
+    transition: all 0.2s ease;
+    position: relative;
+}
+
+.file-manager-item:first-child {
+    border-top-left-radius: 7px;
+    border-top-right-radius: 7px;
+}
+
+.file-manager-item:last-child {
+    border-bottom: none;
+    border-bottom-left-radius: 7px;
+    border-bottom-right-radius: 7px;
+}
+
+.file-manager-item:hover {
+    background: #f9fafb;
+}
+
+/* Sortable states */
+.file-manager-item.ui-sortable-helper {
+    background: #fff;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+    border-radius: 8px !important;
+    opacity: 0.95;
+}
+
+.file-manager-item.ui-sortable-placeholder {
+    background: #e5f3ff;
+    border: 2px dashed #2271b1;
+    border-radius: 8px;
+    visibility: visible !important;
+}
+
+/* Drag handle */
+.file-handle {
+    cursor: move;
+    padding: 4px;
+    color: #a7aaad;
+    transition: all 0.2s;
+}
+
+.file-handle:hover {
+    color: #2271b1;
+}
+
+.file-handle .dashicons {
+    font-size: 20px;
+    width: 20px;
+    height: 20px;
+}
+
+/* File icon */
+.file-icon {
+    position: relative;
+    width: 48px;
+    height: 48px;
+    background: #f0f6fc;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.file-icon .dashicons {
+    font-size: 24px;
+    width: 24px;
+    height: 24px;
+    color: #2271b1;
+}
+
+.file-extension {
+    position: absolute;
+    bottom: -4px;
+    right: -4px;
+    background: #2271b1;
+    color: white;
+    font-size: 9px;
+    font-weight: 600;
+    padding: 2px 4px;
+    border-radius: 4px;
+    line-height: 1;
+}
+
+/* File details */
+.file-details {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.file-name-input,
+.file-url-input {
+    border: 1px solid #dcdcde;
+    border-radius: 4px;
+    padding: 6px 10px;
+    font-size: 13px;
+    transition: all 0.15s;
+    background: #fff;
+}
+
+.file-name-input {
+    font-weight: 500;
+    color: #1e1e1e;
+}
+
+.file-url-input {
+    font-size: 12px;
+    color: #646970;
+    background: #f6f7f7;
+}
+
+.file-url-input[readonly] {
+    cursor: default;
+    background: #f6f7f7;
+}
+
+.file-name-input:focus,
+.file-url-input:focus:not([readonly]) {
+    border-color: #2271b1;
+    box-shadow: 0 0 0 1px #2271b1;
+    outline: none;
+}
+
+/* File actions */
+.file-actions {
+    display: flex;
+    gap: 4px;
+    align-items: center;
+}
+
+.file-action-btn {
+    width: 32px;
+    height: 32px;
+    padding: 0;
+    border: 1px solid #dcdcde;
+    border-radius: 4px;
+    background: #fff;
+    color: #646970;
+    cursor: pointer;
+    transition: all 0.15s;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    text-decoration: none;
+}
+
+.file-action-btn:hover {
+    background: #f0f0f1;
+    border-color: #949494;
+    color: #1e1e1e;
+}
+
+.file-action-btn .dashicons {
+    font-size: 18px;
+    width: 18px;
+    height: 18px;
+}
+
+/* Remove button - special styling */
+.file-remove:hover {
+    background: #fcf0f1;
+    border-color: #d63638;
+    color: #d63638;
+}
+
+/* Different file type colors based on data-extension */
+.file-icon[data-extension="pdf"] {
+    background: #ffe5e5;
+}
+
+.file-icon[data-extension="pdf"] .dashicons {
+    color: #d63638;
+}
+
+.file-icon[data-extension="jpg"],
+.file-icon[data-extension="jpeg"],
+.file-icon[data-extension="png"],
+.file-icon[data-extension="gif"],
+.file-icon[data-extension="svg"] {
+    background: #e7f7ed;
+}
+
+.file-icon[data-extension="jpg"] .dashicons,
+.file-icon[data-extension="jpeg"] .dashicons,
+.file-icon[data-extension="png"] .dashicons,
+.file-icon[data-extension="gif"] .dashicons,
+.file-icon[data-extension="svg"] .dashicons {
+    color: #00a32a;
+}
+
+.file-icon[data-extension="mp3"],
+.file-icon[data-extension="wav"],
+.file-icon[data-extension="mp4"],
+.file-icon[data-extension="mov"] {
+    background: #fcf0ff;
+}
+
+.file-icon[data-extension="mp3"] .dashicons,
+.file-icon[data-extension="wav"] .dashicons,
+.file-icon[data-extension="mp4"] .dashicons,
+.file-icon[data-extension="mov"] .dashicons {
+    color: #8c35b1;
+}
+
+.file-icon[data-extension="xls"],
+.file-icon[data-extension="xlsx"],
+.file-icon[data-extension="csv"] {
+    background: #e5f5e7;
+}
+
+.file-icon[data-extension="xls"] .dashicons,
+.file-icon[data-extension="xlsx"] .dashicons,
+.file-icon[data-extension="csv"] .dashicons {
+    color: #007017;
+}
+
+.file-icon[data-extension="zip"],
+.file-icon[data-extension="rar"] {
+    background: #fcf9e8;
+}
+
+.file-icon[data-extension="zip"] .dashicons,
+.file-icon[data-extension="rar"] .dashicons {
+    color: #8a6116;
+}
+
+/* Responsive */
+@media screen and (max-width: 782px) {
+    .file-manager-item {
+        flex-wrap: wrap;
+        padding: 12px;
+    }
+
+    .file-handle {
+        order: -1;
+    }
+
+    .file-icon {
+        width: 40px;
+        height: 40px;
+    }
+
+    .file-icon .dashicons {
+        font-size: 20px;
+        width: 20px;
+        height: 20px;
+    }
+
+    .file-details {
+        flex: 1 1 calc(100% - 120px);
+    }
+
+    .file-actions {
+        margin-left: auto;
+    }
+}

@@ -1,0 +1,154 @@
+/**
+ * WP Flyout - Action Buttons Component
+ * Styles for action buttons with AJAX functionality
+ */
+
+.wp-flyout-action-buttons {
+    margin: 20px 0;
+    display: flex;
+    gap: 12px;
+}
+
+/* Layout variations */
+.wp-flyout-action-buttons.layout-stacked {
+    flex-direction: column;
+}
+
+.wp-flyout-action-buttons.layout-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 12px;
+}
+
+/* Alignment variations */
+.wp-flyout-action-buttons.align-center {
+    justify-content: center;
+}
+
+.wp-flyout-action-buttons.align-right {
+    justify-content: flex-end;
+}
+
+.wp-flyout-action-buttons.align-justify {
+    justify-content: space-between;
+}
+
+/* Button styles */
+.wp-flyout-action-btn {
+    position: relative;
+    min-width: 100px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+}
+
+.wp-flyout-action-btn.loading {
+    pointer-events: none;
+    opacity: 0.7;
+}
+
+/* Button text and spinner */
+.wp-flyout-action-btn .button-text {
+    transition: opacity 0.2s;
+}
+
+.wp-flyout-action-btn .button-spinner {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+}
+
+.wp-flyout-action-btn .button-spinner .spin {
+    animation: wp-flyout-spin 0.8s linear infinite;
+}
+
+/* Danger button style */
+.wp-flyout-action-btn.button-danger {
+    background: #d63638;
+    border-color: #d63638;
+    color: #fff;
+}
+
+.wp-flyout-action-btn.button-danger:hover {
+    background: #c02a2c;
+    border-color: #c02a2c;
+    color: #fff;
+}
+
+.wp-flyout-action-btn.button-danger:focus {
+    box-shadow: 0 0 0 1px #fff, 0 0 0 3px #d63638;
+}
+
+/* Success button style */
+.wp-flyout-action-btn.button-success {
+    background: #00a32a;
+    border-color: #00a32a;
+    color: #fff;
+}
+
+.wp-flyout-action-btn.button-success:hover {
+    background: #008a20;
+    border-color: #008a20;
+}
+
+/* Warning button style */
+.wp-flyout-action-btn.button-warning {
+    background: #dba617;
+    border-color: #dba617;
+    color: #fff;
+}
+
+.wp-flyout-action-btn.button-warning:hover {
+    background: #c49615;
+    border-color: #c49615;
+}
+
+/* Fix icon alignment in buttons */
+.wp-flyout-action-btn .dashicons {
+    font-size: 16px;
+    width: 16px;
+    height: 16px;
+    line-height: 1;
+    vertical-align: middle;
+    margin-top: -2px; /* Fine-tune vertical alignment */
+}
+
+/* Ensure proper flex alignment */
+.wp-flyout-action-btn {
+    position: relative;
+    min-width: 100px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    line-height: 1.5; /* Normalize line height */
+}
+
+/* Fix text alignment when icon is present */
+.wp-flyout-action-btn .button-text {
+    transition: opacity 0.2s;
+    line-height: 1;
+    display: inline-flex;
+    align-items: center;
+}
+
+/* Spinner animation */
+@keyframes wp-flyout-spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+/* Responsive */
+@media screen and (max-width: 782px) {
+    .wp-flyout-action-buttons:not(.layout-inline) {
+        flex-direction: column;
+    }
+
+    .wp-flyout-action-btn {
+        width: 100%;
+        justify-content: center;
+    }
+}

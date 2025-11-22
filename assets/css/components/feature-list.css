@@ -1,0 +1,326 @@
+/**
+ * FeatureList Component Styles
+ *
+ * Simple list management interface with clean, modern styling.
+ * Supports icons, sorting, and responsive layouts.
+ *
+ * @package     ArrayPress\WPFlyout
+ * @version     1.0.0
+ * @author      David Sherlock
+ */
+
+/* ==========================================
+   CONTAINER
+   ========================================== */
+
+.wp-flyout-feature-list {
+    margin: 20px 0;
+}
+
+/* ==========================================
+   HEADER
+   ========================================== */
+
+.feature-list-header {
+    margin-bottom: 10px;
+}
+
+.feature-list-label {
+    display: block;
+    font-size: 13px;
+    font-weight: 600;
+    color: #1e1e1e;
+    margin-bottom: 5px;
+}
+
+/* ==========================================
+   LIST CONTAINER
+   ========================================== */
+
+.feature-list-container {
+    background: #fff;
+    border: 1px solid #dcdcde;
+    border-radius: 8px;
+    overflow: hidden;
+    position: relative;
+}
+
+/* Empty state */
+.feature-list-empty {
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 40px 20px;
+    text-align: center;
+    color: #646970;
+    background: #f6f7f7;
+}
+
+.feature-list-container.is-empty .feature-list-empty {
+    display: flex;
+}
+
+.feature-list-container.is-empty .feature-list-items {
+    display: none;
+}
+
+.feature-list-empty .dashicons {
+    font-size: 48px;
+    width: 48px;
+    height: 48px;
+    color: #c3c4c7;
+    margin-bottom: 12px;
+}
+
+.feature-list-empty p {
+    margin: 0;
+    font-size: 14px;
+}
+
+/* ==========================================
+   ITEMS
+   ========================================== */
+
+.feature-list-items {
+    display: block;
+}
+
+/* ==========================================
+   ITEM
+   ========================================== */
+
+.feature-list-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 15px;
+    background: #fff;
+    border-bottom: 1px solid #f0f0f1;
+    transition: background-color 0.15s;
+}
+
+.feature-list-item:last-child {
+    border-bottom: none;
+}
+
+.feature-list-item:hover {
+    background: #f8f9fa;
+}
+
+/* Sortable states */
+.feature-list-item.ui-sortable-helper {
+    background: #fff;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+    border-radius: 4px;
+    opacity: 0.95;
+}
+
+.feature-list-item-placeholder {
+    background: #e5f3ff !important;
+    border: 2px dashed #2271b1 !important;
+    border-radius: 4px;
+    visibility: visible !important;
+}
+
+/* ==========================================
+   DRAG HANDLE
+   ========================================== */
+
+.feature-list-handle {
+    cursor: move;
+    padding: 4px;
+    color: #a7aaad;
+    transition: all 0.2s;
+    flex-shrink: 0;
+}
+
+.feature-list-handle:hover {
+    color: #2271b1;
+}
+
+.feature-list-handle .dashicons {
+    font-size: 20px;
+    width: 20px;
+    height: 20px;
+}
+
+/* ==========================================
+   INPUT
+   ========================================== */
+
+.feature-list-input {
+    flex: 1;
+    padding: 6px 10px;
+    border: 1px solid #dcdcde;
+    border-radius: 4px;
+    font-size: 13px;
+    background: #fff;
+    transition: all 0.15s;
+    min-width: 0;
+}
+
+.feature-list-input:hover {
+    border-color: #949494;
+}
+
+.feature-list-input:focus {
+    border-color: #2271b1;
+    box-shadow: 0 0 0 1px #2271b1;
+    outline: none;
+}
+
+/* Placeholder styling */
+.feature-list-input::placeholder {
+    color: #a7aaad;
+    font-style: italic;
+}
+
+/* ==========================================
+   REMOVE BUTTON
+   ========================================== */
+
+.feature-list-remove {
+    padding: 6px;
+    background: #fff;
+    border: 1px solid #dcdcde;
+    border-radius: 4px;
+    color: #646970;
+    cursor: pointer;
+    transition: all 0.15s;
+    flex-shrink: 0;
+}
+
+.feature-list-remove:hover {
+    background: #fcf0f1;
+    border-color: #d63638;
+    color: #d63638;
+}
+
+.feature-list-remove .dashicons {
+    font-size: 16px;
+    width: 16px;
+    height: 16px;
+    display: block;
+}
+
+/* ==========================================
+   FOOTER
+   ========================================== */
+
+.feature-list-footer {
+    margin-top: 12px;
+}
+
+.feature-list-add {
+    display: inline-flex !important;
+    align-items: center;
+    gap: 6px;
+}
+
+.feature-list-add .dashicons {
+    font-size: 16px;
+    width: 16px;
+    height: 16px;
+    margin: 0 !important;
+}
+
+.feature-list-add:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+/* Item count display */
+.feature-list-add .item-count {
+    font-size: 12px;
+    color: #646970;
+    margin-left: 4px;
+}
+
+/* ==========================================
+   VARIATIONS
+   ========================================== */
+
+/* Compact mode */
+.wp-flyout-feature-list.compact .feature-list-item {
+    padding: 8px 12px;
+}
+
+.wp-flyout-feature-list.compact .feature-list-input {
+    padding: 4px 8px;
+    font-size: 12px;
+}
+
+/* ==========================================
+   RESPONSIVE
+   ========================================== */
+
+@media screen and (max-width: 782px) {
+    .feature-list-item {
+        flex-wrap: wrap;
+        padding: 10px;
+    }
+
+    .feature-list-handle {
+        order: -1;
+        width: 100%;
+        text-align: center;
+        padding: 4px 0;
+        margin-bottom: 8px;
+        border-bottom: 1px solid #f0f0f1;
+    }
+
+    .feature-list-input {
+        flex: 1 1 calc(100% - 100px);
+        order: 1;
+    }
+
+    .feature-list-remove {
+        order: 2;
+        margin-left: auto;
+    }
+}
+
+/* ==========================================
+   PRINT
+   ========================================== */
+
+@media print {
+    .feature-list-handle,
+    .feature-list-remove,
+    .feature-list-footer,
+    .feature-list-empty {
+        display: none !important;
+    }
+
+    .feature-list-item {
+        page-break-inside: avoid;
+        border-bottom: 1px solid #000;
+    }
+
+    .feature-list-container {
+        border: 1px solid #000;
+    }
+}
+
+/* ==========================================
+   ACCESSIBILITY
+   ========================================== */
+
+/* Focus visible for keyboard navigation */
+.feature-list-input:focus-visible,
+.feature-list-remove:focus-visible,
+.feature-list-add:focus-visible {
+    outline: 2px solid #2271b1;
+    outline-offset: 2px;
+}
+
+/* Reduced motion */
+@media (prefers-reduced-motion: reduce) {
+    .feature-list-item,
+    .feature-list-input,
+    .feature-list-remove,
+    .feature-list-handle {
+        transition: none;
+    }
+}

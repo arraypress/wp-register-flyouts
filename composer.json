@@ -1,0 +1,39 @@
+{
+  "name": "arraypress/wp-register-flyouts",
+  "description": "Lightweight flyout panels for WordPress admin interfaces",
+  "type": "library",
+  "license": "GPL-2.0-or-later",
+  "homepage": "https://github.com/arraypress/wp-flyout/",
+  "authors": [
+    {
+      "name": "David Sherlock",
+      "homepage": "https://arraypress.com/"
+    }
+  ],
+  "require": {
+    "php": ">=7.4",
+    "arraypress/wp-composer-assets": "dev-main",
+    "arraypress/wp-currencies": "dev-main"
+  },
+  "autoload": {
+    "psr-4": {
+      "ArrayPress\\RegisterFlyouts\\": "src/"
+    },
+    "files": [
+      "src/Utils/Functions.php"
+    ]
+  },
+  "config": {
+    "optimize-autoloader": true,
+    "sort-packages": true
+  },
+  "minimum-stability": "dev",
+  "prefer-stable": true,
+  "keywords": [
+    "wordpress",
+    "flyout",
+    "panel",
+    "admin",
+    "ui"
+  ]
+}

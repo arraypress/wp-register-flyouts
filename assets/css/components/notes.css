@@ -1,0 +1,197 @@
+/**
+ * WP Flyout - Notes Panel Component
+ */
+
+.wp-flyout-notes-panel {
+    margin: 20px 0;
+}
+
+/* Notes list container */
+.notes-list {
+    max-height: 400px;
+    overflow-y: auto;
+    margin-bottom: 15px;
+    border: 1px solid var(--wp-flyout-border);
+    border-radius: 4px;
+    background: #fafafa;
+}
+
+.notes-list:empty,
+.notes-list .no-notes {
+    padding: 20px;
+    text-align: center;
+    color: var(--wp-flyout-text-secondary);
+    font-style: italic;
+}
+
+/* Individual note item */
+.note-item {
+    background: #fff;
+    border-bottom: 1px solid var(--wp-flyout-border);
+    padding: 12px 15px;
+    transition: background-color 0.2s;
+}
+
+.note-item:last-child {
+    border-bottom: none;
+}
+
+.note-item:hover {
+    background: #f6f7f7;
+}
+
+/* Note header */
+.note-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 8px;
+    font-size: 12px;
+    color: var(--wp-flyout-text-secondary);
+}
+
+.note-author {
+    font-weight: 600;
+    color: var(--wp-flyout-text-primary);
+}
+
+.note-date {
+    flex: 1;
+    color: #646970;
+}
+
+.note-header button[data-action="delete-note"] {
+    margin-left: auto;
+    padding: 2px;
+    background: none;
+    border: none;
+    color: var(--wp-flyout-text-secondary);
+    cursor: pointer;
+    opacity: 0;
+    transition: opacity 0.2s, color 0.2s;
+}
+
+.note-item:hover button[data-action="delete-note"] {
+    opacity: 1;
+}
+
+.note-header button[data-action="delete-note"]:hover {
+    color: var(--wp-flyout-danger);
+}
+
+.note-header .dashicons {
+    font-size: 16px;
+    width: 16px;
+    height: 16px;
+}
+
+/* Note content */
+.note-content {
+    line-height: 1.5;
+    color: var(--wp-flyout-text-primary);
+    word-wrap: break-word;
+}
+
+.note-content p {
+    margin: 0 0 0.5em;
+}
+
+.note-content p:last-child {
+    margin-bottom: 0;
+}
+
+/* Add note form */
+.note-add-form {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.note-input {
+    width: 100%;
+    min-height: 60px;
+    padding: 8px 10px;
+    border: 1px solid var(--wp-flyout-border);
+    border-radius: 4px;
+    resize: vertical;
+    font-family: inherit;
+    font-size: 13px;
+}
+
+.note-input:focus {
+    border-color: var(--wp-flyout-primary);
+    box-shadow: 0 0 0 1px var(--wp-flyout-primary);
+    outline: none;
+}
+
+.note-add-form .button {
+    align-self: flex-start;
+}
+
+/* Activity log variant */
+.wp-flyout-notes-panel.activity-log .note-item {
+    padding: 8px 15px;
+}
+
+.wp-flyout-notes-panel.activity-log .note-header {
+    margin-bottom: 4px;
+}
+
+.wp-flyout-notes-panel.activity-log .note-content {
+    font-size: 13px;
+}
+
+/* Compact variant */
+.wp-flyout-notes-panel.compact .notes-list {
+    max-height: 250px;
+}
+
+.wp-flyout-notes-panel.compact .note-item {
+    padding: 8px 12px;
+}
+
+/* Loading state */
+.wp-flyout-notes-panel.loading .notes-list {
+    opacity: 0.6;
+    pointer-events: none;
+}
+
+.wp-flyout-notes-panel.loading .note-add-form {
+    opacity: 0.6;
+    pointer-events: none;
+}
+
+/* Empty state */
+.notes-list:not(:has(.note-item)) {
+    min-height: 100px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* Scrollbar styling */
+.notes-list::-webkit-scrollbar {
+    width: 8px;
+}
+
+.notes-list::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 4px;
+}
+
+.notes-list::-webkit-scrollbar-thumb {
+    background: #c3c4c7;
+    border-radius: 4px;
+}
+
+.notes-list::-webkit-scrollbar-thumb:hover {
+    background: #8c8f94;
+}
+
+/* Responsive */
+@media screen and (max-width: 782px) {
+    .note-add-form .button {
+        width: 100%;
+        justify-content: center;
+    }
+}

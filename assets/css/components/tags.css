@@ -1,0 +1,97 @@
+/**
+ * Tag Input Component - Simplified Styles
+ */
+
+.wp-flyout-tag-input {
+    position: relative;
+}
+
+/* Container */
+.tag-input-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 5px;
+    padding: 5px;
+    border: 1px solid #8c8f94;
+    border-radius: 4px;
+    background: #fff;
+    min-height: 36px;
+    cursor: text;
+}
+
+.tag-input-container:focus-within {
+    border-color: #2271b1;
+    box-shadow: 0 0 0 1px #2271b1;
+}
+
+/* Individual tags */
+.tag-item {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 3px 6px;
+    background: #f0f0f1;
+    border-radius: 3px;
+    font-size: 13px;
+}
+
+/* Remove button */
+.tag-remove {
+    background: none;
+    border: none;
+    padding: 0;
+    margin: 0;
+    cursor: pointer;
+    color: #646970;
+    line-height: 1;
+}
+
+.tag-remove:hover {
+    color: #d63638;
+}
+
+.tag-remove .dashicons {
+    font-size: 14px;
+    width: 14px;
+    height: 14px;
+}
+
+/* Input field */
+.tag-input-field {
+    flex: 1;
+    min-width: 100px;
+    border: none !important;
+    padding: 3px;
+    font-size: 13px;
+    background: transparent;
+    outline: none;
+}
+
+/* Error state flash */
+.tag-input-field.error {
+    animation: error-flash 0.3s;
+}
+
+@keyframes error-flash {
+    0%, 100% { background: transparent; }
+    50% { background: #fcf0f1; }
+}
+
+/* Readonly state */
+.wp-flyout-tag-input[readonly] .tag-input-container {
+    background: #f6f7f7;
+    cursor: default;
+}
+
+.wp-flyout-tag-input[readonly] .tag-remove,
+.wp-flyout-tag-input[readonly] .tag-input-field {
+    display: none;
+}
+
+/* Responsive */
+@media screen and (max-width: 782px) {
+    .tag-item {
+        padding: 5px 8px;
+        font-size: 14px;
+    }
+}

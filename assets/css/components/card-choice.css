@@ -1,0 +1,304 @@
+.wp-flyout-card-choice-group {
+    display: grid;
+    gap: 16px;
+    margin: 20px 0;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.wp-flyout-card-choice-group.columns-1 {
+    grid-template-columns: 1fr;
+}
+
+.wp-flyout-card-choice-group.columns-2 {
+    grid-template-columns: repeat(2, 1fr);
+}
+
+.wp-flyout-card-choice-group.columns-3 {
+    grid-template-columns: repeat(3, 1fr);
+}
+
+/* Card Choice Item */
+.card-choice {
+    position: relative;
+    min-width: 0;
+    box-sizing: border-box;
+}
+
+.card-choice input[type="checkbox"],
+.card-choice input[type="radio"] {
+    position: absolute;
+    opacity: 0;
+    pointer-events: none;
+    width: 0;
+    height: 0;
+}
+
+.card-choice-label {
+    display: block;
+    padding: 20px;
+    border: 2px solid #dcdcde;
+    border-radius: 8px;
+    background: #fff;
+    transition: all 0.2s ease;
+    cursor: pointer;
+    min-height: 100%;
+    box-sizing: border-box;
+    width: 100%;
+    overflow: hidden;
+}
+
+.card-choice:hover .card-choice-label {
+    border-color: #8c8f94;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+}
+
+/* Selected state */
+.card-choice input:checked + .card-choice-label {
+    border-color: #2271b1;
+    background: #f0f6fc;
+    box-shadow: 0 0 0 1px #2271b1;
+}
+
+.card-choice input:checked:hover + .card-choice-label {
+    border-color: #135e96;
+    box-shadow: 0 0 0 1px #135e96, 0 2px 6px rgba(0, 0, 0, 0.08);
+}
+
+/* Disabled state */
+.card-choice input:disabled + .card-choice-label {
+    opacity: 0.5;
+    cursor: not-allowed;
+    background: #f6f7f7;
+}
+
+.card-choice input:disabled:hover + .card-choice-label {
+    border-color: #dcdcde;
+    box-shadow: none;
+}
+
+/* Card Header */
+.card-choice-header {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+}
+
+.card-choice-content {
+    flex: 1;
+    min-width: 0;
+}
+
+/* Icon */
+.card-choice-icon {
+    flex-shrink: 0;
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #646970;
+    margin-top: -2px;
+}
+
+.card-choice input:checked + .card-choice-label .card-choice-icon {
+    color: #2271b1;
+}
+
+.card-choice-icon .dashicons,
+.card-choice-icon::before {
+    font-size: 32px;
+    width: 32px;
+    height: 32px;
+    line-height: 32px;
+}
+
+/* Check indicator */
+.card-choice-check {
+    flex-shrink: 0;
+    width: 24px;
+    height: 24px;
+    border: 2px solid #8c8f94;
+    border-radius: 50%;
+    position: relative;
+    transition: all 0.2s ease;
+    background: #fff;
+    margin-top: 2px;
+}
+
+/* Checkbox style for multi-select */
+.card-choice input[type="checkbox"] + .card-choice-label .card-choice-check {
+    border-radius: 4px;
+}
+
+/* Checked indicator */
+.card-choice input:checked + .card-choice-label .card-choice-check {
+    border-color: #2271b1;
+    background: #2271b1;
+}
+
+/* Radio dot */
+.card-choice input[type="radio"]:checked + .card-choice-label .card-choice-check::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 10px;
+    height: 10px;
+    background: #fff;
+    border-radius: 50%;
+}
+
+/* Checkbox checkmark */
+.card-choice input[type="checkbox"]:checked + .card-choice-label .card-choice-check::after {
+    content: '';
+    position: absolute;
+    top: 3px;
+    left: 7px;
+    width: 6px;
+    height: 11px;
+    border: solid #fff;
+    border-width: 0 2px 2px 0;
+    transform: rotate(45deg);
+    background: transparent;
+}
+
+/* Card Content */
+.card-choice-title {
+    margin: 0 0 6px 0;
+    font-size: 15px;
+    font-weight: 600;
+    color: #1e1e1e;
+    line-height: 1.4;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.card-choice-description {
+    margin: 0;
+    font-size: 13px;
+    line-height: 1.5;
+    color: #646970;
+}
+
+/* Badge */
+.card-choice-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 3px 10px;
+    border-radius: 12px;
+    font-size: 12px;
+    font-weight: 500;
+    background: #f0f0f1;
+    color: #50575e;
+    white-space: nowrap;
+}
+
+.card-choice-badge.badge-recommended {
+    background: #d4f4dd;
+    color: #007017;
+}
+
+.card-choice-badge.badge-popular {
+    background: #e0f2ff;
+    color: #0a4b78;
+}
+
+.card-choice-badge.badge-new {
+    background: #fcf9e8;
+    color: #8a6116;
+}
+
+/* Compact variant */
+.wp-flyout-card-choice-group.compact .card-choice-label {
+    padding: 14px 16px;
+}
+
+.wp-flyout-card-choice-group.compact .card-choice-header {
+    align-items: center;
+}
+
+.wp-flyout-card-choice-group.compact .card-choice-icon {
+    width: 24px;
+    height: 24px;
+    margin-top: 0;
+}
+
+.wp-flyout-card-choice-group.compact .card-choice-icon .dashicons,
+.wp-flyout-card-choice-group.compact .card-choice-icon::before {
+    font-size: 24px;
+    width: 24px;
+    height: 24px;
+    line-height: 24px;
+}
+
+.wp-flyout-card-choice-group.compact .card-choice-title {
+    margin-bottom: 2px;
+    font-size: 14px;
+}
+
+.wp-flyout-card-choice-group.compact .card-choice-description {
+    font-size: 12px;
+}
+
+.wp-flyout-card-choice-group.compact .card-choice-check {
+    margin-top: 0;
+}
+
+/* Focus state */
+.card-choice input:focus-visible + .card-choice-label {
+    outline: 2px solid #2271b1;
+    outline-offset: 2px;
+}
+
+/* Ensure no text selection on click */
+.card-choice-label {
+    user-select: none;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+}
+
+/* Responsive */
+@media screen and (max-width: 782px) {
+    .wp-flyout-card-choice-group.columns-2,
+    .wp-flyout-card-choice-group.columns-3 {
+        grid-template-columns: 1fr;
+    }
+
+    .card-choice-label {
+        padding: 16px;
+    }
+
+    .card-choice-icon {
+        width: 28px;
+        height: 28px;
+    }
+
+    .card-choice-icon .dashicons,
+    .card-choice-icon::before {
+        font-size: 28px;
+        width: 28px;
+        height: 28px;
+        line-height: 28px;
+    }
+}
+
+/* Print styles */
+@media print {
+    .card-choice input:checked + .card-choice-label {
+        border: 2px solid #000 !important;
+        background: #fff !important;
+    }
+
+    .card-choice-check {
+        border: 2px solid #000 !important;
+    }
+
+    .card-choice input:checked + .card-choice-label .card-choice-check {
+        background: #000 !important;
+    }
+}

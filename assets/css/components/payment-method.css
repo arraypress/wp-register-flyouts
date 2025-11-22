@@ -1,0 +1,127 @@
+/**
+ * Payment Method Component
+ * Payment method display with brand icons and risk indicators
+ *
+ * @version 1.0.0
+ */
+
+.wp-flyout-payment-method {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px;
+    background: #fff;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    margin-bottom: 10px;
+}
+
+.payment-icon {
+    flex-shrink: 0;
+    width: 48px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 6px;
+    background: #f9fafb;
+    padding: 4px;
+}
+
+.payment-icon svg {
+    max-width: 100%;
+    max-height: 100%;
+    width: auto;
+    height: auto;
+}
+
+.payment-icon .dashicons {
+    font-size: 24px;
+    width: 24px;
+    height: 24px;
+    color: #6b7280;
+}
+
+.payment-details {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+}
+
+.payment-brand {
+    font-weight: 600;
+    color: #111827;
+    font-size: 14px;
+}
+
+.payment-last4 {
+    color: #6b7280;
+    font-family: 'SF Mono', Consolas, Monaco, monospace;
+    font-size: 13px;
+}
+
+.payment-type {
+    color: #374151;
+    font-size: 14px;
+}
+
+/* Risk indicators */
+.payment-risk {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 2px 8px;
+    border-radius: 12px;
+    font-size: 11px;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.payment-risk.risk-low {
+    background: #d4f4dd;
+    color: #007017;
+}
+
+.payment-risk.risk-normal {
+    background: #e0f2ff;
+    color: #0a4b78;
+}
+
+.payment-risk.risk-elevated {
+    background: #fff5eb;
+    color: #8a6116;
+}
+
+.payment-risk.risk-high {
+    background: #fee2e2;
+    color: #991b1b;
+}
+
+.risk-score {
+    font-weight: 700;
+}
+
+@media screen and (max-width: 480px) {
+    .wp-flyout-payment-method {
+        padding: 10px;
+    }
+
+    .payment-icon {
+        width: 40px;
+        height: 28px;
+    }
+
+    .payment-details {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 4px;
+    }
+
+    .payment-risk {
+        margin-top: 4px;
+    }
+}

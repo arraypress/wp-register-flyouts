@@ -1,0 +1,234 @@
+/**
+ * UI Element Components
+ * Buttons, alerts, separators, and other UI elements
+ *
+ * @version 1.0.0
+ */
+
+/* ========================================
+   ACTION BAR
+   ======================================== */
+
+.wp-flyout-actions {
+    display: flex;
+    gap: 12px;
+    padding: 20px 0;
+    align-items: center;
+}
+
+.wp-flyout-trigger.button {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.wp-flyout-footer .wp-flyout-actions {
+    padding: 20px !important;
+}
+
+.wp-flyout-actions .button {
+    flex: 1;
+    margin: 0;
+    font-size: 14px;
+    font-weight: 500;
+    border-radius: 6px;
+    justify-content: center;
+    min-height: 44px;
+    text-align: center;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    transition: all 0.2s;
+}
+
+@media screen and (max-width: 600px) {
+    .wp-flyout-actions {
+        flex-direction: column;
+    }
+
+    .wp-flyout-actions .button {
+        width: 100%;
+    }
+}
+
+/* ========================================
+   SEPARATOR
+   ======================================== */
+
+.wp-flyout-separator {
+    border: 0;
+    border-top: 1px solid #dcdcde;
+    margin: 20px 0;
+}
+
+.wp-flyout-separator.has-text {
+    display: flex;
+    align-items: center;
+    border: 0;
+    text-align: center;
+}
+
+.wp-flyout-separator.has-text::before,
+.wp-flyout-separator.has-text::after {
+    content: '';
+    flex: 1;
+    border-top: 1px solid #dcdcde;
+}
+
+.wp-flyout-separator.has-text .separator-text {
+    padding: 0 15px;
+    color: #646970;
+    font-size: 13px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+/* ========================================
+   ALERT
+   ======================================== */
+
+.wp-flyout-alert {
+    position: relative;
+    padding: 12px 40px 12px 12px;
+    margin: 15px 0;
+    border-left: 4px solid;
+    border-radius: 4px;
+    background: #fff;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+
+.alert-content-wrapper {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+}
+
+.alert-icon {
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 20px;
+    height: 20px;
+    margin-top: 2px;
+}
+
+.alert-content {
+    flex: 1;
+    min-width: 0;
+}
+
+.alert-title {
+    margin: 0 0 4px 0;
+    font-size: 14px;
+    font-weight: 600;
+    color: #1e1e1e;
+}
+
+.alert-message {
+    line-height: 1.5;
+    color: #1e1e1e;
+    font-size: 14px;
+}
+
+.alert-dismiss {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    padding: 4px;
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: inherit;
+    opacity: 0.5;
+    transition: opacity 0.2s;
+    display: none;
+}
+
+.wp-flyout-alert.is-dismissible .alert-dismiss {
+    display: block;
+}
+
+.alert-dismiss:hover {
+    opacity: 1;
+}
+
+/* Alert Types */
+.wp-flyout-alert.alert-success {
+    border-color: #00a32a;
+    background: #edfaef;
+}
+
+.wp-flyout-alert.alert-info {
+    border-color: #2271b1;
+    background: #f0f6fc;
+}
+
+.wp-flyout-alert.alert-warning {
+    border-color: #dba617;
+    background: #fcf9e8;
+}
+
+.wp-flyout-alert.alert-error {
+    border-color: #d63638;
+    background: #fef2f2;
+}
+
+/* ========================================
+   SECTION HEADERS
+   ======================================== */
+
+.wp-flyout-section-header {
+    margin-bottom: 20px;
+    border-bottom: 1px solid var(--wp-flyout-border);
+    padding-bottom: 12px;
+}
+
+.wp-flyout-section-header .section-title {
+    margin: 0 0 5px 0;
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--wp-flyout-text);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.wp-flyout-section-header .description {
+    margin: 0;
+    font-size: 13px;
+    color: var(--wp-flyout-text-muted);
+}
+
+/* ========================================
+   EMPTY STATE
+   ======================================== */
+
+.wp-flyout-empty-state {
+    text-align: center;
+    padding: 40px 20px;
+}
+
+.wp-flyout-empty-state .empty-state-icon {
+    display: block;
+    margin-bottom: 15px;
+    color: var(--wp-flyout-text-muted);
+    width: 100%;
+}
+
+.wp-flyout-empty-state .empty-state-icon .dashicons {
+    font-size: 48px;
+    width: 48px;
+    height: 48px;
+}
+
+.wp-flyout-empty-state .empty-state-title {
+    margin: 0 0 8px 0;
+    font-size: 18px;
+    color: var(--wp-flyout-text);
+}
+
+.wp-flyout-empty-state .empty-state-description {
+    margin: 0 0 20px 0;
+    color: var(--wp-flyout-text-muted);
+}

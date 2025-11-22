@@ -1,0 +1,114 @@
+/* ========================================
+   PRICE SUMMARY (renamed from PriceBreakdown)
+   ======================================== */
+
+.wp-flyout-price-summary {
+    margin: 20px 0;
+    background: #fff;
+    border-radius: 8px;
+    overflow: hidden;
+    border: 1px solid #e5e7eb;
+}
+
+.price-summary-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 0;
+}
+
+.price-summary-table td {
+    padding: 14px 16px;
+    vertical-align: top;
+}
+
+/* Items section */
+.price-summary-items {
+    background: #fff;
+}
+
+.price-summary-item {
+    border-bottom: 1px solid #f3f4f6;
+}
+
+.price-summary-items tr:last-child {
+    border-bottom: 2px solid #e5e7eb;
+}
+
+.item-label {
+    width: 70%;
+    color: #111827;
+    font-size: 14px;
+}
+
+.item-quantity {
+    color: #6b7280;
+    font-size: 13px;
+    margin-left: 6px;
+}
+
+.item-amount {
+    width: 30%;
+    text-align: right;
+    font-size: 14px;
+    font-weight: 500;
+    color: #111827;
+    font-variant-numeric: tabular-nums;
+}
+
+/* Summary details section */
+.price-summary-details {
+    background: #f9fafb;
+}
+
+.price-summary-details tr {
+    border-bottom: 1px solid #e5e7eb;
+}
+
+.price-summary-details tr:last-child {
+    border-bottom: none;
+}
+
+.price-summary-details .label {
+    width: 70%;
+    color: #6b7280;
+    font-size: 14px;
+}
+
+.price-summary-details .amount {
+    width: 30%;
+    text-align: right;
+    font-size: 14px;
+    font-weight: 500;
+    color: #111827;
+    font-variant-numeric: tabular-nums;
+}
+
+.price-summary-details .amount.negative {
+    color: #059669;
+}
+
+/* Total footer */
+.price-summary-footer {
+    background: #1f2937;
+    color: #fff;
+}
+
+.price-summary-total td {
+    padding: 18px 16px;
+}
+
+.price-summary-total .label {
+    width: 70%;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    font-size: 13px;
+    font-weight: 600;
+}
+
+.price-summary-total .amount {
+    width: 30%;
+    text-align: right;
+    font-size: 18px;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+}

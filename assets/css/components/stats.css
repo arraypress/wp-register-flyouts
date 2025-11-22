@@ -1,0 +1,111 @@
+/* Stats Component */
+.wp-flyout-stats {
+    margin: 15px 0;
+}
+
+.wp-flyout-stats .stats-grid {
+    display: grid;
+    gap: 15px;
+}
+
+.wp-flyout-stats.columns-2 .stats-grid {
+    grid-template-columns: repeat(2, 1fr);
+}
+
+.wp-flyout-stats.columns-3 .stats-grid {
+    grid-template-columns: repeat(3, 1fr);
+}
+
+.wp-flyout-stats.columns-4 .stats-grid {
+    grid-template-columns: repeat(4, 1fr);
+}
+
+.wp-flyout-stats .stat-card {
+    background: #fff;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    padding: 15px;
+    transition: box-shadow 0.2s;
+}
+
+.wp-flyout-stats .stat-card:hover {
+    box-shadow: 0 2px 4px rgba(0,0,0,0.08);
+}
+
+.wp-flyout-stats .stat-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 10px;
+}
+
+.wp-flyout-stats .stat-icon {
+    color: #646970;
+    font-size: 16px;
+    width: 16px;
+    height: 16px;
+}
+
+.wp-flyout-stats .stat-label {
+    color: #646970;
+    font-size: 12px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.wp-flyout-stats .stat-body {
+    display: flex;
+    align-items: baseline;
+    gap: 10px;
+}
+
+.wp-flyout-stats .stat-value {
+    font-size: 24px;
+    font-weight: 600;
+    color: #1d2327;
+    line-height: 1;
+}
+
+.wp-flyout-stats .stat-change {
+    display: flex;
+    align-items: center;
+    gap: 2px;
+    font-size: 12px;
+    font-weight: 500;
+}
+
+.wp-flyout-stats .stat-change .dashicons {
+    font-size: 12px;
+    width: 12px;
+    height: 12px;
+    line-height: 12px;
+}
+
+.wp-flyout-stats .stat-change.trend-up {
+    color: #00a32a;
+}
+
+.wp-flyout-stats .stat-change.trend-down {
+    color: #d63638;
+}
+
+.wp-flyout-stats .stat-footer {
+    margin-top: 8px;
+    font-size: 12px;
+    color: #646970;
+}
+
+/* Responsive */
+@media (max-width: 782px) {
+    .wp-flyout-stats.columns-3 .stats-grid,
+    .wp-flyout-stats.columns-4 .stats-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (max-width: 600px) {
+    .wp-flyout-stats .stats-grid {
+        grid-template-columns: 1fr;
+    }
+}

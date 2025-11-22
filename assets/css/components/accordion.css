@@ -1,0 +1,207 @@
+/**
+ * Accordion Component Styles
+ *
+ * Simplified styles for expandable content sections.
+ * Supports both single and multiple section modes.
+ *
+ * @package     ArrayPress\WPFlyout
+ * @version     1.0.0
+ */
+
+/* ==========================================
+   CONTAINER
+   ========================================== */
+
+.wp-flyout-accordion {
+    margin: 20px 0;
+}
+
+/* ==========================================
+   SECTION
+   ========================================== */
+
+.accordion-section {
+    border: 1px solid #dcdcde;
+    border-radius: 4px;
+    margin-bottom: 10px;
+    overflow: hidden;
+    transition: box-shadow 0.2s;
+}
+
+.accordion-section:last-child {
+    margin-bottom: 0;
+}
+
+.accordion-section:hover {
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+/* ==========================================
+   HEADER
+   ========================================== */
+
+.accordion-header {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 15px;
+    background: #f6f7f7;
+    border: none;
+    text-align: left;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-size: 14px;
+    font-weight: 600;
+    color: #1e1e1e;
+    font-family: inherit;
+}
+
+.accordion-header:hover {
+    background: #f0f0f1;
+}
+
+.accordion-header:focus {
+    outline: 2px solid #2271b1;
+    outline-offset: -2px;
+}
+
+/* Active state */
+.accordion-section.is-open .accordion-header {
+    background: #fff;
+    border-bottom: 1px solid #dcdcde;
+}
+
+/* Icon */
+.accordion-header .dashicons {
+    font-size: 18px;
+    width: 18px;
+    height: 18px;
+    color: #8c8f94;
+    flex-shrink: 0;
+}
+
+/* Title */
+.accordion-title {
+    flex: 1;
+    margin: 0;
+}
+
+/* Indicator arrow */
+.accordion-indicator {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: transform 0.3s;
+    flex-shrink: 0;
+}
+
+.accordion-indicator .dashicons {
+    font-size: 20px;
+    width: 20px;
+    height: 20px;
+    color: #646970;
+}
+
+.accordion-section.is-open .accordion-indicator {
+    transform: rotate(180deg);
+}
+
+/* ==========================================
+   CONTENT
+   ========================================== */
+
+.accordion-content {
+    overflow: hidden;
+    background: #fff;
+}
+
+.accordion-content-inner {
+    padding: 20px;
+}
+
+/* Remove default margins from first/last elements */
+.accordion-content-inner > *:first-child {
+    margin-top: 0;
+}
+
+.accordion-content-inner > *:last-child {
+    margin-bottom: 0;
+}
+
+/* ==========================================
+   STATES
+   ========================================== */
+
+/* Disabled state */
+.accordion-section.is-disabled {
+    opacity: 0.6;
+    pointer-events: none;
+}
+
+.accordion-section.is-disabled .accordion-header {
+    cursor: not-allowed;
+}
+
+/* ==========================================
+   RESPONSIVE
+   ========================================== */
+
+@media screen and (max-width: 782px) {
+    .accordion-header {
+        padding: 12px;
+        font-size: 13px;
+    }
+
+    .accordion-content-inner {
+        padding: 15px;
+    }
+
+    .accordion-header .dashicons {
+        font-size: 16px;
+        width: 16px;
+        height: 16px;
+    }
+}
+
+/* ==========================================
+   PRINT
+   ========================================== */
+
+@media print {
+    .accordion-section {
+        border: 1px solid #000 !important;
+        page-break-inside: avoid;
+    }
+
+    .accordion-indicator {
+        display: none !important;
+    }
+
+    /* Show all content when printing */
+    .accordion-content {
+        display: block !important;
+    }
+
+    .accordion-header {
+        background: #fff !important;
+        border-bottom: 1px solid #000 !important;
+    }
+}
+
+/* ==========================================
+   ACCESSIBILITY
+   ========================================== */
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+    .accordion-section,
+    .accordion-header,
+    .accordion-indicator {
+        transition: none;
+    }
+
+    .accordion-content {
+        animation: none;
+    }
+}

@@ -1,0 +1,122 @@
+/**
+ * WP Flyout - AJAX Select Component
+ */
+
+/* Container */
+.wp-ajax-select {
+    position: relative;
+    width: 100%;
+}
+
+/* Wrapper */
+.wp-ajax-select-wrapper {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+/* Input field */
+.wp-ajax-select.has-value input[type="text"] {
+    cursor: default;
+}
+
+/* Clear button */
+.wp-ajax-select-clear {
+    position: absolute;
+    right: 30px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 20px;
+    height: 20px;
+    font-size: 20px;
+    line-height: 1;
+    color: #646970;
+    cursor: pointer;
+    text-align: center;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.wp-ajax-select-clear:hover {
+    color: #d63638;
+}
+
+/* Chevron */
+.wp-ajax-select .dashicons-arrow-down-alt2 {
+    position: absolute;
+    right: 8px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #646970;
+    cursor: pointer;
+}
+
+.wp-ajax-select .dashicons-arrow-down-alt2:hover {
+    color: #2271b1;
+}
+
+/* Results dropdown */
+.wp-ajax-select-results {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    margin-top: 4px;
+    max-height: 200px;
+    overflow-y: auto;
+    background: #fff;
+    border: 1px solid #8c8f94;
+    border-radius: 4px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    z-index: 100001;
+}
+
+/* Result items */
+.wp-ajax-select-item {
+    padding: 8px 12px;
+    cursor: pointer;
+    border-bottom: 1px solid #f0f0f1;
+}
+
+.wp-ajax-select-item:last-child {
+    border-bottom: none;
+}
+
+.wp-ajax-select-item:hover,
+.wp-ajax-select-item.active {
+    background: #2271b1;
+    color: #fff;
+}
+
+/* Empty/Loading states */
+.wp-ajax-select-empty,
+.wp-ajax-select-loading {
+    padding: 12px;
+    color: #646970;
+    text-align: center;
+}
+
+.wp-ajax-select-empty {
+    font-style: italic;
+}
+
+/* Loading spinner */
+.wp-ajax-select-loading:before {
+    content: '';
+    display: inline-block;
+    width: 14px;
+    height: 14px;
+    margin-right: 8px;
+    border: 2px solid #dcdcde;
+    border-radius: 50%;
+    border-top-color: #2271b1;
+    animation: wp-ajax-select-spin 0.8s linear infinite;
+    vertical-align: middle;
+}
+
+@keyframes wp-ajax-select-spin {
+    to {
+        transform: rotate(360deg);
+    }
+}

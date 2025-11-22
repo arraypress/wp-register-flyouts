@@ -1,0 +1,412 @@
+/**
+ * WP Flyout - Line Items Component
+ * Modern product selection and line item management
+ */
+
+.wp-flyout-line-items {
+    margin: 20px 0;
+}
+
+/* Product selector */
+.line-items-selector {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 20px;
+    padding: 20px;
+    background: linear-gradient(135deg, #f6f7f7 0%, #fff 100%);
+    border: 1px solid #dcdcde;
+    border-radius: 8px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+/* AJAX select wrapper - must match ajax-select.css expectations */
+.line-items-selector .wp-ajax-select {
+    flex: 1;
+    min-width: 250px;
+}
+
+.line-items-selector .product-ajax-select {
+    display: none; /* Hidden, replaced by AJAX select component */
+}
+
+/* Add item button */
+.line-items-selector button[data-action="add-item"] {
+    cursor: pointer;
+    transition: all 0.2s;
+    white-space: nowrap;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.line-items-selector button[data-action="add-item"]:active {
+    transform: translateY(1px);
+}
+
+.line-items-selector button[data-action="add-item"]:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none;
+}
+
+/* Loading spinner for button */
+.line-items-selector button .dashicons.spin {
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+/* Items table container */
+.line-items-table {
+    margin-bottom: 20px;
+    border: 1px solid #dcdcde;
+    border-radius: 8px;
+    overflow: hidden;
+    background: #fff;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+.line-items-table table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 0;
+}
+
+/* Table header */
+.line-items-table thead {
+    background: linear-gradient(180deg, #f9f9fa 0%, #f3f4f5 100%);
+    border-bottom: 1px solid #dcdcde;
+}
+
+.line-items-table th {
+    padding: 12px 15px;
+    text-align: left;
+    font-weight: 600;
+    font-size: 13px;
+    color: #1e1e1e;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+/* Table body */
+.line-items-table tbody tr {
+    border-bottom: 1px solid #f0f0f1;
+    transition: background-color 0.15s;
+}
+
+.line-items-table tbody tr:last-child {
+    border-bottom: none;
+}
+
+.line-items-table tbody tr:hover {
+    background: #f8f9fa;
+}
+
+.line-items-table td {
+    padding: 15px;
+    vertical-align: middle;
+    font-size: 14px;
+}
+
+/* Column specific styles */
+.column-item {
+    width: auto;
+    min-width: 200px;
+}
+
+.column-item > div {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+/* Item thumbnail */
+.item-thumbnail {
+    width: 48px;
+    height: 48px;
+    object-fit: cover;
+    border-radius: 6px;
+    border: 1px solid #e5e5e5;
+    flex-shrink: 0;
+}
+
+.item-thumbnail-placeholder {
+    width: 48px;
+    height: 48px;
+    background: linear-gradient(135deg, #f0f0f1 0%, #f9f9fa 100%);
+    border: 1px solid #dcdcde;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #8c8f94;
+    flex-shrink: 0;
+}
+
+.item-thumbnail-placeholder .dashicons {
+    font-size: 24px;
+    width: 24px;
+    height: 24px;
+    opacity: 0.5;
+}
+
+/* Quantity column */
+.column-quantity {
+    width: 100px;
+    text-align: center;
+}
+
+.column-quantity th {
+    text-align: center;
+}
+
+.quantity-input {
+    width: 70px;
+    padding: 6px 10px;
+    text-align: center;
+    border: 1px solid #dcdcde;
+    border-radius: 4px;
+    font-size: 14px;
+    font-weight: 500;
+    transition: all 0.15s;
+}
+
+.quantity-input:hover {
+    border-color: #949494;
+}
+
+.quantity-input:focus {
+    border-color: #2271b1;
+    box-shadow: 0 0 0 1px #2271b1;
+    outline: none;
+}
+
+/* Price columns */
+.column-price,
+.column-total {
+    width: 120px;
+    text-align: right;
+    font-weight: 600;
+    color: #1e1e1e;
+}
+
+.column-price th,
+.column-total th {
+    text-align: right;
+}
+
+/* Editable price input */
+.price-input {
+    width: 90px;
+    padding: 6px 10px;
+    text-align: right;
+    border: 1px solid #dcdcde;
+    border-radius: 4px;
+    font-size: 14px;
+    font-weight: 600;
+    transition: all 0.15s;
+    color: #1e1e1e;
+}
+
+.price-input:hover {
+    border-color: #949494;
+}
+
+.price-input:focus {
+    border-color: #2271b1;
+    box-shadow: 0 0 0 1px #2271b1;
+    outline: none;
+}
+
+/* Item total */
+.item-total {
+    color: #135e96;
+    font-size: 15px;
+}
+
+/* Actions column */
+.column-actions {
+    width: 50px;
+    text-align: center;
+}
+
+.column-actions button[data-action="remove-item"] {
+    padding: 6px;
+    background: #fff;
+    border: 1px solid #dcdcde;
+    border-radius: 4px;
+    color: #646970;
+    cursor: pointer;
+    transition: all 0.15s;
+}
+
+.column-actions button[data-action="remove-item"]:hover {
+    background: #fcf0f1;
+    border-color: #d63638;
+    color: #d63638;
+}
+
+.column-actions button[data-action="remove-item"] .dashicons {
+    font-size: 16px;
+    width: 16px;
+    height: 16px;
+    display: block;
+}
+
+/* Empty state */
+.line-items-empty {
+    padding: 60px 40px;
+    text-align: center;
+    background: linear-gradient(135deg, #f6f7f7 0%, #fff 100%);
+    border: 2px dashed #dcdcde;
+    border-radius: 8px;
+}
+
+.line-items-empty p {
+    margin: 0 0 20px 0;
+    font-size: 15px;
+    color: #646970;
+}
+
+.line-items-empty .dashicons {
+    font-size: 48px;
+    width: 48px;
+    height: 48px;
+    color: #dcdcde;
+    margin-bottom: 15px;
+}
+
+.line-item .column-quantity,
+.line-item .column-price,
+.line-item .column-total {
+    text-align: left;
+}
+
+/* Total section */
+.line-items-total {
+    background: linear-gradient(135deg, #f9f9fa 0%, #fff 100%);
+    padding: 20px;
+    border: 1px solid #dcdcde;
+    border-radius: 8px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.total-label {
+    font-size: 17px;
+    font-weight: 600;
+    color: #1e1e1e;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.total-amount {
+    font-size: 24px;
+    font-weight: 700;
+    color: #135e96;
+    font-variant-numeric: tabular-nums;
+}
+
+/* Loading state */
+.wp-flyout-line-items.loading {
+    position: relative;
+    min-height: 200px;
+}
+
+.wp-flyout-line-items.loading::after {
+    content: "";
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 30px;
+    height: 30px;
+    margin: -15px 0 0 -15px;
+    border: 3px solid #f3f4f6;
+    border-top-color: #2271b1;
+    border-radius: 50%;
+    animation: spinner 0.6s linear infinite;
+}
+
+.line-items-selector .regular-text {
+    width: 100%;
+}
+
+@keyframes spinner {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+/* Responsive */
+@media screen and (max-width: 782px) {
+    .line-items-selector {
+        flex-direction: column;
+        padding: 15px;
+    }
+
+    .line-items-selector .wp-ajax-select {
+        width: 100%;
+    }
+
+    .line-items-selector button {
+        width: 100%;
+        justify-content: center;
+    }
+
+    .line-items-table {
+        overflow-x: auto;
+    }
+
+    .line-items-table table {
+        min-width: 600px;
+    }
+
+    .item-thumbnail,
+    .item-thumbnail-placeholder {
+        width: 36px;
+        height: 36px;
+    }
+
+    .quantity-input {
+        width: 60px;
+    }
+
+    .price-input {
+        width: 80px;
+    }
+
+    .line-items-total {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 10px;
+    }
+
+    .total-amount {
+        font-size: 20px;
+    }
+}
+
+/* When price is not editable, show as plain text */
+.wp-flyout-line-items:not([data-editable-price="1"]) .column-price {
+    font-variant-numeric: tabular-nums;
+}
+
+/* Highlight row on add/update */
+.line-item-highlight {
+    animation: highlight 1s ease-out;
+}
+
+@keyframes highlight {
+    0% {
+        background-color: #ffffcc;
+    }
+    100% {
+        background-color: transparent;
+    }
+}

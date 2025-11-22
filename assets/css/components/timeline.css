@@ -1,0 +1,170 @@
+/**
+ * Timeline Component Styles - Simplified
+ *
+ * @package     ArrayPress\WPFlyout
+ * @version     1.0.0
+ */
+
+/* ==========================================
+   CONTAINER
+   ========================================== */
+
+.wp-flyout-timeline {
+    position: relative;
+    padding: 20px 0;
+    margin: 20px 0;
+}
+
+/* ==========================================
+   TIMELINE ITEM
+   ========================================== */
+
+.timeline-item {
+    position: relative;
+    padding-left: 50px;
+    margin-bottom: 30px;
+}
+
+/* Connector line */
+.timeline-item::before {
+    content: '';
+    position: absolute;
+    left: 19px;
+    top: 22px;
+    bottom: -32px;
+    width: 2px;
+    background: #dcdcde;
+}
+
+/* Hide connector on last item */
+.timeline-item.last-item::before {
+    display: none;
+}
+
+/* ==========================================
+   BADGE
+   ========================================== */
+
+.timeline-badge {
+    position: absolute;
+    left: 10px;
+    top: 0;
+    width: 20px;
+    height: 20px;
+    background: #fff;
+    border: 2px solid #dcdcde;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 2;
+}
+
+.timeline-badge .dashicons {
+    font-size: 12px;
+    width: 12px;
+    height: 12px;
+    color: #646970;
+}
+
+/* Status types */
+.timeline-item-success .timeline-badge {
+    border-color: #00a32a;
+    background: #00a32a;
+}
+
+.timeline-item-info .timeline-badge {
+    border-color: #2271b1;
+    background: #2271b1;
+}
+
+.timeline-item-warning .timeline-badge {
+    border-color: #dba617;
+    background: #dba617;
+}
+
+.timeline-item-error .timeline-badge {
+    border-color: #d63638;
+    background: #d63638;
+}
+
+.timeline-item-success .timeline-badge .dashicons,
+.timeline-item-info .timeline-badge .dashicons,
+.timeline-item-warning .timeline-badge .dashicons,
+.timeline-item-error .timeline-badge .dashicons {
+    color: #fff;
+}
+
+/* ==========================================
+   CONTENT
+   ========================================== */
+
+.timeline-content {
+    background: #f6f7f7;
+    padding: 15px;
+    border-radius: 4px;
+    border: 1px solid #dcdcde;
+}
+
+.timeline-date {
+    font-size: 12px;
+    color: #8c8f94;
+    margin-bottom: 8px;
+}
+
+.timeline-title {
+    margin: 0 0 8px 0;
+    font-size: 14px;
+    font-weight: 600;
+    color: #1e1e1e;
+}
+
+.timeline-description {
+    margin: 0;
+    font-size: 13px;
+    line-height: 1.5;
+    color: #50575e;
+}
+
+/* ==========================================
+   COMPACT MODE
+   ========================================== */
+
+.wp-flyout-timeline.compact .timeline-item {
+    margin-bottom: 15px;
+    padding-left: 35px;
+}
+
+.wp-flyout-timeline.compact .timeline-item::before {
+    left: 14px;
+}
+
+.wp-flyout-timeline.compact .timeline-badge {
+    left: 5px;
+    width: 18px;
+    height: 18px;
+}
+
+.wp-flyout-timeline.compact .timeline-content {
+    padding: 10px;
+    background: transparent;
+    border: none;
+}
+
+/* ==========================================
+   RESPONSIVE
+   ========================================== */
+
+@media screen and (max-width: 782px) {
+    .timeline-item {
+        padding-left: 35px;
+    }
+
+    .timeline-item::before {
+        left: 14px;
+    }
+
+    .timeline-badge {
+        left: 5px;
+    }
+}

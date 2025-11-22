@@ -1,0 +1,283 @@
+/**
+ * WP Flyout Core Styles
+ * Core flyout mechanics and base components only
+ *
+ * @version 1.0.0
+ */
+
+/* ========================================
+   CSS VARIABLES
+   ======================================== */
+:root {
+    /* Core dimensions */
+    --wp-flyout-width-small: 400px;
+    --wp-flyout-width-medium: 600px;
+    --wp-flyout-width-large: 800px;
+    --wp-flyout-width-full: calc(100vw - 160px);
+
+    /* Core colors - uses WordPress admin colors */
+    --wp-flyout-bg: #fff;
+    --wp-flyout-border: #dcdcde;
+    --wp-flyout-shadow: rgba(0, 0, 0, 0.1);
+    --wp-flyout-text: #1e1e1e;
+    --wp-flyout-text-muted: #646970;
+    --wp-flyout-text-secondary: #8c8f94;
+    --wp-flyout-primary: #2271b1;
+    --wp-flyout-primary-hover: #135e96;
+    --wp-flyout-success: #00a32a;
+    --wp-flyout-warning: #dba617;
+    --wp-flyout-error: #d63638;
+    --wp-flyout-danger: #d63638;
+    --wp-flyout-info: #72aee6;
+}
+
+/* ========================================
+   CORE FLYOUT STRUCTURE
+   ======================================== */
+
+/* Overlay */
+.wp-flyout-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.7);
+    z-index: 159999;
+    opacity: 0;
+    transition: opacity 0.3s;
+    pointer-events: none;
+}
+
+.wp-flyout-overlay.active {
+    opacity: 1;
+    pointer-events: auto;
+}
+
+/* Flyout Container */
+.wp-flyout {
+    position: fixed;
+    top: 32px;
+    right: 0;
+    bottom: 0;
+    background: var(--wp-flyout-bg);
+    box-shadow: -2px 0 10px var(--wp-flyout-shadow);
+    z-index: 160000;
+    display: flex;
+    flex-direction: column;
+    transform: translateX(100%);
+    transition: transform 0.3s ease-out;
+    max-height: calc(100vh - 32px);
+}
+
+.wp-flyout.active {
+    transform: translateX(0);
+}
+
+/* Size Variants */
+.wp-flyout-small {
+    width: var(--wp-flyout-width-small);
+}
+
+.wp-flyout-medium {
+    width: var(--wp-flyout-width-medium);
+}
+
+.wp-flyout-large {
+    width: var(--wp-flyout-width-large);
+}
+
+.wp-flyout-full {
+    width: var(--wp-flyout-width-full);
+}
+
+/* Header */
+.wp-flyout-header {
+    padding: 20px 30px;
+    background: var(--wp-flyout-bg);
+    border-bottom: 1px solid var(--wp-flyout-border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-shrink: 0;
+}
+
+/* Header content wrapper for title and subtitle */
+.wp-flyout-header-content {
+    flex: 1;
+    min-width: 0; /* Prevent text overflow */
+}
+
+/* Title styling - now more specific */
+.wp-flyout-header h2,
+.wp-flyout-title {
+    margin: 0;
+    font-size: 20px;
+    font-weight: 500;
+    color: var(--wp-flyout-text);
+    line-height: 1.3;
+}
+
+/* Subtitle styling */
+.wp-flyout-subtitle {
+    margin: 4px 0 0;
+    font-size: 13px;
+    line-height: 1.4;
+    color: var(--wp-flyout-text-muted);
+}
+
+/* Close button */
+.wp-flyout-close {
+    background: none;
+    border: none;
+    padding: 0;
+    width: 36px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--wp-flyout-text-muted);
+    cursor: pointer;
+    transition: all 0.2s;
+    border-radius: 4px;
+    flex-shrink: 0;
+    margin-left: 12px;
+}
+
+.wp-flyout-close:hover {
+    color: var(--wp-flyout-text);
+    background: #f0f0f1;
+}
+
+.wp-flyout-close .dashicons {
+    font-size: 20px;
+    width: 20px;
+    height: 20px;
+}
+
+/* Tabs */
+.wp-flyout-tabs {
+    background: var(--wp-flyout-bg);
+    border-bottom: 1px solid var(--wp-flyout-border);
+    flex-shrink: 0;
+}
+
+.wp-flyout-tab-nav {
+    display: flex;
+    margin: 0;
+    padding: 0 30px;
+    gap: 4px;
+}
+
+.wp-flyout-tab {
+    padding: 14px 20px;
+    background: none;
+    color: var(--wp-flyout-text-muted);
+    cursor: pointer;
+    text-decoration: none;
+    transition: all 0.2s;
+    border-bottom: 3px solid transparent;
+    font-size: 14px;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.wp-flyout-tab:hover {
+    color: var(--wp-flyout-text);
+}
+
+.wp-flyout-tab.active {
+    color: var(--wp-flyout-primary);
+    border-bottom-color: var(--wp-flyout-primary);
+}
+
+.wp-flyout-tab.disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+/* Body */
+.wp-flyout-body {
+    flex: 1 1 auto;
+    overflow-y: auto;
+    padding: 30px;
+    min-height: 0;
+}
+
+/* Tab Content */
+.wp-flyout-tab-content {
+    display: none;
+}
+
+.wp-flyout-tab-content.active {
+    display: block;
+    animation: fadeIn 0.3s;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
+}
+
+/* Footer */
+.wp-flyout-footer {
+    background: var(--wp-flyout-bg);
+    border-top: 1px solid var(--wp-flyout-border);
+    flex-shrink: 0;
+    position: sticky;
+    bottom: 0;
+    z-index: 10;
+}
+
+/* Form wrapper */
+.wp-flyout-form {
+    display: flex;
+    flex-direction: column;
+    flex: 1 1 auto;
+    min-height: 0;
+}
+
+/* ========================================
+   RESPONSIVE
+   ======================================== */
+
+@media screen and (max-width: 782px) {
+    .wp-flyout {
+        width: 100%;
+        top: 46px;
+        max-height: calc(100vh - 46px);
+    }
+
+    .wp-flyout-header,
+    .wp-flyout-body,
+    .wp-flyout-footer {
+        padding-left: 20px;
+        padding-right: 20px;
+    }
+
+    .wp-flyout-tab-nav {
+        padding: 0 20px;
+        overflow-x: auto;
+    }
+
+    /* Adjust title and subtitle for mobile */
+    .wp-flyout-title {
+        font-size: 18px;
+    }
+
+    .wp-flyout-subtitle {
+        font-size: 12px;
+    }
+}
+
+@media screen and (max-width: 600px) {
+    .wp-flyout-field-group {
+        flex-direction: column !important;
+    }
+}

@@ -287,6 +287,8 @@ class Sanitizer {
 			return [];
 		}
 
+
+
 		$sanitized = [];
 
 		foreach ( $items as $item ) {

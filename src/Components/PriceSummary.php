@@ -92,7 +92,7 @@ class PriceSummary implements Renderable {
                     <tr class="price-summary-total">
                         <td class="label"><?php esc_html_e( 'Total', 'wp-flyout' ); ?></td>
                         <td class="amount">
-                            <?php echo esc_html( format_currency( $this->config['total'], $this->config['currency'] ) ); ?>
+                            <?php esc_currency_e( $this->config['total'], $this->config['currency'] ); ?>
                         </td>
                     </tr>
                     </tfoot>
@@ -137,7 +137,7 @@ class PriceSummary implements Renderable {
                 <?php endif; ?>
             </td>
             <td class="item-amount">
-                <?php echo esc_html( format_currency( $amount, $this->config['currency'] ) ); ?>
+                <?php esc_currency_e( $amount, $this->config['currency'] ); ?>
             </td>
         </tr>
         <?php
@@ -158,18 +158,18 @@ class PriceSummary implements Renderable {
                 continue;
             }
 
-            $amount      = $this->config[ $key ];
+            $amount = $this->config[ $key ];
 
             // Show discounts as negative
             if ( $key === 'discount' && $amount > 0 ) {
-                $amount = -$amount;
+                $amount = - $amount;
             }
 
             ?>
             <tr class="price-summary-<?php echo esc_attr( $key ); ?>">
                 <td class="label"><?php echo esc_html( $label ); ?></td>
                 <td class="amount <?php echo $amount < 0 ? 'negative' : ''; ?>">
-                    <?php echo esc_html( format_currency( $amount, $this->config['currency'] ) ); ?>
+                    <?php esc_currency_e( $amount, $this->config['currency'] ); ?>
                 </td>
             </tr>
             <?php

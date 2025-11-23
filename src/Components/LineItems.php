@@ -228,7 +228,7 @@ class LineItems implements Renderable {
 
             <td class="column-price">
                 <span data-price="<?php echo esc_attr( (string) $price ); ?>">
-                    <?php echo esc_html( format_currency( $price, $this->config['currency'] ) ); ?>
+                    <?php esc_currency_e( $price, $this->config['currency'] ); ?>
                 </span>
                 <input type="hidden"
                        name="<?php echo esc_attr( $this->config['name'] ); ?>[<?php echo $index; ?>][price]"
@@ -237,7 +237,7 @@ class LineItems implements Renderable {
 
             <?php if ( $this->config['show_quantity'] ) : ?>
                 <td class="column-total">
-                    <span class="item-total"><?php echo esc_html( format_currency( $total, $this->config['currency'] ) ); ?></span>
+                    <span class="item-total"><?php esc_currency_e( $total, $this->config['currency'] ); ?></span>
                 </td>
             <?php endif; ?>
 
@@ -259,7 +259,7 @@ class LineItems implements Renderable {
         <div class="line-items-total">
             <span class="total-label">Total:</span>
             <span class="total-amount" data-value="<?php echo esc_attr( (string) $total ); ?>">
-                <?php echo esc_html( format_currency( $total, $this->config['currency'] ) ); ?>
+                <?php esc_currency_e( $total, $this->config['currency'] ); ?>
             </span>
         </div>
         <?php

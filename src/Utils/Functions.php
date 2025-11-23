@@ -47,8 +47,6 @@ if ( ! function_exists( 'register_flyout' ) ) {
 	 * @type callable $delete      Function to delete data: function($id)
 	 *                             }
 	 * @return Manager|null The manager instance or null if registration failed
-	 * @since 9.0.0 Updated to use Registry pattern instead of global variable
-	 *
 	 * @since 1.0.0
 	 */
 	function register_flyout( string $id, array $config = [] ): ?Manager {
@@ -81,24 +79,20 @@ if ( ! function_exists( 'get_flyout_button' ) ) {
 	/**
 	 * Get a flyout trigger button HTML
 	 *
-	 * This is a convenience function that works with the global registration.
-	 * It automatically determines the correct manager from the flyout ID using the Registry.
+	 * @param string $id      Full flyout identifier (same as used in register_flyout)
+	 * @param array  $args    {
+	 *                        Mixed configuration for button and data attributes
 	 *
-	 * @param string $id    Full flyout identifier (same as used in register_flyout)
-	 * @param array  $data  Data attributes to pass to the flyout
-	 * @param array  $args  {
-	 *                      Button configuration
+	 * @type string  $text    Button text (default: 'Open')
+	 * @type string  $class   Additional CSS classes
+	 * @type string  $icon    Dashicon name (without 'dashicons-' prefix)
+	 * @type mixed   ...$data Any other keys become data attributes (id, title, subtitle, etc)
+	 *                        }
 	 *
-	 * @type string  $text  Button text (default: 'Open')
-	 * @type string  $class Additional CSS classes
-	 * @type string  $icon  Dashicon name (without 'dashicons-' prefix)
-	 *                      }
 	 * @return string Button HTML or empty string if flyout not found
 	 * @since 1.0.0
-	 * @since 9.0.0 Updated to use Registry pattern
-	 *
-	 */
-	function get_flyout_button( string $id, array $data = [], array $args = [] ): string {
+	 * */
+	function get_flyout_button( string $id, array $args = [] ): string {
 		try {
 			$components = Registry::parse_flyout_id( $id );
 			$registry   = Registry::get_instance();
@@ -109,8 +103,20 @@ if ( ! function_exists( 'get_flyout_button' ) ) {
 
 			$manager = $registry->get_manager( $components['prefix'] );
 
-			// Get button HTML from manager
-			return $manager->get_button( $components['flyout_id'], $data, $args );
+			// Separate button config from data attributes
+			$button_config = [ 'text', 'class', 'icon' ];
+			$button_args   = [];
+			$data          = [];
+
+			foreach ( $args as $key => $value ) {
+				if ( in_array( $key, $button_config, true ) ) {
+					$button_args[ $key ] = $value;
+				} else {
+					$data[ $key ] = $value;
+				}
+			}
+
+			return $manager->get_button( $components['flyout_id'], $data, $button_args );
 
 		} catch ( Exception $e ) {
 			error_log( sprintf(
@@ -128,19 +134,14 @@ if ( ! function_exists( 'render_flyout_button' ) ) {
 	/**
 	 * Render a flyout trigger button
 	 *
-	 * Outputs the button HTML directly.
-	 *
 	 * @param string $id   Full flyout identifier
-	 * @param array  $data Data attributes to pass
-	 * @param array  $args Button configuration
+	 * @param array  $args Mixed configuration (see get_flyout_button)
 	 *
 	 * @return void
 	 * @since 1.0.0
-	 * @since 9.0.0 Updated to use Registry pattern
-	 *
 	 */
-	function render_flyout_button( string $id, array $data = [], array $args = [] ): void {
-		echo get_flyout_button( $id, $data, $args );
+	function render_flyout_button( string $id, array $args = [] ): void {
+		echo get_flyout_button( $id, $args );
 	}
 }
 
@@ -148,24 +149,20 @@ if ( ! function_exists( 'get_flyout_link' ) ) {
 	/**
 	 * Get a flyout trigger link HTML
 	 *
-	 * This is a convenience function that works with the global registration.
-	 * It automatically determines the correct manager from the flyout ID using the Registry.
+	 * @param string $id      Full flyout identifier
+	 * @param array  $args    {
+	 *                        Mixed configuration for link and data attributes
 	 *
-	 * @param string $id     Full flyout identifier (same as used in register_flyout)
-	 * @param string $text   Link text to display
-	 * @param array  $data   Data attributes to pass to the flyout
-	 * @param array  $args   {
-	 *                       Link configuration
+	 * @type string  $text    Link text (required)
+	 * @type string  $class   Additional CSS classes
+	 * @type string  $target  Link target attribute
+	 * @type mixed   ...$data Any other keys become data attributes
+	 *                        }
 	 *
-	 * @type string  $class  Additional CSS classes
-	 * @type string  $target Link target attribute (e.g., '_blank')
-	 *                       }
 	 * @return string Link HTML or empty string if flyout not found
-	 * @since 9.0.0 Updated to use Registry pattern
-	 *
 	 * @since 1.0.0
 	 */
-	function get_flyout_link( string $id, string $text, array $data = [], array $args = [] ): string {
+	function get_flyout_link( string $id, array $args = [] ): string {
 		try {
 			$components = Registry::parse_flyout_id( $id );
 			$registry   = Registry::get_instance();
@@ -176,8 +173,29 @@ if ( ! function_exists( 'get_flyout_link' ) ) {
 
 			$manager = $registry->get_manager( $components['prefix'] );
 
-			// Get link HTML from manager
-			return $manager->link( $components['flyout_id'], $text, $data, $args );
+			// Extract text (required)
+			$text = $args['text'] ?? '';
+			if ( empty( $text ) ) {
+				return '';
+			}
+
+			// Separate link config from data attributes
+			$link_config = [ 'text', 'class', 'target' ];
+			$link_args   = [];
+			$data        = [];
+
+			foreach ( $args as $key => $value ) {
+				if ( $key === 'text' ) {
+					continue; // Already extracted
+				}
+				if ( in_array( $key, $link_config, true ) ) {
+					$link_args[ $key ] = $value;
+				} else {
+					$data[ $key ] = $value;
+				}
+			}
+
+			return $manager->link( $components['flyout_id'], $text, $data, $link_args );
 
 		} catch ( Exception $e ) {
 			error_log( sprintf(
@@ -195,19 +213,13 @@ if ( ! function_exists( 'render_flyout_link' ) ) {
 	/**
 	 * Render a flyout trigger link
 	 *
-	 * Outputs the link HTML directly.
-	 *
 	 * @param string $id   Full flyout identifier
-	 * @param string $text Link text to display
-	 * @param array  $data Data attributes to pass
-	 * @param array  $args Link configuration
+	 * @param array  $args Mixed configuration (see get_flyout_link)
 	 *
 	 * @return void
-	 * @since 9.0.0 Updated to use Registry pattern
-	 *
 	 * @since 1.0.0
 	 */
-	function render_flyout_link( string $id, string $text, array $data = [], array $args = [] ): void {
-		echo get_flyout_link( $id, $text, $data, $args );
+	function render_flyout_link( string $id, array $args = [] ): void {
+		echo get_flyout_link( $id, $args );
 	}
 }

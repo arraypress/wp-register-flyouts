@@ -300,7 +300,8 @@ class Sanitizer {
 				'id'       => $item_id,
 				'name'     => sanitize_text_field( $item['name'] ?? '' ),
 				'quantity' => max( 1, absint( $item['quantity'] ?? 1 ) ),
-				'price'    => sanitize_currency( $item['price'] ?? 0 ),
+				'price'    => absint( $item['price'] ?? 0 ),
+
 			];
 		}
 

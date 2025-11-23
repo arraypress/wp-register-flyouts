@@ -1,11 +1,6 @@
 /**
  * Line Items Component JavaScript - Simplified
- *
- * Manages line items with AJAX product selection and quantities.
- * All amounts are handled as integers in cents.
- *
- * @package     ArrayPress\WPFlyout
- * @version     2.0.0
+ * @version 3.1.0
  */
 (function ($) {
     'use strict';
@@ -15,7 +10,6 @@
         init: function () {
             const self = this;
 
-            // Event delegation
             $(document)
                 .on('click', '.wp-flyout-line-items [data-action="add-item"]', function (e) {
                     self.handleAdd(e);
@@ -30,7 +24,6 @@
                     self.initComponent($(data.element));
                 });
 
-            // Initialize on load
             $(function () {
                 $('.wp-flyout-line-items').each(function () {
                     self.initComponent($(this).parent());
@@ -51,12 +44,9 @@
                 $component.data('lineItemsInitialized', true);
 
                 const $select = $component.find('.product-ajax-select');
-
-                // Initialize AJAX select
                 if ($select.length && !$select.data('wpAjaxSelectInitialized')) {
                     if (typeof WPAjaxSelect !== 'undefined') {
-                        const ajaxSelect = new WPAjaxSelect($select[0]);
-                        $select.data('wpAjaxSelect', ajaxSelect);
+                        new WPAjaxSelect($select[0]);
                     }
                 }
 
@@ -77,7 +67,6 @@
                 return;
             }
 
-            // Check for existing item
             const existingItem = this.findExistingItem($component, itemId);
             if (existingItem.length) {
                 const $qtyInput = existingItem.find('.quantity-input');
@@ -107,7 +96,7 @@
                 dataType: 'json',
                 data: {
                     action: detailsAction,
-                    id: String(itemId),
+                    item_id: String(itemId),
                     _wpnonce: nonce
                 },
                 success: function (response) {
@@ -129,11 +118,11 @@
 
         addItemToTable: function ($component, product) {
             let $tbody = $component.find('.line-items-list');
-            const $emptyMessage = $component.find('.line-items-empty');
 
-            // Create table if empty
-            if ($emptyMessage.length) {
-                const showQty = $component.data('show-quantity') === '1';
+            // Create table if it doesn't exist yet
+            if (!$tbody.length) {
+                // Check as boolean (handles '1', 1, true, 'true')
+                const showQty = $component.data('show-quantity') != '0' && $component.data('show-quantity') != false;
                 const tableHtml = `
                     <table>
                         <thead>

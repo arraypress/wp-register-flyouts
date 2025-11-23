@@ -1,14 +1,11 @@
 <?php
 /**
- * Line Items Component
- *
- * Manages line items with AJAX product selection and quantities.
- * All prices are stored as integers in cents.
+ * Line Items Component - Simplified
  *
  * @package     ArrayPress\RegisterFlyouts\Components
  * @copyright   Copyright (c) 2025, ArrayPress Limited
  * @license     GPL2+
- * @version     2.0.0
+ * @version     3.1.0
  */
 
 declare( strict_types=1 );
@@ -43,11 +40,6 @@ class LineItems implements Renderable {
         if ( ! is_array( $this->config['items'] ) ) {
             $this->config['items'] = [];
         }
-
-        // If quantity is not shown, it can't be editable
-        if ( ! $this->config['show_quantity'] ) {
-            $this->config['editable_quantity'] = false;
-        }
     }
 
     /**
@@ -57,20 +49,19 @@ class LineItems implements Renderable {
      */
     private static function get_defaults(): array {
         return [
-                'id'                => '',
-                'name'              => 'line_items',
-                'items'             => [],
-                'currency'          => 'USD',
-                'editable_quantity' => true,
-                'show_quantity'     => true,
-                'ajax_search'       => '',
-                'ajax_details'      => '',
-                'nonce'             => '',
-                'details_nonce'     => '',
-                'placeholder'       => __( 'Search for products...', 'wp-flyout' ),
-                'empty_text'        => __( 'No items added yet.', 'wp-flyout' ),
-                'add_text'          => __( 'Add Item', 'wp-flyout' ),
-                'class'             => ''
+                'id'            => '',
+                'name'          => 'line_items',
+                'items'         => [],
+                'currency'      => 'USD',
+                'show_quantity' => true,
+                'ajax_search'   => '',
+                'ajax_details'  => '',
+                'nonce'         => '',
+                'details_nonce' => '',
+                'placeholder'   => 'Search for products...',
+                'empty_text'    => 'No items added yet.',
+                'add_text'      => 'Add Item',
+                'class'         => ''
         ];
     }
 
@@ -86,7 +77,6 @@ class LineItems implements Renderable {
             $quantity = (int) ( $item['quantity'] ?? 1 );
             $total    += $price * $quantity;
         }
-
         return $total;
     }
 
@@ -102,11 +92,10 @@ class LineItems implements Renderable {
         }
 
         $data = [
-                'name'              => $this->config['name'],
-                'currency'          => $this->config['currency'],
-                'editable-quantity' => $this->config['editable_quantity'] ? '1' : '0',
-                'show-quantity'     => $this->config['show_quantity'] ? '1' : '0',
-                'details-action'    => $this->config['ajax_details']
+                'name'           => $this->config['name'],
+                'currency'       => $this->config['currency'],
+                'show-quantity'  => $this->config['show_quantity'] ? '1' : '0',
+                'details-action' => $this->config['ajax_details']
         ];
 
         ob_start();
@@ -167,13 +156,13 @@ class LineItems implements Renderable {
         <table>
             <thead>
             <tr>
-                <th class="column-item"><?php esc_html_e( 'Item', 'wp-flyout' ); ?></th>
+                <th class="column-item">Item</th>
                 <?php if ( $this->config['show_quantity'] ) : ?>
-                    <th class="column-quantity"><?php esc_html_e( 'Qty', 'wp-flyout' ); ?></th>
+                    <th class="column-quantity">Qty</th>
                 <?php endif; ?>
-                <th class="column-price"><?php esc_html_e( 'Price', 'wp-flyout' ); ?></th>
+                <th class="column-price">Price</th>
                 <?php if ( $this->config['show_quantity'] ) : ?>
-                    <th class="column-total"><?php esc_html_e( 'Total', 'wp-flyout' ); ?></th>
+                    <th class="column-total">Total</th>
                 <?php endif; ?>
                 <th class="column-actions"></th>
             </tr>
@@ -194,7 +183,7 @@ class LineItems implements Renderable {
      * @param int   $index Item index
      */
     private function render_item_row( array $item, int $index ): void {
-        $price    = (int) ( $item['price'] ?? 0 ); // Always in cents
+        $price    = (int) ( $item['price'] ?? 0 );
         $quantity = (int) ( $item['quantity'] ?? 1 );
         $total    = $price * $quantity;
         ?>
@@ -224,19 +213,12 @@ class LineItems implements Renderable {
 
             <?php if ( $this->config['show_quantity'] ) : ?>
                 <td class="column-quantity">
-                    <?php if ( $this->config['editable_quantity'] ) : ?>
-                        <input type="number"
-                               name="<?php echo esc_attr( $this->config['name'] ); ?>[<?php echo $index; ?>][quantity]"
-                               value="<?php echo esc_attr( (string) $quantity ); ?>"
-                               min="1"
-                               class="quantity-input small-text"
-                               data-action="update-quantity">
-                    <?php else : ?>
-                        <span class="quantity-display"><?php echo esc_html( $quantity ); ?></span>
-                        <input type="hidden"
-                               name="<?php echo esc_attr( $this->config['name'] ); ?>[<?php echo $index; ?>][quantity]"
-                               value="<?php echo esc_attr( (string) $quantity ); ?>">
-                    <?php endif; ?>
+                    <input type="number"
+                           name="<?php echo esc_attr( $this->config['name'] ); ?>[<?php echo $index; ?>][quantity]"
+                           value="<?php echo esc_attr( (string) $quantity ); ?>"
+                           min="1"
+                           class="quantity-input small-text"
+                           data-action="update-quantity">
                 </td>
             <?php else : ?>
                 <input type="hidden"
@@ -275,7 +257,7 @@ class LineItems implements Renderable {
         $total = $this->calculate_total();
         ?>
         <div class="line-items-total">
-            <span class="total-label"><?php esc_html_e( 'Total:', 'wp-flyout' ); ?></span>
+            <span class="total-label">Total:</span>
             <span class="total-amount" data-value="<?php echo esc_attr( (string) $total ); ?>">
                 <?php echo esc_html( format_currency( $total, $this->config['currency'] ) ); ?>
             </span>
@@ -303,19 +285,12 @@ class LineItems implements Renderable {
 
                 <?php if ( $this->config['show_quantity'] ) : ?>
                     <td class="column-quantity">
-                        <?php if ( $this->config['editable_quantity'] ) : ?>
-                            <input type="number"
-                                   name="<?php echo esc_attr( $this->config['name'] ); ?>[{{index}}][quantity]"
-                                   value="1"
-                                   min="1"
-                                   class="quantity-input small-text"
-                                   data-action="update-quantity">
-                        <?php else : ?>
-                            <span class="quantity-display">1</span>
-                            <input type="hidden"
-                                   name="<?php echo esc_attr( $this->config['name'] ); ?>[{{index}}][quantity]"
-                                   value="1">
-                        <?php endif; ?>
+                        <input type="number"
+                               name="<?php echo esc_attr( $this->config['name'] ); ?>[{{index}}][quantity]"
+                               value="1"
+                               min="1"
+                               class="quantity-input small-text"
+                               data-action="update-quantity">
                     </td>
                 <?php else : ?>
                     <input type="hidden"

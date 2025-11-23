@@ -625,8 +625,12 @@ class Manager {
 		$flyout_instance_id = $config['id'] ?? uniqid() . '_' . ( $id ?: 'new' );
 		$flyout             = new Flyout( $flyout_instance_id );
 
-		$flyout->set_title( $config['title'] );
-		$flyout->set_subtitle( $config['subtitle'] );
+		// Override title/subtitle if passed via button
+		$title    = sanitize_text_field( $_POST['title'] ?? '' ) ?: $config['title'];
+		$subtitle = sanitize_text_field( $_POST['subtitle'] ?? '' ) ?: $config['subtitle'];
+
+		$flyout->set_title( $title );
+		$flyout->set_subtitle( $subtitle );
 		$flyout->set_size( $config['size'] );
 
 		// Apply filter to modify flyout instance

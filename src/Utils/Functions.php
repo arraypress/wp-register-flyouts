@@ -211,21 +211,3 @@ if ( ! function_exists( 'render_flyout_link' ) ) {
 		echo get_flyout_link( $id, $text, $data, $args );
 	}
 }
-
-if ( ! function_exists( 'parse_flyout_id' ) ) {
-	/**
-	 * Parse a flyout ID into its components
-	 *
-	 * Utility function to split a flyout ID into prefix and name.
-	 * Useful for custom implementations or debugging.
-	 *
-	 * @param string $id Full flyout identifier
-	 *
-	 * @return array{prefix: string, flyout_id: string} Parsed components
-	 * @since 9.0.0
-	 *
-	 */
-	function parse_flyout_id( string $id ): array {
-		return Registry::parse_flyout_id( $id );
-	}
-}

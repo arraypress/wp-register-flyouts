@@ -96,7 +96,7 @@
                 dataType: 'json',
                 data: {
                     action: detailsAction,
-                    item_id: String(itemId),
+                    id: String(itemId),
                     _wpnonce: nonce
                 },
                 success: function (response) {

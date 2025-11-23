@@ -122,7 +122,7 @@
             // Create table if it doesn't exist yet
             if (!$tbody.length) {
                 // Check as boolean (handles '1', 1, true, 'true')
-                const showQty = $component.data('show-quantity') != '0' && $component.data('show-quantity') != false;
+                const showQty = $component.data('show-quantity') !== '0' && $component.data('show-quantity') !== false;
                 const tableHtml = `
                     <table>
                         <thead>

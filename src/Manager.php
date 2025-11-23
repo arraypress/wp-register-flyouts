@@ -273,11 +273,8 @@ class Manager {
 				wp_send_json_error( 'Insufficient permissions', 403 );
 			}
 
-			// Sanitize common fields
-			$sanitized_data = $this->sanitize_ajax_data( $_POST );
-
 			// Execute callback with error boundary
-			$result = call_user_func( $endpoint['callback'], $sanitized_data );
+			$result = call_user_func( $endpoint['callback'], $_POST );
 
 			if ( is_wp_error( $result ) ) {
 				wp_send_json_error( $result->get_error_message() );
@@ -288,58 +285,6 @@ class Manager {
 		} catch ( Throwable $e ) {
 			wp_send_json_error( 'Operation failed: ' . $e->getMessage(), 500 );
 		}
-	}
-
-	/**
-	 * Sanitize AJAX data
-	 *
-	 * Provides both sanitized common fields and raw data for custom needs.
-	 * Based on actual component usage from JS files.
-	 *
-	 * FIXED: Matches actual JS field names (search not term/query)
-	 *
-	 * @param array $data Raw POST data
-	 *
-	 * @return array Sanitized data with _raw fallback
-	 * @since 2.0.0
-	 */
-	private function sanitize_ajax_data( array $data ): array {
-		$sanitized = [];
-
-		// Always include raw for custom fields
-		$sanitized['_raw'] = $data;
-
-		// Sanitize common component fields
-		if ( isset( $data['id'] ) ) {
-			$sanitized['id'] = absint( $data['id'] );
-		}
-
-		if ( isset( $data['search'] ) ) {
-			$sanitized['search'] = sanitize_text_field( $data['search'] );
-		}
-
-		if ( isset( $data['term'] ) ) {
-			$sanitized['term'] = sanitize_text_field( $data['term'] );
-		}
-
-		if ( isset( $data['query'] ) ) {
-			$sanitized['query'] = sanitize_text_field( $data['query'] );
-		}
-
-		if ( isset( $data['value'] ) ) {
-			$sanitized['value'] = sanitize_text_field( $data['value'] );
-		}
-
-		if ( isset( $data['action'] ) ) {
-			$sanitized['action'] = sanitize_key( $data['action'] );
-		}
-
-		// Don't sanitize nonce
-		if ( isset( $data['_wpnonce'] ) ) {
-			$sanitized['_wpnonce'] = $data['_wpnonce'];
-		}
-
-		return $sanitized;
 	}
 
 	/**
@@ -425,11 +370,8 @@ class Manager {
 				wp_send_json_error( 'Insufficient permissions', 403 );
 			}
 
-			// Sanitize data
-			$sanitized_data = $this->sanitize_ajax_data( $_POST );
-
 			// Execute callback
-			$result = call_user_func( $endpoint['callback'], $sanitized_data );
+			$result = call_user_func( $endpoint['callback'], $_POST );
 
 			if ( is_wp_error( $result ) ) {
 				wp_send_json_error( $result->get_error_message() );

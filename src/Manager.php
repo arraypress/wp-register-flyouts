@@ -3,11 +3,12 @@
  * WP Flyout Manager - Standardized Implementation
  *
  * Manages flyout registration, AJAX handling, and automatic data mapping.
+ * Fixed version with memory optimization, proper sanitization, and error handling.
  *
  * @package     ArrayPress\RegisterFlyouts
  * @copyright   Copyright (c) 2025, ArrayPress Limited
  * @license     GPL2+
- * @version     1.0.0
+ * @version     2.0.0
  * @author      David Sherlock
  */
 
@@ -19,6 +20,7 @@ use ArrayPress\RegisterFlyouts\Components\FormField;
 use ArrayPress\RegisterFlyouts\Core\Flyout;
 use ArrayPress\RegisterFlyouts\Parts\ActionBar;
 use Exception;
+use Throwable;
 
 /**
  * Class Manager
@@ -49,6 +51,17 @@ class Manager {
 	 * @var array
 	 */
 	private array $flyouts = [];
+
+	/**
+	 * Registered AJAX endpoints (minimal data to avoid memory leaks)
+	 *
+	 * Stores only callback and capability instead of entire config arrays
+	 * to prevent memory bloat with many fields.
+	 *
+	 * @since 2.0.0
+	 * @var array<string, array{callback: callable, capability: string, type: string}>
+	 */
+	private array $ajax_endpoints = [];
 
 	/**
 	 * Admin pages where assets should load
@@ -162,6 +175,8 @@ class Manager {
 	 * Standardized approach: all components use action name as nonce key
 	 * and send _wpnonce parameter.
 	 *
+	 * FIXED: Reduced memory usage by storing minimal endpoint data
+	 *
 	 * @param string $flyout_id Flyout identifier
 	 * @param array  $config    Flyout configuration (passed by reference to update)
 	 *
@@ -178,6 +193,8 @@ class Manager {
 			'options_callback' => 'ajax_options'
 		];
 
+		$capability = $config['capability'];
+
 		foreach ( $config['fields'] as $field_key => &$field ) {
 			$field_name = $field['name'] ?? $field_key;
 
@@ -187,7 +204,7 @@ class Manager {
 				}
 
 				// Generate unique action name
-				$action_name = 'wp_flyout_' . $this->prefix . '_' . $flyout_id . '_' . sanitize_key( $field_name ) . '_' . str_replace( 'ajax_', '', $ajax_key );
+				$action_name = $this->generate_action_name( $flyout_id, $field_name, $ajax_key );
 
 				// Store action name in field config for frontend use
 				$field[ $ajax_key ] = $action_name;
@@ -195,28 +212,134 @@ class Manager {
 				// Always use action name as nonce key
 				$field[ $ajax_key . '_nonce_key' ] = $action_name;
 
-				// Register the AJAX handler
-				add_action( 'wp_ajax_' . $action_name, function () use ( $field, $callback_key, $action_name, $config ) {
-					if ( ! check_ajax_referer( $action_name, '_wpnonce', false ) ) {
-						wp_send_json_error( 'Security check failed', 403 );
-					}
+				// Store minimal endpoint data (fixes memory leak)
+				$this->ajax_endpoints[ $action_name ] = [
+					'callback'   => $field[ $callback_key ],
+					'capability' => $capability,
+					'type'       => 'field'
+				];
 
-					// Check capability
-					if ( ! current_user_can( $config['capability'] ) ) {
-						wp_send_json_error( 'Insufficient permissions', 403 );
-					}
-
-					// Call the callback
-					$result = call_user_func( $field[ $callback_key ], $_POST );
-
-					if ( is_wp_error( $result ) ) {
-						wp_send_json_error( $result->get_error_message() );
-					}
-
-					wp_send_json_success( $result );
-				} );
+				// Register lightweight handler
+				add_action( 'wp_ajax_' . $action_name, [ $this, 'handle_field_ajax' ] );
 			}
 		}
+	}
+
+	/**
+	 * Generate AJAX action name
+	 *
+	 * @param string $flyout_id  Flyout identifier
+	 * @param string $field_name Field name
+	 * @param string $ajax_key   AJAX key (e.g. 'ajax_search')
+	 *
+	 * @return string Generated action name
+	 * @since 2.0.0
+	 */
+	private function generate_action_name( string $flyout_id, string $field_name, string $ajax_key ): string {
+		$suffix = str_replace( 'ajax_', '', $ajax_key );
+
+		return sprintf( 'wp_flyout_%s_%s_%s_%s',
+			$this->prefix,
+			$flyout_id,
+			sanitize_key( $field_name ),
+			$suffix
+		);
+	}
+
+	/**
+	 * Handle field AJAX requests
+	 *
+	 * FIXED: Added sanitization and error boundaries
+	 *
+	 * @return void Sends JSON response and exits
+	 * @since 2.0.0
+	 */
+	public function handle_field_ajax(): void {
+		try {
+			$action_name = $_POST['action'] ?? '';
+
+			if ( ! isset( $this->ajax_endpoints[ $action_name ] ) ) {
+				wp_send_json_error( 'Invalid endpoint', 400 );
+			}
+
+			$endpoint = $this->ajax_endpoints[ $action_name ];
+
+			// Security checks
+			if ( ! check_ajax_referer( $action_name, '_wpnonce', false ) ) {
+				wp_send_json_error( 'Security check failed', 403 );
+			}
+
+			if ( ! current_user_can( $endpoint['capability'] ) ) {
+				wp_send_json_error( 'Insufficient permissions', 403 );
+			}
+
+			// Sanitize common fields
+			$sanitized_data = $this->sanitize_ajax_data( $_POST );
+
+			// Execute callback with error boundary
+			$result = call_user_func( $endpoint['callback'], $sanitized_data );
+
+			if ( is_wp_error( $result ) ) {
+				wp_send_json_error( $result->get_error_message() );
+			}
+
+			wp_send_json_success( $result );
+
+		} catch ( Throwable $e ) {
+			wp_send_json_error( 'Operation failed: ' . $e->getMessage(), 500 );
+		}
+	}
+
+	/**
+	 * Sanitize AJAX data
+	 *
+	 * Provides both sanitized common fields and raw data for custom needs.
+	 * Based on actual component usage from JS files.
+	 *
+	 * FIXED: Matches actual JS field names (search not term/query)
+	 *
+	 * @param array $data Raw POST data
+	 *
+	 * @return array Sanitized data with _raw fallback
+	 * @since 2.0.0
+	 */
+	private function sanitize_ajax_data( array $data ): array {
+		$sanitized = [];
+
+		// Always include raw for custom fields
+		$sanitized['_raw'] = $data;
+
+		// Sanitize common component fields
+		if ( isset( $data['id'] ) ) {
+			$sanitized['id'] = absint( $data['id'] );
+		}
+
+		if ( isset( $data['search'] ) ) {
+			$sanitized['search'] = sanitize_text_field( $data['search'] );
+		}
+
+		if ( isset( $data['term'] ) ) {
+			$sanitized['term'] = sanitize_text_field( $data['term'] );
+		}
+
+		if ( isset( $data['query'] ) ) {
+			$sanitized['query'] = sanitize_text_field( $data['query'] );
+		}
+
+		if ( isset( $data['value'] ) ) {
+			$sanitized['value'] = sanitize_text_field( $data['value'] );
+		}
+
+		if ( isset( $data['action'] ) ) {
+			$sanitized['action'] = sanitize_key( $data['action'] );
+		}
+
+		// Don't sanitize nonce
+		if ( isset( $data['_wpnonce'] ) ) {
+			$sanitized['_wpnonce'] = $data['_wpnonce'];
+		}
+
+		return $sanitized;
 	}
 
 	/**
@@ -229,6 +352,8 @@ class Manager {
 	 * @since 1.0.0
 	 */
 	private function register_action_button_endpoints( string $flyout_id, array $config ): void {
+		$capability = $config['capability'];
+
 		foreach ( $config['fields'] as $field ) {
 			$type = $field['type'] ?? '';
 
@@ -258,38 +383,68 @@ class Manager {
 				$action_name = 'wp_flyout_action_' . $action;
 
 				// Check if already registered to avoid duplicates
-				if ( has_action( 'wp_ajax_' . $action_name ) ) {
+				if ( isset( $this->ajax_endpoints[ $action_name ] ) ) {
 					continue;
 				}
 
+				// Store minimal data
+				$this->ajax_endpoints[ $action_name ] = [
+					'callback'   => $item['callback'],
+					'capability' => $capability,
+					'type'       => 'action'
+				];
+
 				// Register the AJAX handler
-				add_action( 'wp_ajax_' . $action_name, function () use ( $item, $action_name, $config ) {
-					// Always use action name as nonce key
-					if ( ! check_ajax_referer( $action_name, '_wpnonce', false ) ) {
-						wp_send_json_error( 'Security check failed', 403 );
-					}
-
-					// Check capability
-					if ( ! current_user_can( $config['capability'] ) ) {
-						wp_send_json_error( 'Insufficient permissions', 403 );
-					}
-
-					// Call the callback
-					$result = call_user_func( $item['callback'], $_POST );
-
-					if ( is_wp_error( $result ) ) {
-						wp_send_json_error( $result->get_error_message() );
-					}
-
-					// If result is array with message, send as success
-					if ( is_array( $result ) && isset( $result['message'] ) ) {
-						wp_send_json_success( $result );
-					}
-
-					// Default success
-					wp_send_json_success( [ 'message' => 'Action completed successfully' ] );
-				} );
+				add_action( 'wp_ajax_' . $action_name, [ $this, 'handle_action_ajax' ] );
 			}
+		}
+	}
+
+	/**
+	 * Handle action button AJAX requests
+	 *
+	 * @return void Sends JSON response and exits
+	 * @since 2.0.0
+	 */
+	public function handle_action_ajax(): void {
+		try {
+			$action_name = $_POST['action'] ?? '';
+
+			if ( ! isset( $this->ajax_endpoints[ $action_name ] ) ) {
+				wp_send_json_error( 'Invalid action', 400 );
+			}
+
+			$endpoint = $this->ajax_endpoints[ $action_name ];
+
+			// Security checks
+			if ( ! check_ajax_referer( $action_name, '_wpnonce', false ) ) {
+				wp_send_json_error( 'Security check failed', 403 );
+			}
+
+			if ( ! current_user_can( $endpoint['capability'] ) ) {
+				wp_send_json_error( 'Insufficient permissions', 403 );
+			}
+
+			// Sanitize data
+			$sanitized_data = $this->sanitize_ajax_data( $_POST );
+
+			// Execute callback
+			$result = call_user_func( $endpoint['callback'], $sanitized_data );
+
+			if ( is_wp_error( $result ) ) {
+				wp_send_json_error( $result->get_error_message() );
+			}
+
+			// If result is array with message, send as success
+			if ( is_array( $result ) && isset( $result['message'] ) ) {
+				wp_send_json_success( $result );
+			}
+
+			// Default success
+			wp_send_json_success( [ 'message' => 'Action completed successfully' ] );
+
+		} catch ( Throwable $e ) {
+			wp_send_json_error( 'Action failed: ' . $e->getMessage(), 500 );
 		}
 	}
 
@@ -329,8 +484,9 @@ class Manager {
 					wp_send_json_error( __( 'Invalid action', 'wp-flyout' ), 400 );
 			}
 
-		} catch ( Exception $e ) {
-			wp_send_json_error( $e->getMessage(), $e->getCode() ?: 500 );
+		} catch ( Throwable $e ) {
+			$code = $e->getCode() ?: 500;
+			wp_send_json_error( $e->getMessage(), $code );
 		}
 	}
 
@@ -370,6 +526,8 @@ class Manager {
 	/**
 	 * Handle load action
 	 *
+	 * FIXED: Added error boundaries
+	 *
 	 * @param array $config  Flyout configuration
 	 * @param array $request Validated request data
 	 *
@@ -380,14 +538,18 @@ class Manager {
 		$data = [];
 
 		if ( $config['load'] && is_callable( $config['load'] ) ) {
-			$data = call_user_func( $config['load'], $request['id'] );
+			try {
+				$data = call_user_func( $config['load'], $request['id'] );
 
-			if ( is_wp_error( $data ) ) {
-				wp_send_json_error( $data->get_error_message(), 400 );
-			}
+				if ( is_wp_error( $data ) ) {
+					wp_send_json_error( $data->get_error_message(), 400 );
+				}
 
-			if ( $data === false ) {
-				wp_send_json_error( __( 'Record not found', 'wp-flyout' ), 404 );
+				if ( $data === false ) {
+					wp_send_json_error( __( 'Record not found', 'wp-flyout' ), 404 );
+				}
+			} catch ( Throwable $e ) {
+				wp_send_json_error( 'Failed to load data: ' . $e->getMessage(), 500 );
 			}
 		}
 
@@ -397,6 +559,8 @@ class Manager {
 
 	/**
 	 * Handle save action
+	 *
+	 * FIXED: Added error boundaries
 	 *
 	 * @param array $config  Flyout configuration
 	 * @param array $request Validated request data
@@ -418,41 +582,52 @@ class Manager {
 		$form_data = apply_filters( 'wp_flyout_before_save', $form_data, $config, $this->prefix );
 
 		if ( ! empty( $config['validate'] ) && is_callable( $config['validate'] ) ) {
-			$validation = call_user_func( $config['validate'], $form_data );
+			try {
+				$validation = call_user_func( $config['validate'], $form_data );
 
-			if ( is_wp_error( $validation ) ) {
-				wp_send_json_error(
-					$validation->get_error_message(),
-					400
-				);
+				if ( is_wp_error( $validation ) ) {
+					wp_send_json_error(
+						$validation->get_error_message(),
+						400
+					);
+				}
+
+				if ( $validation === false ) {
+					wp_send_json_error( __( 'Validation failed', 'wp-flyout' ), 400 );
+				}
+			} catch ( Throwable $e ) {
+				wp_send_json_error( 'Validation error: ' . $e->getMessage(), 500 );
+			}
+		}
+
+		$id = $form_data['id'] ?? $request['id'] ?? null;
+
+		try {
+			$result = call_user_func( $config['save'], $id, $form_data );
+
+			// Apply filter after save
+			do_action( 'wp_flyout_after_save', $result, $id, $form_data, $config, $this->prefix );
+
+			if ( is_wp_error( $result ) ) {
+				wp_send_json_error( $result->get_error_message(), 400 );
 			}
 
-			if ( $validation === false ) {
-				wp_send_json_error( __( 'Validation failed', 'wp-flyout' ), 400 );
+			if ( $result === false ) {
+				wp_send_json_error( __( 'Save failed', 'wp-flyout' ), 500 );
 			}
+
+			wp_send_json_success( [
+				'message' => __( 'Saved successfully', 'wp-flyout' )
+			] );
+		} catch ( Throwable $e ) {
+			wp_send_json_error( 'Save operation failed: ' . $e->getMessage(), 500 );
 		}
-
-		$id     = $form_data['id'] ?? $request['id'] ?? null;
-		$result = call_user_func( $config['save'], $id, $form_data );
-
-		// Apply filter after save
-		do_action( 'wp_flyout_after_save', $result, $id, $form_data, $config, $this->prefix );
-
-		if ( is_wp_error( $result ) ) {
-			wp_send_json_error( $result->get_error_message(), 400 );
-		}
-
-		if ( $result === false ) {
-			wp_send_json_error( __( 'Save failed', 'wp-flyout' ), 500 );
-		}
-
-		wp_send_json_success( [
-			'message' => __( 'Saved successfully', 'wp-flyout' )
-		] );
 	}
 
 	/**
 	 * Handle delete action
+	 *
+	 * FIXED: Added error boundaries
 	 *
 	 * @param array $config  Flyout configuration
 	 * @param array $request Validated request data
@@ -468,22 +643,26 @@ class Manager {
 		// Apply filter before delete
 		$id = apply_filters( 'wp_flyout_before_delete', $request['id'], $config, $this->prefix );
 
-		$result = call_user_func( $config['delete'], $id );
+		try {
+			$result = call_user_func( $config['delete'], $id );
 
-		// Apply action after delete
-		do_action( 'wp_flyout_after_delete', $result, $id, $config, $this->prefix );
+			// Apply action after delete
+			do_action( 'wp_flyout_after_delete', $result, $id, $config, $this->prefix );
 
-		if ( is_wp_error( $result ) ) {
-			wp_send_json_error( $result->get_error_message(), 400 );
+			if ( is_wp_error( $result ) ) {
+				wp_send_json_error( $result->get_error_message(), 400 );
+			}
+
+			if ( $result === false ) {
+				wp_send_json_error( __( 'Delete failed', 'wp-flyout' ), 500 );
+			}
+
+			wp_send_json_success( [
+				'message' => __( 'Deleted successfully', 'wp-flyout' )
+			] );
+		} catch ( Throwable $e ) {
+			wp_send_json_error( 'Delete operation failed: ' . $e->getMessage(), 500 );
 		}
-
-		if ( $result === false ) {
-			wp_send_json_error( __( 'Delete failed', 'wp-flyout' ), 500 );
-		}
-
-		wp_send_json_success( [
-			'message' => __( 'Deleted successfully', 'wp-flyout' )
-		] );
 	}
 
 	// =========================================================================

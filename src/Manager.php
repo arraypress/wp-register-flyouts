@@ -127,7 +127,7 @@ class Manager {
 			'title'       => '',
 			'subtitle'    => '',
 			'size'        => 'medium',
-			'panels'      => [],
+			'tabs'      => [],
 			'fields'      => [],
 			'actions'     => [],
 			'capability'  => 'manage_options',
@@ -637,8 +637,8 @@ class Manager {
 		// Apply filter to modify flyout instance
 		$flyout = apply_filters( 'wp_flyout_build_flyout', $flyout, $config, $data, $this->prefix );
 
-		if ( ! empty( $config['panels'] ) ) {
-			$this->build_panel_interface( $flyout, $config['panels'], $config['fields'], $data );
+		if ( ! empty( $config['tabs'] ) ) {
+			$this->build_tab_interface( $flyout, $config['tabs'], $config['fields'], $data );
 		} else {
 			$content = $this->render_fields( $config['fields'], $data );
 			$flyout->add_content( '', $content );
@@ -664,37 +664,37 @@ class Manager {
 	}
 
 	/**
-	 * Build panel interface for flyout
+	 * Build tab interface for flyout
 	 *
 	 * @param Flyout $flyout Flyout instance
-	 * @param array  $panels Panel configurations
+	 * @param array  $tabs   Tab configurations
 	 * @param array  $fields All field configurations
 	 * @param mixed  $data   Data for field population
 	 *
 	 * @return void
 	 * @since 1.0.0
 	 */
-	private function build_panel_interface( Flyout $flyout, array $panels, array $fields, $data ): void {
-		// Group fields by panel
-		$fields_by_panel = [];
+	private function build_tab_interface( Flyout $flyout, array $tabs, array $fields, $data ): void {
+		// Group fields by tab
+		$fields_by_tab = [];
 		foreach ( $fields as $key => $field ) {
-			$panel = $field['panel'] ?? $field['tab'] ?? 'default';
-			if ( ! isset( $fields_by_panel[ $panel ] ) ) {
-				$fields_by_panel[ $panel ] = [];
+			$tab = $field['tab'] ?? 'default';
+			if ( ! isset( $fields_by_tab[ $tab ] ) ) {
+				$fields_by_tab[ $tab ] = [];
 			}
-			$fields_by_panel[ $panel ][ $key ] = $field;
+			$fields_by_tab[ $tab ][ $key ] = $field;
 		}
 
-		// Add panels with their fields
-		foreach ( $panels as $panel_id => $panel_config ) {
-			$label    = is_array( $panel_config ) ? $panel_config['label'] : $panel_config;
-			$is_first = array_key_first( $panels ) === $panel_id;
+		// Add tabs with their fields
+		foreach ( $tabs as $tab_id => $tab_config ) {
+			$label    = is_array( $tab_config ) ? $tab_config['label'] : $tab_config;
+			$is_first = array_key_first( $tabs ) === $tab_id;
 
-			$flyout->add_tab( $panel_id, $label, $is_first );
+			$flyout->add_tab( $tab_id, $label, $is_first );
 
-			$panel_fields = $fields_by_panel[ $panel_id ] ?? [];
-			$content      = $this->render_fields( $panel_fields, $data );
-			$flyout->set_tab_content( $panel_id, $content );
+			$tab_fields = $fields_by_tab[ $tab_id ] ?? [];
+			$content    = $this->render_fields( $tab_fields, $data );
+			$flyout->set_tab_content( $tab_id, $content );
 		}
 	}
 

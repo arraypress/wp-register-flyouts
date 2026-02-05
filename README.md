@@ -87,8 +87,8 @@ register_flyout( 'prefix_name', [
     // Fields (see Field Types section)
     'fields' => [...],
     
-    // Or use panels for tabbed interface
-    'panels' => [
+    // Or use tabs for tabbed interface
+    'tabs' => [
         'general' => [
             'label'  => 'General',
             'icon'   => 'admin-settings',

@@ -37,7 +37,7 @@ if ( ! function_exists( 'register_flyout' ) ) {
 	 *
 	 * @type string   $title       Flyout title
 	 * @type string   $width       Width: 'small', 'medium', 'large', 'full'
-	 * @type array    $panels      Panel configurations (optional)
+	 * @type array    $tabs        Tab configurations (optional)
 	 * @type array    $fields      Field configurations
 	 * @type array    $actions     Footer action buttons
 	 * @type string   $capability  Required capability (default: 'manage_options')

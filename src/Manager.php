@@ -133,6 +133,7 @@ class Manager {
 			'capability'  => 'manage_options',
 			'admin_pages' => [],
 			'load'        => null,
+			'validate'    => null,
 			'save'        => null,
 			'delete'      => null,
 		];

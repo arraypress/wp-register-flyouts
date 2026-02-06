@@ -20,7 +20,7 @@
       "ArrayPress\\RegisterFlyouts\\": "src/"
     },
     "files": [
-      "src/Utils/Functions.php"
+      "src/Utilities/Functions.php"
     ]
   },
   "config": {

@@ -244,7 +244,8 @@ class Assets {
 	 * Register Select2 assets if not already available
 	 *
 	 * Select2 may already be registered by WooCommerce or other plugins.
-	 * We only register it if it's not already available.
+	 * We only register it if it's not already available. Uses local copies
+	 * from the assets/libraries directory via the Composer Assets loader.
 	 *
 	 * @param string $version Version string for cache busting
 	 *
@@ -253,9 +254,10 @@ class Assets {
 	 */
 	private static function register_select2( string $version ): void {
 		if ( ! wp_script_is( 'select2', 'registered' ) ) {
-			wp_register_script(
+			wp_register_composer_script(
 				'select2',
-				'https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js',
+				__FILE__,
+				'js/libraries/select2.min.js',
 				[ 'jquery' ],
 				'4.1.0-rc.0',
 				true
@@ -263,9 +265,10 @@ class Assets {
 		}
 
 		if ( ! wp_style_is( 'select2', 'registered' ) ) {
-			wp_register_style(
+			wp_register_composer_style(
 				'select2',
-				'https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css',
+				__FILE__,
+				'css/libraries/select2.min.css',
 				[],
 				'4.1.0-rc.0'
 			);

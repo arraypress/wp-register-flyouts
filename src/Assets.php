@@ -185,7 +185,7 @@ class Assets {
 	 */
 	public static function register_assets(): void {
 		$base_file = __FILE__;
-		$version   = defined( 'WP_DEBUG' ) && WP_DEBUG ? time() : '1.0.0';
+		$version   = defined( 'WP_DEBUG' ) && WP_DEBUG ? (string) time() : '1.0.0';
 
 		// Register Select2 if not already registered
 		self::register_select2( $version );

@@ -344,6 +344,9 @@
          */
         showAlert: function ($flyout, message, type) {
             if (window.WPFlyoutAlert) {
+                // Remove any existing alerts to prevent stacking
+                $flyout.find('.wp-flyout-alert').remove();
+
                 WPFlyoutAlert.show(message, type, {
                     target: $flyout.find('.wp-flyout-body'),
                     prepend: true,

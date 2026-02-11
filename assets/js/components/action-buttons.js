@@ -169,6 +169,7 @@
         showAlert: function ($flyout, message, type) {
             // Use WPFlyoutAlert if available
             if (window.WPFlyoutAlert) {
+                $flyout.find('.wp-flyout-alert').remove();
                 WPFlyoutAlert.show(message, type, {
                     target: $flyout.find('.wp-flyout-body'),
                     prepend: true,

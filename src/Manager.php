@@ -277,18 +277,18 @@ class Manager {
 			$action_name = $_POST['action'] ?? '';
 
 			if ( ! isset( $this->ajax_endpoints[ $action_name ] ) ) {
-				wp_send_json_error( 'Invalid endpoint', 400 );
+				wp_send_json_error( 'Invalid endpoint' );
 			}
 
 			$endpoint = $this->ajax_endpoints[ $action_name ];
 
 			// Security checks
 			if ( ! check_ajax_referer( $action_name, '_wpnonce', false ) ) {
-				wp_send_json_error( 'Security check failed', 403 );
+				wp_send_json_error( 'Security check failed' );
 			}
 
 			if ( ! current_user_can( $endpoint['capability'] ) ) {
-				wp_send_json_error( 'Insufficient permissions', 403 );
+				wp_send_json_error( 'Insufficient permissions' );
 			}
 
 			// Determine if this is a search or hydration request
@@ -326,7 +326,7 @@ class Manager {
 			wp_send_json_success( $formatted );
 
 		} catch ( Throwable $e ) {
-			wp_send_json_error( 'Operation failed: ' . $e->getMessage(), 500 );
+			wp_send_json_error( 'Operation failed: ' . $e->getMessage() );
 		}
 	}
 
@@ -341,18 +341,18 @@ class Manager {
 			$action_name = $_POST['action'] ?? '';
 
 			if ( ! isset( $this->ajax_endpoints[ $action_name ] ) ) {
-				wp_send_json_error( 'Invalid endpoint', 400 );
+				wp_send_json_error( 'Invalid endpoint' );
 			}
 
 			$endpoint = $this->ajax_endpoints[ $action_name ];
 
 			// Security checks
 			if ( ! check_ajax_referer( $action_name, '_wpnonce', false ) ) {
-				wp_send_json_error( 'Security check failed', 403 );
+				wp_send_json_error( 'Security check failed' );
 			}
 
 			if ( ! current_user_can( $endpoint['capability'] ) ) {
-				wp_send_json_error( 'Insufficient permissions', 403 );
+				wp_send_json_error( 'Insufficient permissions' );
 			}
 
 			// Execute callback with error boundary
@@ -365,7 +365,7 @@ class Manager {
 			wp_send_json_success( $result );
 
 		} catch ( Throwable $e ) {
-			wp_send_json_error( 'Operation failed: ' . $e->getMessage(), 500 );
+			wp_send_json_error( 'Operation failed: ' . $e->getMessage() );
 		}
 	}
 
@@ -431,17 +431,17 @@ class Manager {
 			$action_name = $_POST['action'] ?? '';
 
 			if ( ! isset( $this->ajax_endpoints[ $action_name ] ) ) {
-				wp_send_json_error( 'Invalid action', 400 );
+				wp_send_json_error( 'Invalid action' );
 			}
 
 			$endpoint = $this->ajax_endpoints[ $action_name ];
 
 			if ( ! check_ajax_referer( $action_name, '_wpnonce', false ) ) {
-				wp_send_json_error( 'Security check failed', 403 );
+				wp_send_json_error( 'Security check failed' );
 			}
 
 			if ( ! current_user_can( $endpoint['capability'] ) ) {
-				wp_send_json_error( 'Insufficient permissions', 403 );
+				wp_send_json_error( 'Insufficient permissions' );
 			}
 
 			$result = call_user_func( $endpoint['callback'], $_POST );
@@ -457,7 +457,7 @@ class Manager {
 			wp_send_json_success( [ 'message' => 'Action completed successfully' ] );
 
 		} catch ( Throwable $e ) {
-			wp_send_json_error( 'Action failed: ' . $e->getMessage(), 500 );
+			wp_send_json_error( 'Action failed: ' . $e->getMessage() );
 		}
 	}
 
@@ -490,12 +490,11 @@ class Manager {
 					break;
 
 				default:
-					wp_send_json_error( __( 'Invalid action', 'wp-flyout' ), 400 );
+					wp_send_json_error( __( 'Invalid action', 'wp-flyout' ) );
 			}
 
 		} catch ( Throwable $e ) {
-			$code = $e->getCode() ?: 500;
-			wp_send_json_error( $e->getMessage(), $code );
+			wp_send_json_error( $e->getMessage() );
 		}
 	}
 
@@ -511,17 +510,17 @@ class Manager {
 		$action    = sanitize_key( $_POST['flyout_action'] ?? 'load' );
 
 		if ( ! isset( $this->flyouts[ $flyout_id ] ) ) {
-			throw new Exception( 'Invalid flyout', 400 );
+			throw new Exception( 'Invalid flyout' );
 		}
 
 		$config = $this->flyouts[ $flyout_id ];
 
 		if ( ! check_ajax_referer( 'wp_flyout_' . $this->prefix . '_' . $flyout_id, 'nonce', false ) ) {
-			throw new Exception( 'Security check failed', 403 );
+			throw new Exception( 'Security check failed' );
 		}
 
 		if ( ! current_user_can( $config['capability'] ) ) {
-			throw new Exception( 'Insufficient permissions', 403 );
+			throw new Exception( 'Insufficient permissions' );
 		}
 
 		return [
@@ -549,14 +548,14 @@ class Manager {
 				$data = call_user_func( $config['load'], $request['id'] );
 
 				if ( is_wp_error( $data ) ) {
-					wp_send_json_error( $data->get_error_message(), 400 );
+					wp_send_json_error( $data->get_error_message() );
 				}
 
 				if ( $data === false ) {
-					wp_send_json_error( __( 'Record not found', 'wp-flyout' ), 404 );
+					wp_send_json_error( __( 'Record not found', 'wp-flyout' ) );
 				}
 			} catch ( Throwable $e ) {
-				wp_send_json_error( 'Failed to load data: ' . $e->getMessage(), 500 );
+				wp_send_json_error( 'Failed to load data: ' . $e->getMessage() );
 			}
 		}
 
@@ -575,7 +574,7 @@ class Manager {
 	 */
 	private function handle_save( array $config, array $request ): void {
 		if ( ! $config['save'] || ! is_callable( $config['save'] ) ) {
-			wp_send_json_error( __( 'Save not configured', 'wp-flyout' ), 501 );
+			wp_send_json_error( __( 'Save not configured', 'wp-flyout' ) );
 		}
 
 		parse_str( $request['form_data'], $raw_data );
@@ -590,14 +589,14 @@ class Manager {
 				$validation = call_user_func( $config['validate'], $form_data );
 
 				if ( is_wp_error( $validation ) ) {
-					wp_send_json_error( $validation->get_error_message(), 400 );
+					wp_send_json_error( $validation->get_error_message() );
 				}
 
 				if ( $validation === false ) {
-					wp_send_json_error( __( 'Validation failed', 'wp-flyout' ), 400 );
+					wp_send_json_error( __( 'Validation failed', 'wp-flyout' ) );
 				}
 			} catch ( Throwable $e ) {
-				wp_send_json_error( 'Validation error: ' . $e->getMessage(), 500 );
+				wp_send_json_error( 'Validation error: ' . $e->getMessage() );
 			}
 		}
 
@@ -609,18 +608,18 @@ class Manager {
 			do_action( 'wp_flyout_after_save', $result, $id, $form_data, $config, $this->prefix );
 
 			if ( is_wp_error( $result ) ) {
-				wp_send_json_error( $result->get_error_message(), 400 );
+				wp_send_json_error( $result->get_error_message() );
 			}
 
 			if ( $result === false ) {
-				wp_send_json_error( __( 'Save failed', 'wp-flyout' ), 500 );
+				wp_send_json_error( __( 'Save failed', 'wp-flyout' ) );
 			}
 
 			wp_send_json_success( [
 				'message' => __( 'Saved successfully', 'wp-flyout' )
 			] );
 		} catch ( Throwable $e ) {
-			wp_send_json_error( 'Save operation failed: ' . $e->getMessage(), 500 );
+			wp_send_json_error( 'Save operation failed: ' . $e->getMessage() );
 		}
 	}
 
@@ -635,7 +634,7 @@ class Manager {
 	 */
 	private function handle_delete( array $config, array $request ): void {
 		if ( ! $config['delete'] || ! is_callable( $config['delete'] ) ) {
-			wp_send_json_error( __( 'Delete not configured', 'wp-flyout' ), 501 );
+			wp_send_json_error( __( 'Delete not configured', 'wp-flyout' ) );
 		}
 
 		$id = apply_filters( 'wp_flyout_before_delete', $request['id'], $config, $this->prefix );
@@ -646,18 +645,18 @@ class Manager {
 			do_action( 'wp_flyout_after_delete', $result, $id, $config, $this->prefix );
 
 			if ( is_wp_error( $result ) ) {
-				wp_send_json_error( $result->get_error_message(), 400 );
+				wp_send_json_error( $result->get_error_message() );
 			}
 
 			if ( $result === false ) {
-				wp_send_json_error( __( 'Delete failed', 'wp-flyout' ), 500 );
+				wp_send_json_error( __( 'Delete failed', 'wp-flyout' ) );
 			}
 
 			wp_send_json_success( [
 				'message' => __( 'Deleted successfully', 'wp-flyout' )
 			] );
 		} catch ( Throwable $e ) {
-			wp_send_json_error( 'Delete operation failed: ' . $e->getMessage(), 500 );
+			wp_send_json_error( 'Delete operation failed: ' . $e->getMessage() );
 		}
 	}
 

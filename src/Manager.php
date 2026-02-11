@@ -695,7 +695,8 @@ class Manager {
 		}
 
 		if ( $id ) {
-			$flyout->add_content( '', sprintf(
+			$tab_key = ! empty( $config['tabs'] ) ? array_key_first( $config['tabs'] ) : '';
+			$flyout->add_content( $tab_key, sprintf(
 				'<input type="hidden" name="id" value="%s">',
 				esc_attr( $id )
 			) );

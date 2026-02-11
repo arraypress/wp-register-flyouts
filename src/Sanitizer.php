@@ -79,7 +79,7 @@ class Sanitizer {
 
 			// Selection inputs
 			'select'      => 'sanitize_text_field',
-			'ajax_select' => 'sanitize_text_field',
+			'ajax_select' => [ self::class, 'sanitize_ajax_select' ],
 			'radio'       => 'sanitize_text_field',
 			'toggle'      => [ self::class, 'sanitize_toggle' ],
 
@@ -456,6 +456,23 @@ class Sanitizer {
 		}
 
 		return $sanitized;
+	}
+
+	/**
+	 * Sanitize ajax_select field
+	 *
+	 * Handles single values (string), multiple values (array), and tags.
+	 *
+	 * @param mixed $value Raw value from form submission
+	 *
+	 * @return string|array Sanitized value
+	 */
+	public static function sanitize_ajax_select( $value ) {
+		if ( is_array( $value ) ) {
+			return array_values( array_filter( array_map( 'sanitize_text_field', $value ) ) );
+		}
+
+		return sanitize_text_field( (string) $value );
 	}
 
 	// ========================================

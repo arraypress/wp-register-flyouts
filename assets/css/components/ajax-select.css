@@ -4,15 +4,40 @@
  * Styles Select2 to match the flyout form field aesthetic.
  * Replaces the custom WPAjaxSelect styles.
  *
- * @version 4.0.0
+ * @version 4.1.0
  */
 
-/* Container */
+/* ==========================================================================
+   NATIVE SELECT OVERRIDES
+   Prevent form-fields.css from styling Select2-managed selects
+   ========================================================================== */
+
+/* Hide the native select when Select2 is managing it */
+.wp-flyout-field select.wp-flyout-ajax-select {
+    appearance: auto !important;
+    background-image: none !important;
+    padding-right: 8px !important;
+}
+
+/* When Select2 has initialized, the native select is hidden.
+   But just in case, reset any custom chevron/padding */
+.wp-flyout-field .select2-container + select.wp-flyout-ajax-select,
+.wp-flyout-field select.select2-hidden-accessible {
+    display: none !important;
+}
+
+/* ==========================================================================
+   SELECT2 CONTAINER
+   ========================================================================== */
+
 .wp-flyout-field .select2-container {
     width: 100% !important;
 }
 
-/* Single select */
+/* ==========================================================================
+   SINGLE SELECT
+   ========================================================================== */
+
 .wp-flyout-field .select2-container--default .select2-selection--single {
     height: 36px;
     border: 1px solid #8c8f94;
@@ -25,47 +50,113 @@
 .wp-flyout-field .select2-container--default .select2-selection--single .select2-selection__rendered {
     line-height: 34px;
     padding-left: 0;
+    padding-right: 40px; /* Space for clear + arrow */
     color: #2c3338;
     font-size: 14px;
 }
 
 .wp-flyout-field .select2-container--default .select2-selection--single .select2-selection__arrow {
     height: 34px;
+    right: 4px;
 }
 
 .wp-flyout-field .select2-container--default .select2-selection--single .select2-selection__placeholder {
     color: #a7aaad;
 }
 
-/* Multiple select */
+/* Clear button positioning — prevent overlap with arrow */
+.wp-flyout-field .select2-container--default .select2-selection--single .select2-selection__clear {
+    color: #50575e;
+    font-size: 18px;
+    font-weight: normal;
+    margin-right: 16px; /* Push left of the arrow */
+    float: right;
+    padding: 0 4px;
+    line-height: 34px;
+}
+
+.wp-flyout-field .select2-container--default .select2-selection--single .select2-selection__clear:hover {
+    color: #d63638;
+}
+
+/* ==========================================================================
+   MULTIPLE SELECT
+   ========================================================================== */
+
 .wp-flyout-field .select2-container--default .select2-selection--multiple {
     border: 1px solid #8c8f94;
     border-radius: 4px;
     background: #fff;
     min-height: 36px;
-    padding: 2px 4px;
+    padding: 4px 6px;
     transition: border-color 0.15s;
+}
+
+.wp-flyout-field .select2-container--default .select2-selection--multiple .select2-selection__rendered {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    padding: 0;
+    list-style: none;
+    margin: 0;
 }
 
 .wp-flyout-field .select2-container--default .select2-selection--multiple .select2-selection__choice {
     background: #f0f0f1;
     border: 1px solid #c3c4c7;
     border-radius: 3px;
-    padding: 2px 6px;
-    margin: 2px;
+    padding: 2px 8px;
+    margin: 0; /* Gap handled by flex gap */
     font-size: 13px;
+    line-height: 22px;
+    display: inline-flex;
+    align-items: center;
+    max-width: 100%;
 }
 
 .wp-flyout-field .select2-container--default .select2-selection--multiple .select2-selection__choice__remove {
     color: #50575e;
-    margin-right: 4px;
+    margin-right: 6px;
+    font-size: 16px;
+    font-weight: bold;
+    cursor: pointer;
+    order: -1; /* Move x to left side */
+    line-height: 1;
 }
 
 .wp-flyout-field .select2-container--default .select2-selection--multiple .select2-selection__choice__remove:hover {
     color: #d63638;
 }
 
-/* Focus state */
+/* Search input within multi-select */
+.wp-flyout-field .select2-container--default .select2-selection--multiple .select2-search--inline .select2-search__field {
+    margin: 0;
+    padding: 4px 0;
+    font-size: 14px;
+    min-height: 24px;
+}
+
+/* Multi-select clear all button */
+.wp-flyout-field .select2-container--default .select2-selection--multiple .select2-selection__clear {
+    position: absolute;
+    right: 8px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #50575e;
+    font-size: 18px;
+    cursor: pointer;
+    padding: 0 4px;
+    z-index: 1;
+}
+
+.wp-flyout-field .select2-container--default .select2-selection--multiple .select2-selection__clear:hover {
+    color: #d63638;
+}
+
+/* ==========================================================================
+   FOCUS STATES
+   ========================================================================== */
+
 .wp-flyout-field .select2-container--default.select2-container--focus .select2-selection--single,
 .wp-flyout-field .select2-container--default.select2-container--focus .select2-selection--multiple,
 .wp-flyout-field .select2-container--default.select2-container--open .select2-selection--single,
@@ -75,7 +166,10 @@
     outline: 2px solid transparent;
 }
 
-/* Dropdown */
+/* ==========================================================================
+   DROPDOWN
+   ========================================================================== */
+
 .select2-container--default .select2-dropdown {
     border-color: #8c8f94;
     border-radius: 4px;
@@ -97,7 +191,10 @@
     outline: none;
 }
 
-/* Results */
+/* ==========================================================================
+   RESULTS
+   ========================================================================== */
+
 .select2-container--default .select2-results__option {
     padding: 8px 12px;
     font-size: 14px;
@@ -134,18 +231,10 @@
     text-align: center;
 }
 
-/* Clear button */
-.wp-flyout-field .select2-container--default .select2-selection__clear {
-    color: #50575e;
-    font-size: 16px;
-    margin-right: 4px;
-}
+/* ==========================================================================
+   DISABLED STATE
+   ========================================================================== */
 
-.wp-flyout-field .select2-container--default .select2-selection__clear:hover {
-    color: #d63638;
-}
-
-/* Disabled state */
 .wp-flyout-field .select2-container--default.select2-container--disabled .select2-selection--single,
 .wp-flyout-field .select2-container--default.select2-container--disabled .select2-selection--multiple {
     background: #f0f0f1;

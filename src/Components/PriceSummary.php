@@ -15,6 +15,7 @@ declare( strict_types=1 );
 namespace ArrayPress\RegisterFlyouts\Components;
 
 use ArrayPress\RegisterFlyouts\Interfaces\Renderable;
+use function esc_currency_e;
 
 class PriceSummary implements Renderable {
 

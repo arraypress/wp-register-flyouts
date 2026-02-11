@@ -1,122 +1,153 @@
 /**
- * WP Flyout - AJAX Select Component
+ * WP Flyout - AJAX Select Component (Select2)
+ *
+ * Styles Select2 to match the flyout form field aesthetic.
+ * Replaces the custom WPAjaxSelect styles.
+ *
+ * @version 4.0.0
  */
 
 /* Container */
-.wp-ajax-select {
-    position: relative;
-    width: 100%;
+.wp-flyout-field .select2-container {
+    width: 100% !important;
 }
 
-/* Wrapper */
-.wp-ajax-select-wrapper {
-    position: relative;
-    display: flex;
-    align-items: center;
+/* Single select */
+.wp-flyout-field .select2-container--default .select2-selection--single {
+    height: 36px;
+    border: 1px solid #8c8f94;
+    border-radius: 4px;
+    background: #fff;
+    padding: 0 8px;
+    transition: border-color 0.15s;
 }
 
-/* Input field */
-.wp-ajax-select.has-value input[type="text"] {
-    cursor: default;
+.wp-flyout-field .select2-container--default .select2-selection--single .select2-selection__rendered {
+    line-height: 34px;
+    padding-left: 0;
+    color: #2c3338;
+    font-size: 14px;
 }
 
-/* Clear button */
-.wp-ajax-select-clear {
-    position: absolute;
-    right: 30px;
-    top: 50%;
-    transform: translateY(-50%);
-    width: 20px;
-    height: 20px;
-    font-size: 20px;
-    line-height: 1;
-    color: #646970;
-    cursor: pointer;
-    text-align: center;
-    display: flex;
-    align-items: center;
-    justify-content: center;
+.wp-flyout-field .select2-container--default .select2-selection--single .select2-selection__arrow {
+    height: 34px;
 }
 
-.wp-ajax-select-clear:hover {
+.wp-flyout-field .select2-container--default .select2-selection--single .select2-selection__placeholder {
+    color: #a7aaad;
+}
+
+/* Multiple select */
+.wp-flyout-field .select2-container--default .select2-selection--multiple {
+    border: 1px solid #8c8f94;
+    border-radius: 4px;
+    background: #fff;
+    min-height: 36px;
+    padding: 2px 4px;
+    transition: border-color 0.15s;
+}
+
+.wp-flyout-field .select2-container--default .select2-selection--multiple .select2-selection__choice {
+    background: #f0f0f1;
+    border: 1px solid #c3c4c7;
+    border-radius: 3px;
+    padding: 2px 6px;
+    margin: 2px;
+    font-size: 13px;
+}
+
+.wp-flyout-field .select2-container--default .select2-selection--multiple .select2-selection__choice__remove {
+    color: #50575e;
+    margin-right: 4px;
+}
+
+.wp-flyout-field .select2-container--default .select2-selection--multiple .select2-selection__choice__remove:hover {
     color: #d63638;
 }
 
-/* Chevron */
-.wp-ajax-select .dashicons-arrow-down-alt2 {
-    position: absolute;
-    right: 8px;
-    top: 50%;
-    transform: translateY(-50%);
-    color: #646970;
-    cursor: pointer;
+/* Focus state */
+.wp-flyout-field .select2-container--default.select2-container--focus .select2-selection--single,
+.wp-flyout-field .select2-container--default.select2-container--focus .select2-selection--multiple,
+.wp-flyout-field .select2-container--default.select2-container--open .select2-selection--single,
+.wp-flyout-field .select2-container--default.select2-container--open .select2-selection--multiple {
+    border-color: var(--wp-flyout-primary, #2271b1);
+    box-shadow: 0 0 0 1px var(--wp-flyout-primary, #2271b1);
+    outline: 2px solid transparent;
 }
 
-.wp-ajax-select .dashicons-arrow-down-alt2:hover {
-    color: #2271b1;
+/* Dropdown */
+.select2-container--default .select2-dropdown {
+    border-color: #8c8f94;
+    border-radius: 4px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
+    z-index: 160001; /* Above flyout overlay */
 }
 
-/* Results dropdown */
-.wp-ajax-select-results {
-    position: absolute;
-    top: 100%;
-    left: 0;
-    right: 0;
-    margin-top: 4px;
-    max-height: 200px;
-    overflow-y: auto;
-    background: #fff;
+/* Search field inside dropdown */
+.select2-container--default .select2-search--dropdown .select2-search__field {
     border: 1px solid #8c8f94;
     border-radius: 4px;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-    z-index: 100001;
+    padding: 8px;
+    font-size: 14px;
 }
 
-/* Result items */
-.wp-ajax-select-item {
+.select2-container--default .select2-search--dropdown .select2-search__field:focus {
+    border-color: var(--wp-flyout-primary, #2271b1);
+    box-shadow: 0 0 0 1px var(--wp-flyout-primary, #2271b1);
+    outline: none;
+}
+
+/* Results */
+.select2-container--default .select2-results__option {
     padding: 8px 12px;
+    font-size: 14px;
     cursor: pointer;
     border-bottom: 1px solid #f0f0f1;
 }
 
-.wp-ajax-select-item:last-child {
+.select2-container--default .select2-results__option:last-child {
     border-bottom: none;
 }
 
-.wp-ajax-select-item:hover,
-.wp-ajax-select-item.active {
-    background: #2271b1;
+.select2-container--default .select2-results__option--highlighted[aria-selected] {
+    background-color: #2271b1;
     color: #fff;
 }
 
-/* Empty/Loading states */
-.wp-ajax-select-empty,
-.wp-ajax-select-loading {
+.select2-container--default .select2-results__option[aria-selected="true"] {
+    background-color: #f0f0f1;
+    color: #2c3338;
+}
+
+/* Loading / empty states */
+.select2-container--default .select2-results__option.loading-results {
+    color: #a7aaad;
+    font-style: italic;
     padding: 12px;
-    color: #646970;
     text-align: center;
 }
 
-.wp-ajax-select-empty {
+.select2-results__message {
+    color: #646970;
     font-style: italic;
+    padding: 12px;
+    text-align: center;
 }
 
-/* Loading spinner */
-.wp-ajax-select-loading:before {
-    content: '';
-    display: inline-block;
-    width: 14px;
-    height: 14px;
-    margin-right: 8px;
-    border: 2px solid #dcdcde;
-    border-radius: 50%;
-    border-top-color: #2271b1;
-    animation: wp-ajax-select-spin 0.8s linear infinite;
-    vertical-align: middle;
+/* Clear button */
+.wp-flyout-field .select2-container--default .select2-selection__clear {
+    color: #50575e;
+    font-size: 16px;
+    margin-right: 4px;
 }
 
-@keyframes wp-ajax-select-spin {
-    to {
-        transform: rotate(360deg);
-    }
+.wp-flyout-field .select2-container--default .select2-selection__clear:hover {
+    color: #d63638;
+}
+
+/* Disabled state */
+.wp-flyout-field .select2-container--default.select2-container--disabled .select2-selection--single,
+.wp-flyout-field .select2-container--default.select2-container--disabled .select2-selection--multiple {
+    background: #f0f0f1;
+    cursor: not-allowed;
 }

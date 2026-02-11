@@ -1,313 +1,200 @@
 /**
- * WordPress AJAX Select Component - Updated for Callbacks
+ * AJAX Select Component - Select2 Integration
  *
- * Dynamic select dropdown with AJAX search functionality
+ * Initializes Select2 on .wp-flyout-ajax-select elements with AJAX search
+ * and hydration support via WordPress admin-ajax.php.
+ *
+ * Replaces the custom WPAjaxSelect class with Select2 for better
+ * accessibility, keyboard navigation, mobile support, and RTL handling.
  *
  * @package ArrayPress\WPFlyout
- * @version 3.0.0
+ * @version 4.0.0
  */
 (function ($) {
     'use strict';
 
-    class WPAjaxSelect {
-        constructor(element, options = {}) {
-            this.$select = $(element);
+    const AjaxSelect = {
 
-            // Skip if already initialized
-            if (this.$select.data('wpAjaxSelectInitialized')) {
-                return;
-            }
-
-            this.$select.data('wpAjaxSelectInitialized', true);
-
-            // Clean up all option text to remove whitespace
-            this.$select.find('option').each(function () {
-                const $option = $(this);
-                const cleanText = $.trim($option.text());
-                $option.text(cleanText);
-            });
-
-            // Parse data attributes
-            const dataOptions = {};
-            $.each(this.$select.data(), (key, value) => {
-                dataOptions[key] = value;
-            });
-
-            // Merge options
-            this.options = $.extend({
-                placeholder: 'Type to search...',
-                ajax: null,
-                nonce: null,
-                minLength: 2,
-                delay: 300
-            }, dataOptions, options);
-
-            this.searchTimeout = null;
-            this.init();
-        }
-
-        init() {
-            // Must have ajax action
-            if (!this.options.ajax) {
-                console.warn('WPAjaxSelect: No ajax action specified');
-                return;
-            }
-
-            this.$select.hide();
-
-            // Build UI with wrapper for input and chevron
-            this.$container = $('<div class="wp-ajax-select">');
-            this.$wrapper = $('<div class="wp-ajax-select-wrapper">');
-            this.$input = $('<input class="regular-text" type="text">');
-            this.$chevron = $('<span class="dashicons dashicons-arrow-down-alt2"></span>');
-            this.$clear = $('<span class="wp-ajax-select-clear" style="display:none">×</span>');
-            this.$results = $('<div class="wp-ajax-select-results" style="display:none">');
-
-            this.$input.attr('placeholder', this.options.placeholder);
-
-            this.$wrapper
-                .append(this.$input)
-                .append(this.$clear)
-                .append(this.$chevron);
-
-            this.$container
-                .append(this.$wrapper)
-                .append(this.$results);
-
-            this.$select.after(this.$container);
-
-            // Handle initial value - NO AJAX if we have the text!
-            const $selected = this.$select.find('option:selected');
-            if ($selected.length && $selected.val()) {
-                const trimmedText = $.trim($selected.text());
-                this.setSelected($selected.val(), trimmedText);
-            }
-
-            this.bindEvents();
-        }
-
-        bindEvents() {
+        /**
+         * Initialize the component
+         */
+        init: function () {
             const self = this;
 
-            // Type to search
-            this.$input.on('input', function () {
-                // Skip if readonly (has value)
-                if ($(this).prop('readonly')) return;
-
-                clearTimeout(self.searchTimeout);
-                const term = $(this).val().trim();
-
-                if (term.length < self.options.minLength) {
-                    self.$results.hide();
-                    return;
-                }
-
-                self.searchTimeout = setTimeout(() => {
-                    self.search(term);
-                }, self.options.delay);
+            // Init on page ready
+            $(function () {
+                self.initAll(document);
             });
 
-            // Clear button
-            this.$clear.on('click', (e) => {
-                e.stopPropagation();
-                this.clear();
-                this.$input.focus();
+            // Init when flyout opens
+            $(document).on('wpflyout:opened', function (e, data) {
+                self.initAll(data.element);
             });
+        },
 
-            // Chevron click - toggle dropdown or focus input
-            this.$chevron.on('click', (e) => {
-                e.stopPropagation();
-                if (this.$input.prop('readonly')) {
-                    // Has value - just focus
-                    this.$input.focus();
-                } else {
-                    // No value - focus to trigger search
-                    this.$input.focus();
+        /**
+         * Initialize all ajax selects within a container
+         *
+         * @param {HTMLElement|jQuery} container
+         */
+        initAll: function (container) {
+            const self = this;
+            $(container).find('.wp-flyout-ajax-select').each(function () {
+                if (!$(this).data('select2')) {
+                    self.initOne($(this));
                 }
             });
+        },
 
-            // Select item
-            this.$results.on('click', '.wp-ajax-select-item', (e) => {
-                const $item = $(e.currentTarget);
-                this.select($item.data('value'), $item.text());
-            });
+        /**
+         * Initialize a single Select2 instance
+         *
+         * @param {jQuery} $select
+         */
+        initOne: function ($select) {
+            const action = $select.data('ajax-action');
+            const nonce = $select.data('nonce') || '';
+            const placeholder = $select.data('placeholder') || 'Type to search...';
+            const tags = $select.data('tags') === true || $select.data('tags') === 'true';
+            const multiple = $select.prop('multiple');
 
-            // Click outside closes
-            $(document).on('click', (e) => {
-                if (!this.$container[0].contains(e.target)) {
-                    this.$results.hide();
-                }
-            });
+            if (!action) {
+                console.warn('AjaxSelect: No data-ajax-action specified', $select[0]);
+                return;
+            }
 
-            // Keyboard navigation
-            this.$input.on('keydown', (e) => {
-                // Delete/Escape to clear when readonly
-                if (this.$input.prop('readonly')) {
-                    if (e.which === 8 || e.which === 46 || e.which === 27) {
-                        e.preventDefault();
-                        this.clear();
-                    }
-                    return;
-                }
-
-                const $items = this.$results.find('.wp-ajax-select-item');
-                const $active = this.$results.find('.active');
-                let index = $items.index($active);
-
-                switch (e.which) {
-                    case 40: // Down
-                        e.preventDefault();
-                        if ($items.length) {
-                            index = (index + 1) % $items.length;
-                            $items.removeClass('active').eq(index).addClass('active');
+            const config = {
+                placeholder: placeholder,
+                allowClear: true,
+                minimumInputLength: 1,
+                tags: tags,
+                width: '100%',
+                ajax: {
+                    url: window.ajaxurl || '/wp-admin/admin-ajax.php',
+                    type: 'POST',
+                    dataType: 'json',
+                    delay: 300,
+                    data: function (params) {
+                        return {
+                            action: action,
+                            search: params.term || '',
+                            _wpnonce: nonce
+                        };
+                    },
+                    processResults: function (response) {
+                        if (response.success && Array.isArray(response.data)) {
+                            return {
+                                results: response.data.map(function (item) {
+                                    return {
+                                        id: String(item.id),
+                                        text: String(item.text)
+                                    };
+                                })
+                            };
                         }
-                        break;
-                    case 38: // Up
-                        e.preventDefault();
-                        if ($items.length) {
-                            index = index <= 0 ? $items.length - 1 : index - 1;
-                            $items.removeClass('active').eq(index).addClass('active');
-                        }
-                        break;
-                    case 13: // Enter
-                        if ($active.length) {
-                            e.preventDefault();
-                            this.select($active.data('value'), $active.text());
-                        }
-                        break;
-                    case 27: // Escape
-                        this.$results.hide();
-                        break;
+                        return { results: [] };
+                    },
+                    cache: true
                 }
-            });
-        }
-
-        search(term) {
-            const data = {
-                action: this.options.ajax,
-                search: term,
-                _wpnonce: this.options.nonce || ''
             };
 
-            // Show loading
-            this.$results.html('<div class="wp-ajax-select-loading">Loading...</div>').show();
+            // Scope dropdown to flyout panel if inside one
+            const $flyoutBody = $select.closest('.wp-flyout-body');
+            if ($flyoutBody.length) {
+                config.dropdownParent = $flyoutBody;
+            }
 
+            $select.select2(config);
+
+            // Hydrate if there are pre-selected values without labels
+            this.hydrateIfNeeded($select, action, nonce);
+        },
+
+        /**
+         * Hydrate pre-selected options that only have IDs (no labels)
+         *
+         * If the server rendered <option value="42" selected>Loading...</option>
+         * or similar, fetch the real labels via the same endpoint.
+         *
+         * @param {jQuery} $select
+         * @param {string} action
+         * @param {string} nonce
+         */
+        hydrateIfNeeded: function ($select, action, nonce) {
+            const $options = $select.find('option[selected]');
+            if (!$options.length) {
+                return;
+            }
+
+            // Check if any selected options need hydration (have placeholder text)
+            const needsHydration = [];
+            $options.each(function () {
+                const text = $.trim($(this).text());
+                if (text === 'Loading...' || text === '' || text === $(this).val()) {
+                    needsHydration.push($(this).val());
+                }
+            });
+
+            if (!needsHydration.length) {
+                return;
+            }
+
+            // Fetch labels via the include parameter
             $.ajax({
                 url: window.ajaxurl || '/wp-admin/admin-ajax.php',
                 type: 'POST',
-                data: data,
-                success: (response) => {
-                    if (response.success && response.data) {
-                        this.showResults(response.data);
-                    } else {
-                        this.$results.html('<div class="wp-ajax-select-empty">No results found</div>');
-                    }
+                dataType: 'json',
+                data: {
+                    action: action,
+                    include: needsHydration.join(','),
+                    _wpnonce: nonce
                 },
-                error: () => {
-                    this.$results.html('<div class="wp-ajax-select-empty">Error loading results</div>');
+                success: function (response) {
+                    if (response.success && Array.isArray(response.data)) {
+                        response.data.forEach(function (item) {
+                            const $option = $select.find('option[value="' + item.id + '"]');
+                            if ($option.length) {
+                                $option.text(item.text);
+                            }
+                        });
+                        // Refresh Select2 display
+                        $select.trigger('change.select2');
+                    }
                 }
             });
-        }
+        },
 
-        showResults(results) {
-            this.$results.empty();
-
-            // Handle both array and object formats
-            if (!Array.isArray(results)) {
-                results = Object.entries(results).map(([value, text]) => ({
-                    value: String(value),
-                    text: String(text)
-                }));
-            }
-
-            if (!results.length) {
-                this.$results.html('<div class="wp-ajax-select-empty">No results found</div>');
-            } else {
-                results.forEach(item => {
-                    $('<div class="wp-ajax-select-item">')
-                        .text(item.text)
-                        .attr('data-value', item.value)
-                        .appendTo(this.$results);
-                });
-            }
-
-            this.$results.show();
-        }
-
-        select(value, text) {
-            // Trim the text
-            text = $.trim(text);
-
+        /**
+         * Programmatically set a value with label (no AJAX needed)
+         *
+         * @param {jQuery} $select
+         * @param {string|number} value
+         * @param {string} text
+         */
+        setValue: function ($select, value, text) {
             // Add option if it doesn't exist
-            if (!this.$select.find(`option[value="${value}"]`).length) {
-                this.$select.append(`<option value="${value}">${text}</option>`);
-            }
-
-            this.$select.val(value).trigger('change');
-            this.setSelected(value, text);
-            this.$results.hide();
-        }
-
-        setSelected(value, text) {
-            // Ensure text is trimmed
-            text = $.trim(text);
-            this.$input.val(text).prop('readonly', true);
-            this.$clear.show();
-            this.$container.addClass('has-value');
-        }
-
-        clear() {
-            this.$select.val('').trigger('change');
-            this.$input.val('').prop('readonly', false);
-            this.$clear.hide();
-            this.$results.hide();
-            this.$container.removeClass('has-value');
-        }
-
-        // Public method to set value programmatically
-        val(value, text) {
-            if (value === undefined) {
-                return this.$select.val();
-            }
-
-            if (text) {
-                // We have both - no need for AJAX
-                this.select(value, $.trim(text));
+            if (!$select.find('option[value="' + value + '"]').length) {
+                $select.append(new Option(text, String(value), true, true));
             } else {
-                // Only have value - check for existing option
-                const $option = this.$select.find(`option[value="${value}"]`);
-                if ($option.length) {
-                    this.select(value, $.trim($option.text()));
-                }
+                $select.val(String(value));
             }
+            $select.trigger('change');
+        },
 
-            return this;
+        /**
+         * Clear the select
+         *
+         * @param {jQuery} $select
+         */
+        clear: function ($select) {
+            $select.val(null).trigger('change');
         }
-    }
-
-    // jQuery plugin
-    $.fn.wpAjaxSelect = function (options) {
-        return this.each(function () {
-            const instance = new WPAjaxSelect(this, options);
-            $(this).data('wpAjaxSelect', instance);
-        });
     };
 
-    // Auto-initialize on ready
-    $(document).ready(function () {
-        $('[data-ajax]').wpAjaxSelect();
-    });
+    // Initialize
+    AjaxSelect.init();
 
-    // Initialize in flyouts
-    $(document).on('wpflyout:opened', function (e, data) {
-        $(data.element).find('select[data-ajax]').each(function () {
-            if (!$(this).data('wpAjaxSelectInitialized')) {
-                new WPAjaxSelect(this);
-            }
-        });
-    });
-
-    // Export
-    window.WPAjaxSelect = WPAjaxSelect;
+    // Export for external use
+    window.WPFlyoutAjaxSelect = AjaxSelect;
 
 })(jQuery);

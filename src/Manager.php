@@ -8,7 +8,7 @@
  * @package     ArrayPress\RegisterFlyouts
  * @copyright   Copyright (c) 2025, ArrayPress Limited
  * @license     GPL2+
- * @version     2.0.0
+ * @version     3.0.0
  * @author      David Sherlock
  */
 
@@ -127,7 +127,7 @@ class Manager {
 			'title'       => '',
 			'subtitle'    => '',
 			'size'        => 'medium',
-			'tabs'      => [],
+			'tabs'        => [],
 			'fields'      => [],
 			'actions'     => [],
 			'capability'  => 'manage_options',
@@ -173,54 +173,70 @@ class Manager {
 	/**
 	 * Register AJAX endpoints for components
 	 *
-	 * Standardized approach: all components use action name as nonce key
-	 * and send _wpnonce parameter.
-	 *
-	 * FIXED: Reduced memory usage by storing minimal endpoint data
+	 * Handles two patterns:
+	 * - Unified callback: 'callback' key for ajax_select (handles both search + hydration)
+	 * - Legacy callbacks: 'search_callback', 'details_callback', etc.
 	 *
 	 * @param string $flyout_id Flyout identifier
 	 * @param array  $config    Flyout configuration (passed by reference to update)
 	 *
 	 * @return void
-	 * @since 1.0.0
+	 * @since 3.0.0
 	 */
 	private function register_component_endpoints( string $flyout_id, array &$config ): void {
-		// Define callback to AJAX field mappings
-		$callback_mappings = [
-			'search_callback'  => 'ajax_search',
-			'details_callback' => 'ajax_details',
-			'add_callback'     => 'ajax_add',
-			'delete_callback'  => 'ajax_delete',
-			'options_callback' => 'ajax_options'
-		];
-
 		$capability = $config['capability'];
 
 		foreach ( $config['fields'] as $field_key => &$field ) {
 			$field_name = $field['name'] ?? $field_key;
+			$type       = $field['type'] ?? 'text';
+
+			// Handle unified callback for ajax_select
+			if ( $type === 'ajax_select' && isset( $field['callback'] ) && is_callable( $field['callback'] ) ) {
+				$action_name = $this->generate_action_name( $flyout_id, $field_name, 'ajax_search' );
+
+				// Store action name for frontend
+				$field['ajax']                  = $action_name;
+				$field['ajax_search']           = $action_name;
+				$field['ajax_search_nonce_key'] = $action_name;
+
+				// Store the unified callback
+				$this->ajax_endpoints[ $action_name ] = [
+					'callback'   => $field['callback'],
+					'capability' => $capability,
+					'type'       => 'unified_callback',
+				];
+
+				add_action( 'wp_ajax_' . $action_name, [ $this, 'handle_unified_ajax' ] );
+				continue;
+			}
+
+			// Legacy callback mappings for other components
+			$callback_mappings = [
+				'search_callback'  => 'ajax_search',
+				'details_callback' => 'ajax_details',
+				'add_callback'     => 'ajax_add',
+				'delete_callback'  => 'ajax_delete',
+				'options_callback' => 'ajax_options',
+			];
 
 			foreach ( $callback_mappings as $callback_key => $ajax_key ) {
 				if ( ! isset( $field[ $callback_key ] ) || ! is_callable( $field[ $callback_key ] ) ) {
 					continue;
 				}
 
-				// Generate unique action name
 				$action_name = $this->generate_action_name( $flyout_id, $field_name, $ajax_key );
 
 				// Store action name in field config for frontend use
-				$field[ $ajax_key ] = $action_name;
-
-				// Always use action name as nonce key
+				$field[ $ajax_key ]              = $action_name;
 				$field[ $ajax_key . '_nonce_key' ] = $action_name;
 
-				// Store minimal endpoint data (fixes memory leak)
+				// Store minimal endpoint data
 				$this->ajax_endpoints[ $action_name ] = [
 					'callback'   => $field[ $callback_key ],
 					'capability' => $capability,
-					'type'       => 'field'
+					'type'       => 'field',
 				];
 
-				// Register lightweight handler
 				add_action( 'wp_ajax_' . $action_name, [ $this, 'handle_field_ajax' ] );
 			}
 		}
@@ -248,9 +264,74 @@ class Manager {
 	}
 
 	/**
-	 * Handle field AJAX requests
+	 * Handle unified callback AJAX requests (ajax_select)
 	 *
-	 * FIXED: Added sanitization and error boundaries
+	 * Routes to the single callback with either search term or IDs for hydration.
+	 * The callback signature is: function( string $search = '', ?array $ids = null ): array
+	 *
+	 * @return void Sends JSON response and exits
+	 * @since 3.0.0
+	 */
+	public function handle_unified_ajax(): void {
+		try {
+			$action_name = $_POST['action'] ?? '';
+
+			if ( ! isset( $this->ajax_endpoints[ $action_name ] ) ) {
+				wp_send_json_error( 'Invalid endpoint', 400 );
+			}
+
+			$endpoint = $this->ajax_endpoints[ $action_name ];
+
+			// Security checks
+			if ( ! check_ajax_referer( $action_name, '_wpnonce', false ) ) {
+				wp_send_json_error( 'Security check failed', 403 );
+			}
+
+			if ( ! current_user_can( $endpoint['capability'] ) ) {
+				wp_send_json_error( 'Insufficient permissions', 403 );
+			}
+
+			// Determine if this is a search or hydration request
+			$search = sanitize_text_field( $_POST['search'] ?? '' );
+			$ids    = null;
+
+			if ( ! empty( $_POST['include'] ) ) {
+				// Hydration request — resolve IDs to labels
+				$raw_ids = $_POST['include'];
+				if ( is_string( $raw_ids ) ) {
+					$raw_ids = explode( ',', $raw_ids );
+				}
+				$ids    = array_map( 'absint', array_filter( (array) $raw_ids ) );
+				$search = '';
+			}
+
+			// Call the unified callback
+			$result = call_user_func( $endpoint['callback'], $search, $ids );
+
+			if ( is_wp_error( $result ) ) {
+				wp_send_json_error( $result->get_error_message() );
+			}
+
+			// Normalize result to [ { value: x, label: y }, ... ] for Select2
+			$formatted = [];
+			if ( is_array( $result ) ) {
+				foreach ( $result as $value => $label ) {
+					$formatted[] = [
+						'id'   => (string) $value,
+						'text' => (string) $label,
+					];
+				}
+			}
+
+			wp_send_json_success( $formatted );
+
+		} catch ( Throwable $e ) {
+			wp_send_json_error( 'Operation failed: ' . $e->getMessage(), 500 );
+		}
+	}
+
+	/**
+	 * Handle field AJAX requests (legacy callbacks)
 	 *
 	 * @return void Sends JSON response and exits
 	 * @since 2.0.0
@@ -303,7 +384,6 @@ class Manager {
 		foreach ( $config['fields'] as $field ) {
 			$type = $field['type'] ?? '';
 
-			// Get items array based on component type
 			$items = [];
 			if ( $type === 'action_buttons' ) {
 				$items = $field['buttons'] ?? [];
@@ -314,33 +394,27 @@ class Manager {
 			}
 
 			foreach ( $items as $item ) {
-				// Skip separators (action_menu only)
 				if ( isset( $item['type'] ) && $item['type'] === 'separator' ) {
 					continue;
 				}
 
-				// Check for callback instead of action string
 				if ( empty( $item['callback'] ) || ! is_callable( $item['callback'] ) ) {
 					continue;
 				}
 
-				// Generate action name if not provided
 				$action      = $item['action'] ?? uniqid( 'action_' );
 				$action_name = 'wp_flyout_action_' . $action;
 
-				// Check if already registered to avoid duplicates
 				if ( isset( $this->ajax_endpoints[ $action_name ] ) ) {
 					continue;
 				}
 
-				// Store minimal data
 				$this->ajax_endpoints[ $action_name ] = [
 					'callback'   => $item['callback'],
 					'capability' => $capability,
-					'type'       => 'action'
+					'type'       => 'action',
 				];
 
-				// Register the AJAX handler
 				add_action( 'wp_ajax_' . $action_name, [ $this, 'handle_action_ajax' ] );
 			}
 		}
@@ -362,7 +436,6 @@ class Manager {
 
 			$endpoint = $this->ajax_endpoints[ $action_name ];
 
-			// Security checks
 			if ( ! check_ajax_referer( $action_name, '_wpnonce', false ) ) {
 				wp_send_json_error( 'Security check failed', 403 );
 			}
@@ -371,19 +444,16 @@ class Manager {
 				wp_send_json_error( 'Insufficient permissions', 403 );
 			}
 
-			// Execute callback
 			$result = call_user_func( $endpoint['callback'], $_POST );
 
 			if ( is_wp_error( $result ) ) {
 				wp_send_json_error( $result->get_error_message() );
 			}
 
-			// If result is array with message, send as success
 			if ( is_array( $result ) && isset( $result['message'] ) ) {
 				wp_send_json_success( $result );
 			}
 
-			// Default success
 			wp_send_json_success( [ 'message' => 'Action completed successfully' ] );
 
 		} catch ( Throwable $e ) {
@@ -403,13 +473,9 @@ class Manager {
 	 */
 	public function handle_ajax(): void {
 		try {
-			// Extract and validate request
 			$request = $this->validate_request();
+			$config  = $this->flyouts[ $request['flyout_id'] ];
 
-			// Get flyout config
-			$config = $this->flyouts[ $request['flyout_id'] ];
-
-			// Route to appropriate handler
 			switch ( $request['action'] ) {
 				case 'load':
 					$this->handle_load( $config, $request );
@@ -469,8 +535,6 @@ class Manager {
 	/**
 	 * Handle load action
 	 *
-	 * FIXED: Added error boundaries
-	 *
 	 * @param array $config  Flyout configuration
 	 * @param array $request Validated request data
 	 *
@@ -503,8 +567,6 @@ class Manager {
 	/**
 	 * Handle save action
 	 *
-	 * FIXED: Added error boundaries
-	 *
 	 * @param array $config  Flyout configuration
 	 * @param array $request Validated request data
 	 *
@@ -521,7 +583,6 @@ class Manager {
 		$normalized_fields = $this->normalize_fields( $config['fields'] );
 		$form_data         = Sanitizer::sanitize_form_data( $raw_data, $normalized_fields );
 
-		// Apply filter after sanitization
 		$form_data = apply_filters( 'wp_flyout_before_save', $form_data, $config, $this->prefix );
 
 		if ( ! empty( $config['validate'] ) && is_callable( $config['validate'] ) ) {
@@ -529,10 +590,7 @@ class Manager {
 				$validation = call_user_func( $config['validate'], $form_data );
 
 				if ( is_wp_error( $validation ) ) {
-					wp_send_json_error(
-						$validation->get_error_message(),
-						400
-					);
+					wp_send_json_error( $validation->get_error_message(), 400 );
 				}
 
 				if ( $validation === false ) {
@@ -548,7 +606,6 @@ class Manager {
 		try {
 			$result = call_user_func( $config['save'], $id, $form_data );
 
-			// Apply filter after save
 			do_action( 'wp_flyout_after_save', $result, $id, $form_data, $config, $this->prefix );
 
 			if ( is_wp_error( $result ) ) {
@@ -570,8 +627,6 @@ class Manager {
 	/**
 	 * Handle delete action
 	 *
-	 * FIXED: Added error boundaries
-	 *
 	 * @param array $config  Flyout configuration
 	 * @param array $request Validated request data
 	 *
@@ -583,13 +638,11 @@ class Manager {
 			wp_send_json_error( __( 'Delete not configured', 'wp-flyout' ), 501 );
 		}
 
-		// Apply filter before delete
 		$id = apply_filters( 'wp_flyout_before_delete', $request['id'], $config, $this->prefix );
 
 		try {
 			$result = call_user_func( $config['delete'], $id );
 
-			// Apply action after delete
 			do_action( 'wp_flyout_after_delete', $result, $id, $config, $this->prefix );
 
 			if ( is_wp_error( $result ) ) {
@@ -626,7 +679,6 @@ class Manager {
 		$flyout_instance_id = $config['id'] ?? uniqid() . '_' . ( $id ?: 'new' );
 		$flyout             = new Flyout( $flyout_instance_id );
 
-		// Override title/subtitle if passed via button
 		$title    = sanitize_text_field( $_POST['title'] ?? '' ) ?: $config['title'];
 		$subtitle = sanitize_text_field( $_POST['subtitle'] ?? '' ) ?: $config['subtitle'];
 
@@ -634,7 +686,6 @@ class Manager {
 		$flyout->set_subtitle( $subtitle );
 		$flyout->set_size( $config['size'] );
 
-		// Apply filter to modify flyout instance
 		$flyout = apply_filters( 'wp_flyout_build_flyout', $flyout, $config, $data, $this->prefix );
 
 		if ( ! empty( $config['tabs'] ) ) {
@@ -655,7 +706,6 @@ class Manager {
 			? $config['actions']
 			: $this->get_default_actions( $config );
 
-		// Only set footer if there are actions
 		if ( ! empty( $actions ) ) {
 			$flyout->set_footer( $this->render_actions( $actions ) );
 		}
@@ -675,7 +725,6 @@ class Manager {
 	 * @since 1.0.0
 	 */
 	private function build_tab_interface( Flyout $flyout, array $tabs, array $fields, $data ): void {
-		// Group fields by tab
 		$fields_by_tab = [];
 		foreach ( $fields as $key => $field ) {
 			$tab = $field['tab'] ?? 'default';
@@ -685,7 +734,6 @@ class Manager {
 			$fields_by_tab[ $tab ][ $key ] = $field;
 		}
 
-		// Add tabs with their fields
 		foreach ( $tabs as $tab_id => $tab_config ) {
 			$label    = is_array( $tab_config ) ? $tab_config['label'] : $tab_config;
 			$is_first = array_key_first( $tabs ) === $tab_id;
@@ -727,7 +775,7 @@ class Manager {
 			$actions[] = [
 				'text'  => __( 'Save', 'wp-flyout' ),
 				'style' => 'primary',
-				'class' => 'wp-flyout-save'
+				'class' => 'wp-flyout-save',
 			];
 		}
 
@@ -735,7 +783,7 @@ class Manager {
 			$actions[] = [
 				'text'  => __( 'Delete', 'wp-flyout' ),
 				'style' => 'link-delete',
-				'class' => 'wp-flyout-delete'
+				'class' => 'wp-flyout-delete',
 			];
 		}
 
@@ -749,23 +797,15 @@ class Manager {
 	/**
 	 * Render fields from configuration
 	 *
-	 * Processes field configurations and renders them with support for:
-	 * - Conditional field dependencies
-	 * - Component resolution
-	 * - AJAX endpoint nonce generation
-	 * - Data value resolution from objects/arrays
-	 *
 	 * @param array $fields Field configurations
 	 * @param mixed $data   Data object or array for field population
 	 *
 	 * @return string Generated HTML
-	 * @since 12.1.0 Added conditional field support and simplified AJAX handling
 	 * @since 1.0.0
 	 */
 	private function render_fields( array $fields, $data ): string {
 		$output = '';
 
-		// Apply filter before rendering
 		$fields = apply_filters( 'wp_flyout_before_render_fields', $fields, $data, $this->prefix );
 
 		$normalized_fields = $this->normalize_fields( $fields );
@@ -780,18 +820,15 @@ class Manager {
 			$field = apply_filters( 'wp_flyout_render_field', $field, $field_key, $data, $this->prefix );
 			$field = apply_filters( "wp_flyout_render_field_{$field_key}", $field, $data, $this->prefix );
 
-			// Normalize AJAX fields (handles nonces, ajax_select, etc.)
+			// Normalize AJAX fields
 			$field = $this->normalize_ajax_fields( $field, $field_key, $data );
 
-			// Get field type
 			$type = $field['type'] ?? 'text';
 
 			// Render field based on type
 			if ( Components::is_component( $type ) ) {
-				// Component rendering
 				$resolved_data = Components::resolve_data( $type, $field_key, $data );
 
-				// Merge resolved data with field config (field config takes precedence)
 				foreach ( $resolved_data as $key => $value ) {
 					if ( ! isset( $field[ $key ] ) && $value !== null ) {
 						$field[ $key ] = $value;
@@ -801,7 +838,6 @@ class Manager {
 				$component    = Components::create( $type, $field );
 				$field_output = $component ? $component->render() : '';
 			} else {
-				// Standard field rendering
 				if ( ! isset( $field['value'] ) && $data ) {
 					$field['value'] = Components::resolve_value( $field_key, $data );
 				}
@@ -813,13 +849,11 @@ class Manager {
 			$output .= $field_output;
 		}
 
-		// Apply filter after rendering
 		return apply_filters( 'wp_flyout_after_render_fields', $output, $fields, $data, $this->prefix );
 	}
 
 	/**
 	 * Normalize field configurations
-	 * Ensures all fields have proper 'name' attributes
 	 *
 	 * @param array $fields Field configurations
 	 *
@@ -827,7 +861,6 @@ class Manager {
 	 * @since 1.0.0
 	 */
 	private function normalize_fields( array $fields ): array {
-		// Apply pre-normalization filter
 		$fields = apply_filters( 'wp_flyout_before_normalize_fields', $fields, $this->prefix );
 
 		$normalized = [];
@@ -844,7 +877,6 @@ class Manager {
 			$normalized[ $field_key ] = $field;
 		}
 
-		// Apply post-normalization filter
 		return apply_filters( 'wp_flyout_after_normalize_fields', $normalized, $this->prefix );
 	}
 
@@ -852,14 +884,14 @@ class Manager {
 	 * Normalize AJAX field configurations
 	 *
 	 * Centralizes AJAX-related field processing including nonce generation
-	 * and ajax_select specific handling.
+	 * and ajax_select specific handling with unified callback support.
 	 *
 	 * @param array  $field     Field configuration
 	 * @param string $field_key Field identifier
 	 * @param mixed  $data      Data source for value resolution
 	 *
 	 * @return array Normalized field configuration
-	 * @since 12.1.0
+	 * @since 3.0.0
 	 */
 	private function normalize_ajax_fields( array $field, string $field_key, $data ): array {
 		$type = $field['type'] ?? 'text';
@@ -869,7 +901,7 @@ class Manager {
 			'ajax_search'  => 'nonce',
 			'ajax_add'     => 'add_nonce',
 			'ajax_delete'  => 'delete_nonce',
-			'ajax_details' => 'details_nonce'
+			'ajax_details' => 'details_nonce',
 		];
 
 		foreach ( $ajax_actions as $action => $nonce_field ) {
@@ -891,9 +923,14 @@ class Manager {
 				$field['value'] = Components::resolve_value( $field_key, $data );
 			}
 
-			// Load options if we have a value but no options
+			// Hydrate options using unified callback if we have a value but no options
 			if ( ! empty( $field['value'] ) && empty( $field['options'] ) ) {
-				if ( ! empty( $field['options_callback'] ) && is_callable( $field['options_callback'] ) ) {
+				if ( ! empty( $field['callback'] ) && is_callable( $field['callback'] ) ) {
+					// Unified callback: pass IDs for hydration
+					$ids             = is_array( $field['value'] ) ? $field['value'] : [ $field['value'] ];
+					$field['options'] = call_user_func( $field['callback'], '', $ids );
+				} elseif ( ! empty( $field['options_callback'] ) && is_callable( $field['options_callback'] ) ) {
+					// Legacy options_callback
 					$field['options'] = call_user_func( $field['options_callback'], $field['value'], $data );
 				}
 			}
@@ -905,18 +942,11 @@ class Manager {
 	/**
 	 * Process field dependencies for conditional display
 	 *
-	 * Adds data attributes to fields that have dependencies configured.
-	 * Supports three dependency patterns:
-	 * - Simple truthy check: 'depends' => 'field_name'
-	 * - Value match: 'depends' => ['field' => 'name', 'value' => 'x']
-	 * - Contains check: 'depends' => ['field' => 'name', 'contains' => 'x']
-	 *
 	 * @param array  $field     Field configuration
 	 * @param string $field_key Field identifier
 	 *
 	 * @return array Modified field configuration with dependency data
-	 * @since  12.1.0
-	 * @access private
+	 * @since 12.1.0
 	 */
 	private function process_field_dependencies( array $field, string $field_key ): array {
 		if ( ! isset( $field['depends'] ) ) {
@@ -925,17 +955,14 @@ class Manager {
 
 		$depends = $field['depends'];
 
-		// Build dependency data attribute
 		$dependency_data = null;
 
 		if ( is_string( $depends ) ) {
-			// Simple truthy check
 			$dependency_data = $depends;
 		} elseif ( is_array( $depends ) ) {
-			// Complex dependency
 			if ( isset( $depends['field'] ) ) {
 				$dependency_data = [
-					'field' => $depends['field']
+					'field' => $depends['field'],
 				];
 
 				if ( isset( $depends['value'] ) ) {
@@ -946,28 +973,23 @@ class Manager {
 			}
 		}
 
-		// Add wrapper attributes for the field
 		if ( $dependency_data ) {
 			if ( ! isset( $field['wrapper_attrs'] ) ) {
 				$field['wrapper_attrs'] = [];
 			}
 
-			// Add data-depends attribute - properly encode if array
 			if ( is_array( $dependency_data ) ) {
 				$field['wrapper_attrs']['data-depends'] = htmlspecialchars( wp_json_encode( $dependency_data ), ENT_QUOTES, 'UTF-8' );
 			} else {
 				$field['wrapper_attrs']['data-depends'] = $dependency_data;
 			}
 
-			// Add unique ID if not present
 			if ( empty( $field['wrapper_attrs']['id'] ) ) {
 				$field['wrapper_attrs']['id'] = 'field-' . sanitize_key( $field_key );
 			}
 
-			// Start hidden if dependency exists (JS will show if condition met)
 			$field['wrapper_attrs']['style'] = 'display: none;';
 
-			// Add class for styling
 			if ( ! empty( $field['wrapper_attrs']['class'] ) ) {
 				$field['wrapper_attrs']['class'] .= ' has-dependency';
 			} else {
@@ -994,7 +1016,6 @@ class Manager {
 		foreach ( $config['fields'] as $field ) {
 			$type = $field['type'] ?? 'text';
 
-			// Get asset from Components registry
 			if ( $asset = Components::get_asset( $type ) ) {
 				$this->components[] = $asset;
 			}

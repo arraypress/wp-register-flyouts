@@ -1,6 +1,9 @@
 /**
- * Line Items Component JavaScript - Simplified
- * @version 3.1.0
+ * Line Items Component JavaScript
+ *
+ * Uses Select2 (via WPFlyoutAjaxSelect) for product search.
+ *
+ * @version 4.0.0
  */
 (function ($) {
     'use strict';
@@ -43,10 +46,11 @@
 
                 $component.data('lineItemsInitialized', true);
 
+                // Initialize Select2 on the product search select
                 const $select = $component.find('.product-ajax-select');
-                if ($select.length && !$select.data('wpAjaxSelectInitialized')) {
-                    if (typeof WPAjaxSelect !== 'undefined') {
-                        new WPAjaxSelect($select[0]);
+                if ($select.length && !$select.data('select2')) {
+                    if (typeof WPFlyoutAjaxSelect !== 'undefined') {
+                        WPFlyoutAjaxSelect.initOne($select);
                     }
                 }
 
@@ -60,6 +64,8 @@
             const $button = $(e.currentTarget);
             const $component = $button.closest('.wp-flyout-line-items');
             const $select = $component.find('.product-ajax-select');
+
+            // Get selected value from Select2
             const itemId = $select.val();
 
             if (!itemId) {
@@ -72,7 +78,7 @@
                 const $qtyInput = existingItem.find('.quantity-input');
                 const currentQty = parseInt($qtyInput.val()) || 1;
                 $qtyInput.val(currentQty + 1).trigger('change');
-                this.clearAjaxSelect($select);
+                this.clearSelect($select);
                 return;
             }
 
@@ -87,8 +93,7 @@
             $button.prop('disabled', true).html('<span class="dashicons dashicons-update spin"></span> Loading...');
 
             const detailsAction = $component.data('details-action');
-            const $select = $component.find('.product-ajax-select');
-            const nonce = $select.data('details-nonce') || '';
+            const detailsNonce = $component.data('details-nonce') || '';
 
             $.ajax({
                 url: window.ajaxurl || '/wp-admin/admin-ajax.php',
@@ -97,12 +102,12 @@
                 data: {
                     action: detailsAction,
                     id: String(itemId),
-                    _wpnonce: nonce
+                    _wpnonce: detailsNonce
                 },
                 success: function (response) {
                     if (response.success && response.data) {
                         self.addItemToTable($component, response.data);
-                        self.clearAjaxSelect($select);
+                        self.clearSelect($component.find('.product-ajax-select'));
                     } else {
                         alert('Error: ' + (response.data || 'Product details not found'));
                     }
@@ -121,7 +126,6 @@
 
             // Create table if it doesn't exist yet
             if (!$tbody.length) {
-                // Check as boolean (handles '1', 1, true, 'true')
                 const showQty = $component.data('show-quantity') !== '0' && $component.data('show-quantity') !== false;
                 const tableHtml = `
                     <table>
@@ -264,10 +268,12 @@
             return $found ? $($found) : $();
         },
 
-        clearAjaxSelect: function ($select) {
-            const instance = $select.data('wpAjaxSelect');
-            if (instance && instance.clear) {
-                instance.clear();
+        /**
+         * Clear the Select2 product search
+         */
+        clearSelect: function ($select) {
+            if ($select.data('select2')) {
+                $select.val(null).trigger('change');
             }
         },
 

@@ -8,7 +8,7 @@
  * @package     ArrayPress\RegisterFlyouts\Components
  * @copyright   Copyright (c) 2025, ArrayPress Limited
  * @license     GPL2+
- * @version     5.0.0
+ * @version     6.0.0
  * @author      David Sherlock
  */
 
@@ -146,8 +146,11 @@ class FormField implements Renderable {
                         'multiple' => false,
                 ],
                 'ajax_select' => [
-                        'ajax'        => '',  // The AJAX action to call
-                        'options'     => [],  // Pre-loaded options if available
+                        'ajax'        => '',
+                        'nonce'       => '',
+                        'options'     => [],
+                        'multiple'    => false,
+                        'tags'        => false,
                         'placeholder' => __( 'Type to search...', 'wp-flyout' ),
                 ],
                 'number'      => [
@@ -215,8 +218,6 @@ class FormField implements Renderable {
             return true;
         }
 
-        // TODO: Implement condition checking
-        // This would check against other field values in the form
         return true;
     }
 
@@ -263,7 +264,6 @@ class FormField implements Renderable {
 
         // Add remaining attributes
         foreach ( $wrapper_attrs as $attr => $value ) {
-            // Special handling for data-depends - it's already JSON encoded
             if ( $attr === 'data-depends' ) {
                 $attrs_html .= sprintf( ' %s=\'%s\'', $attr, $value );
             } else {
@@ -303,7 +303,6 @@ class FormField implements Renderable {
     private function render_field(): string {
         $type = $this->config['type'];
 
-        // Get renderer method
         $renderer = self::$type_renderers[ $type ] ?? 'render_input';
 
         if ( ! method_exists( $this, $renderer ) ) {
@@ -333,7 +332,6 @@ class FormField implements Renderable {
                 'placeholder' => $this->config['placeholder'],
         ];
 
-        // Add type-specific attributes
         if ( $type === 'number' ) {
             if ( $this->config['min'] !== null ) {
                 $attrs['min'] = $this->config['min'];
@@ -346,7 +344,6 @@ class FormField implements Renderable {
             }
         }
 
-        // Build HTML
         $html = '<input';
         foreach ( $attrs as $key => $value ) {
             if ( $value !== '' && $value !== null ) {
@@ -354,7 +351,6 @@ class FormField implements Renderable {
             }
         }
 
-        // Add boolean attributes
         if ( $this->config['required'] ) {
             $html .= ' required';
         }
@@ -471,52 +467,60 @@ class FormField implements Renderable {
     }
 
     /**
-     * Render AJAX select field
+     * Render AJAX select field using Select2
+     *
+     * Outputs a <select> element with data attributes that the JS layer
+     * uses to initialize Select2 with AJAX search and hydration support.
      *
      * @return string Generated HTML
-     * @since 5.0.0
+     * @since 6.0.0
      */
     private function render_ajax_select(): string {
-        // Remove nonce generation - Manager provides it
         $ajax_action = $this->config['ajax'] ?? '';
-        $nonce       = $this->config['nonce'] ?? '';  // Use provided nonce
+        $nonce       = $this->config['nonce'] ?? '';
+        $multiple    = ! empty( $this->config['multiple'] );
+        $tags        = ! empty( $this->config['tags'] );
 
         ob_start();
         ?>
         <select id="<?php echo esc_attr( $this->config['id'] ); ?>"
-                name="<?php echo esc_attr( $this->config['name'] ); ?>"
-                class="<?php echo esc_attr( $this->config['class'] ); ?>"
-                data-ajax="<?php echo esc_attr( $ajax_action ); ?>"
+                name="<?php echo esc_attr( $this->config['name'] ); ?><?php echo $multiple ? '[]' : ''; ?>"
+                class="wp-flyout-ajax-select <?php echo esc_attr( $this->config['class'] ); ?>"
+                data-ajax-action="<?php echo esc_attr( $ajax_action ); ?>"
                 data-nonce="<?php echo esc_attr( $nonce ); ?>"
                 data-placeholder="<?php echo esc_attr( $this->config['placeholder'] ); ?>"
+                <?php if ( $multiple ) : ?>
+                    multiple="multiple"
+                <?php endif; ?>
+                <?php if ( $tags ) : ?>
+                    data-tags="true"
+                <?php endif; ?>
                 <?php echo $this->config['required'] ? 'required' : ''; ?>
                 <?php echo $this->config['disabled'] ? 'disabled' : ''; ?>>
 
             <?php
-            // If we have options provided (value => label pairs), add them
+            // Render pre-loaded options (from hydration callback or server-side resolution)
             if ( ! empty( $this->config['options'] ) && is_array( $this->config['options'] ) ) :
+                $current_value = $this->config['value'];
+                $current_values = is_array( $current_value ) ? $current_value : [ $current_value ];
+
                 foreach ( $this->config['options'] as $value => $label ) :
-                    $selected = ( $value == $this->config['value'] ) ? 'selected' : '';
+                    $is_selected = in_array( (string) $value, array_map( 'strval', $current_values ), true );
                     ?>
-                    <option value="<?php echo esc_attr( $value ); ?>" <?php echo $selected; ?>>
+                    <option value="<?php echo esc_attr( $value ); ?>"<?php echo $is_selected ? ' selected' : ''; ?>>
                         <?php echo esc_html( $label ); ?>
                     </option>
                 <?php
                 endforeach;
-            // Otherwise, if we just have a value, create empty option
-            elseif ( ! empty( $this->config['value'] ) ) :
-                ?>
-                <option value="<?php echo esc_attr( $this->config['value'] ); ?>" selected>
-                    Loading...
-                </option>
-            <?php endif; ?>
+            endif;
+            ?>
         </select>
         <?php
         return ob_get_clean();
     }
 
     /**
-     * Render tags input field - Simplified
+     * Render tags input field
      *
      * @return string Generated HTML.
      * @since 5.0.0
@@ -531,10 +535,10 @@ class FormField implements Renderable {
                 <?php foreach ( $value as $tag ) : ?>
                     <span class="tag-item" data-tag="<?php echo esc_attr( $tag ); ?>">
                     <span class="tag-text"><?php echo esc_html( $tag ); ?></span>
-                    <?php if ( ! $this->config['readonly'] ) : ?>
+					<?php if ( ! $this->config['readonly'] ) : ?>
                         <button type="button" class="tag-remove" aria-label="Remove">
-                            <span class="dashicons dashicons-no-alt"></span>
-                        </button>
+							<span class="dashicons dashicons-no-alt"></span>
+						</button>
                     <?php endif; ?>
                 </span>
                 <?php endforeach; ?>

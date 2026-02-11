@@ -1,6 +1,8 @@
 /**
  * WP Flyout - Line Items Component
  * Modern product selection and line item management
+ *
+ * @version 4.0.0
  */
 
 .wp-flyout-line-items {
@@ -11,6 +13,7 @@
 .line-items-selector {
     display: flex;
     gap: 12px;
+    align-items: flex-start;
     margin-bottom: 20px;
     padding: 20px;
     background: linear-gradient(135deg, #f6f7f7 0%, #fff 100%);
@@ -19,14 +22,43 @@
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
 }
 
-/* AJAX select wrapper - must match ajax-select.css expectations */
-.line-items-selector .wp-ajax-select {
+/* Select2 container inside line items selector */
+.line-items-selector .select2-container {
     flex: 1;
     min-width: 250px;
 }
 
-.line-items-selector .product-ajax-select {
-    display: none; /* Hidden, replaced by AJAX select component */
+/* Match single select height to the add button */
+.line-items-selector .select2-container--default .select2-selection--single {
+    height: 36px;
+    border: 1px solid #8c8f94;
+    border-radius: 4px;
+    background: #fff;
+    padding: 0 8px;
+    transition: border-color 0.15s;
+}
+
+.line-items-selector .select2-container--default .select2-selection--single .select2-selection__rendered {
+    line-height: 34px;
+    padding-left: 0;
+    color: #2c3338;
+    font-size: 14px;
+}
+
+.line-items-selector .select2-container--default .select2-selection--single .select2-selection__arrow {
+    height: 34px;
+}
+
+.line-items-selector .select2-container--default .select2-selection--single .select2-selection__placeholder {
+    color: #a7aaad;
+}
+
+/* Focus state inside selector */
+.line-items-selector .select2-container--default.select2-container--focus .select2-selection--single,
+.line-items-selector .select2-container--default.select2-container--open .select2-selection--single {
+    border-color: var(--wp-flyout-primary, #2271b1);
+    box-shadow: 0 0 0 1px var(--wp-flyout-primary, #2271b1);
+    outline: 2px solid transparent;
 }
 
 /* Add item button */
@@ -37,6 +69,8 @@
     display: inline-flex;
     align-items: center;
     gap: 6px;
+    height: 36px;
+    line-height: 34px;
 }
 
 .line-items-selector button[data-action="add-item"]:active {
@@ -333,10 +367,6 @@
     animation: spinner 0.6s linear infinite;
 }
 
-.line-items-selector .regular-text {
-    width: 100%;
-}
-
 @keyframes spinner {
     to {
         transform: rotate(360deg);
@@ -350,8 +380,8 @@
         padding: 15px;
     }
 
-    .line-items-selector .wp-ajax-select {
-        width: 100%;
+    .line-items-selector .select2-container {
+        width: 100% !important;
     }
 
     .line-items-selector button {

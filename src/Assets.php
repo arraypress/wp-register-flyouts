@@ -8,7 +8,7 @@
  * @package     ArrayPress\RegisterFlyouts
  * @copyright   Copyright (c) 2025, ArrayPress Limited
  * @license     GPL2+
- * @version     1.0.0
+ * @version     2.0.0
  * @since       1.0.0
  */
 
@@ -93,7 +93,7 @@ class Assets {
 		'ajax-select'    => [
 			'script' => 'js/components/ajax-select.js',
 			'style'  => 'css/components/ajax-select.css',
-			'deps'   => []
+			'deps'   => [ 'select2' ]
 		],
 		'tags'           => [
 			'script' => 'js/components/tags.js',
@@ -187,6 +187,9 @@ class Assets {
 		$base_file = __FILE__;
 		$version   = defined( 'WP_DEBUG' ) && WP_DEBUG ? time() : '1.0.0';
 
+		// Register Select2 if not already registered
+		self::register_select2( $version );
+
 		// Register core CSS files
 		$css_deps = [ 'dashicons' ];
 		foreach ( self::$core_styles as $css_file ) {
@@ -233,6 +236,38 @@ class Assets {
 	}
 
 	/**
+	 * Register Select2 assets if not already available
+	 *
+	 * Select2 may already be registered by WooCommerce or other plugins.
+	 * We only register it if it's not already available.
+	 *
+	 * @param string $version Version string for cache busting
+	 *
+	 * @return void
+	 * @since 2.0.0
+	 */
+	private static function register_select2( string $version ): void {
+		if ( ! wp_script_is( 'select2', 'registered' ) ) {
+			wp_register_script(
+				'select2',
+				'https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js',
+				[ 'jquery' ],
+				'4.1.0-rc.0',
+				true
+			);
+		}
+
+		if ( ! wp_style_is( 'select2', 'registered' ) ) {
+			wp_register_style(
+				'select2',
+				'https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css',
+				[],
+				'4.1.0-rc.0'
+			);
+		}
+	}
+
+	/**
 	 * Register component assets
 	 *
 	 * Registers individual component CSS and JavaScript files.
@@ -264,11 +299,18 @@ class Assets {
 
 			// Register component style if exists
 			if ( ! empty( $config['style'] ) ) {
+				$style_deps = [ self::$last_handles['style'] ];
+
+				// Add select2 CSS as dependency for ajax-select
+				if ( $name === 'ajax-select' ) {
+					$style_deps[] = 'select2';
+				}
+
 				wp_register_composer_style(
 					$handle,
 					$base_file,
 					$config['style'],
-					[ self::$last_handles['style'] ],
+					$style_deps,
 					$version
 				);
 			}
@@ -328,8 +370,12 @@ class Assets {
 						self::enqueue_component( $dep_component );
 					}
 				} else {
-					// Enqueue WordPress dependencies
+					// Enqueue WordPress/external dependencies (includes select2)
 					wp_enqueue_script( $dep );
+					// Also enqueue matching style if registered (e.g. select2 CSS)
+					if ( wp_style_is( $dep, 'registered' ) ) {
+						wp_enqueue_style( $dep );
+					}
 				}
 			}
 		}

@@ -227,7 +227,7 @@ class Manager {
 				$action_name = $this->generate_action_name( $flyout_id, $field_name, $ajax_key );
 
 				// Store action name in field config for frontend use
-				$field[ $ajax_key ]              = $action_name;
+				$field[ $ajax_key ]                = $action_name;
 				$field[ $ajax_key . '_nonce_key' ] = $action_name;
 
 				// Store minimal endpoint data
@@ -825,9 +825,12 @@ class Manager {
 
 			$type = $field['type'] ?? 'text';
 
+			// Use field name for data lookup (field name may differ from field key)
+			$data_key = $field['name'] ?? $field_key;
+
 			// Render field based on type
 			if ( Components::is_component( $type ) ) {
-				$resolved_data = Components::resolve_data( $type, $field_key, $data );
+				$resolved_data = Components::resolve_data( $type, $data_key, $data );
 
 				foreach ( $resolved_data as $key => $value ) {
 					if ( ! isset( $field[ $key ] ) && $value !== null ) {
@@ -839,7 +842,7 @@ class Manager {
 				$field_output = $component ? $component->render() : '';
 			} else {
 				if ( ! isset( $field['value'] ) && $data ) {
-					$field['value'] = Components::resolve_value( $field_key, $data );
+					$field['value'] = Components::resolve_value( $data_key, $data );
 				}
 
 				$form_field   = new FormField( $field );
@@ -918,16 +921,19 @@ class Manager {
 				$field['ajax'] = $field['ajax_search'];
 			}
 
+			// Use field name for data lookup
+			$data_key = $field['name'] ?? $field_key;
+
 			// Resolve value if not already set
 			if ( ! isset( $field['value'] ) && $data ) {
-				$field['value'] = Components::resolve_value( $field_key, $data );
+				$field['value'] = Components::resolve_value( $data_key, $data );
 			}
 
 			// Hydrate options using unified callback if we have a value but no options
 			if ( ! empty( $field['value'] ) && empty( $field['options'] ) ) {
 				if ( ! empty( $field['callback'] ) && is_callable( $field['callback'] ) ) {
 					// Unified callback: pass IDs for hydration
-					$ids             = is_array( $field['value'] ) ? $field['value'] : [ $field['value'] ];
+					$ids              = is_array( $field['value'] ) ? $field['value'] : [ $field['value'] ];
 					$field['options'] = call_user_func( $field['callback'], '', $ids );
 				} elseif ( ! empty( $field['options_callback'] ) && is_callable( $field['options_callback'] ) ) {
 					// Legacy options_callback

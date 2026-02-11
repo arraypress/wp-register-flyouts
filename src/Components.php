@@ -39,6 +39,7 @@ use ArrayPress\RegisterFlyouts\Components\EmptyState;
 use ArrayPress\RegisterFlyouts\Components\DataTable;
 use ArrayPress\RegisterFlyouts\Components\InfoGrid;
 use ArrayPress\RegisterFlyouts\Components\Alert;
+use ArrayPress\RegisterFlyouts\Components\PriceConfig;
 use InvalidArgumentException;
 
 /**
@@ -241,6 +242,14 @@ class Components {
 			'asset'       => 'image-gallery',
 			'category'    => 'interactive',
 			'description' => 'Image upload with gallery preview and reordering'
+		] );
+
+		self::register( 'price_config', [
+			'class'       => PriceConfig::class,
+			'data_fields' => [ 'amount', 'currency', 'recurring_interval', 'recurring_interval_count' ],
+			'asset'       => 'price-config',
+			'category'    => 'form',
+			'description' => 'Stripe-compatible pricing configuration'
 		] );
 	}
 

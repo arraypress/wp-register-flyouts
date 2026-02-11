@@ -86,6 +86,8 @@ class Sanitizer {
 			// Special inputs
 			'color'       => 'sanitize_hex_color',
 			'hidden'      => 'sanitize_text_field',
+
+			'price_config' => [ self::class, 'sanitize_price_config' ],
 		];
 
 		// Allow early filtering before assignment
@@ -473,6 +475,51 @@ class Sanitizer {
 		}
 
 		return sanitize_text_field( (string) $value );
+	}
+
+	/**
+	 * Sanitize price config data
+	 *
+	 * Converts decimal amount to cents and validates interval.
+	 */
+	public static function sanitize_price_config( $value ): array {
+		if ( ! is_array( $value ) ) {
+			return [
+				'amount'                   => 0,
+				'currency'                 => 'USD',
+				'recurring_interval'       => null,
+				'recurring_interval_count' => null,
+			];
+		}
+
+		$currency = strtoupper( sanitize_text_field( $value['currency'] ?? 'USD' ) );
+
+		// Convert decimal to cents using currency library if available
+		$raw_amount = $value['amount'] ?? 0;
+		if ( function_exists( 'to_currency_cents' ) ) {
+			$amount = to_currency_cents( (float) $raw_amount, $currency );
+		} else {
+			$amount = (int) round( (float) $raw_amount * 100 );
+		}
+
+		$valid_intervals = [ 'day', 'week', 'month', 'year' ];
+		$interval        = sanitize_text_field( $value['recurring_interval'] ?? '' );
+		$interval_count  = absint( $value['recurring_interval_count'] ?? 1 );
+
+		// Only keep interval data if valid
+		if ( ! in_array( $interval, $valid_intervals, true ) ) {
+			$interval       = null;
+			$interval_count = null;
+		} else {
+			$interval_count = max( 1, $interval_count );
+		}
+
+		return [
+			'amount'                   => $amount,
+			'currency'                 => $currency,
+			'recurring_interval'       => $interval,
+			'recurring_interval_count' => $interval_count,
+		];
 	}
 
 	// ========================================

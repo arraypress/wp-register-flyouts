@@ -96,7 +96,8 @@ class LineItems implements Renderable {
                 'name'           => $this->config['name'],
                 'currency'       => $this->config['currency'],
                 'show-quantity'  => $this->config['show_quantity'] ? '1' : '0',
-                'details-action' => $this->config['ajax_details']
+                'details-action' => $this->config['ajax_details'],
+                'details-nonce'  => $this->config['details_nonce']
         ];
 
         ob_start();

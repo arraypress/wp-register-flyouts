@@ -78,6 +78,10 @@ When populating fields from the object returned by `load`, values are resolved i
 5. **`{field}()` method** — `$data->field()`
 6. **CamelCase method** — For underscore names: `user_name` → `$data->userName()`
 
+**Important:** When a field has a `name` attribute that differs from its array key, the `name` is used for data
+resolution. For example, a field registered as `order_items` with `'name' => 'items'` will look up `$data['items']`,
+not `$data['order_items']`.
+
 Example:
 
 ```php
@@ -515,39 +519,103 @@ The toggle renders as a styled switch. The value is `'1'` when checked, `'0'` wh
 ],
 ```
 
-### AJAX Select (Dynamic Search)
+### AJAX Select (Select2-Powered Dynamic Search)
 
-For searchable dropdowns powered by server-side callbacks:
+Searchable dropdowns powered by Select2 and a unified server-side callback. Supports single select, multi-select, and
+free-text tags mode.
+
+The **unified callback** pattern uses a single `callback` function that handles both searching (user types) and
+hydration (reloading saved values). The callback signature is:
 
 ```php
-'customer' => [
+function ( string $search = '', ?array $ids = null ): array
+```
+
+- When `$search` is provided (user typing): return matching results
+- When `$ids` is provided (hydration on load): return labels for those IDs
+- Return format: `[ id => label, ... ]` — automatically converted to Select2 format
+
+#### Single Select
+
+```php
+'customer_id' => [
     'type'        => 'ajax_select',
     'label'       => 'Customer',
     'placeholder' => 'Search customers...',
-
-    // Called when user types to search — receives $_POST array
-    'search_callback' => function ( $post_data ) {
-        $term = sanitize_text_field( $post_data['term'] ?? '' );
-        $customers = search_customers( $term );
-        return array_map( fn( $c ) => [
-            'value' => $c->id,
-            'text'  => $c->name,
-        ], $customers );
-    },
-
-    // Called to load initial option(s) when editing existing record
-    // Receives the current field value and the full data object
-    'options_callback' => function ( $value, $data ) {
-        $customer = get_customer( $value );
-        return [
-            $value => $customer->name,
-        ];
+    'callback'    => function ( string $search = '', ?array $ids = null ): array {
+        $args = [ 'number' => 20 ];
+        if ( $ids ) {
+            $args['include'] = $ids;
+        } else {
+            $args['search'] = '*' . $search . '*';
+        }
+        $result = [];
+        foreach ( get_users( $args ) as $user ) {
+            $result[ $user->ID ] = $user->display_name;
+        }
+        return $result;
     },
 ],
 ```
 
-The library automatically registers AJAX endpoints, generates nonces, and wires up the frontend. You only provide the
-callbacks.
+#### Multi-Select
+
+```php
+'post_ids' => [
+    'type'        => 'ajax_select',
+    'label'       => 'Select Posts',
+    'placeholder' => 'Search posts...',
+    'multiple'    => true,
+    'callback'    => function ( string $search = '', ?array $ids = null ): array {
+        $args = [
+            'post_type'      => 'post',
+            'post_status'    => 'publish',
+            'posts_per_page' => 20,
+            'fields'         => 'ids',
+        ];
+        if ( $ids ) {
+            $args['post__in'] = $ids;
+        } else {
+            $args['s'] = $search;
+        }
+        $result = [];
+        foreach ( get_posts( $args ) as $id ) {
+            $result[ $id ] = get_the_title( $id );
+        }
+        return $result;
+    },
+],
+```
+
+#### Tags Mode (Free-Text)
+
+Allows users to type and create new tags that don't exist in the search results:
+
+```php
+'custom_tags' => [
+    'type'        => 'ajax_select',
+    'label'       => 'Tags',
+    'placeholder' => 'Type and press enter...',
+    'multiple'    => true,
+    'tags'        => true,
+    'callback'    => function ( string $search = '', ?array $ids = null ): array {
+        if ( $ids ) {
+            // For free-text tags, the ID is the tag itself
+            return array_combine( $ids, $ids );
+        }
+        $result = [];
+        foreach ( get_tags( [ 'search' => $search, 'number' => 20, 'hide_empty' => false ] ) as $tag ) {
+            $result[ $tag->slug ] = $tag->name;
+        }
+        return $result;
+    },
+],
+```
+
+The library automatically registers AJAX endpoints, generates nonces, initializes Select2, and handles hydration
+on reload. You only provide the callback.
+
+**Saved data:** Single select saves a string value. Multi-select and tags save arrays of values.
 
 ### Hidden Fields
 
@@ -985,7 +1053,8 @@ The `items` array (populated from load data) should be an array of file objects:
 
 ### Line Items
 
-Add/remove line items with AJAX product search:
+Add/remove line items with AJAX product search. Uses Select2 for the search dropdown with two separate callbacks:
+one for searching products and one for fetching full product details when selected.
 
 ```php
 'order_items' => [
@@ -997,9 +1066,10 @@ Add/remove line items with AJAX product search:
     'empty_text'      => 'No items added',
     'add_text'        => 'Add Item',
 
-    // Called when user searches for products to add
+    // Called when user searches for products — receives $_POST array
+    // Must return [ { value, text }, ... ] format for the dropdown
     'search_callback' => function ( $post_data ) {
-        $term = sanitize_text_field( $post_data['term'] ?? '' );
+        $term = sanitize_text_field( $post_data['search'] ?? '' );
         $products = search_products( $term );
         return array_map( fn( $p ) => [
             'value' => $p->id,
@@ -1007,9 +1077,13 @@ Add/remove line items with AJAX product search:
         ], $products );
     },
 
-    // Called when a product is selected, to get full details
+    // Called when a product is selected, to get full details for display
+    // Must return { id, name, price, thumbnail } — price in cents
     'details_callback' => function ( $post_data ) {
         $product = get_product( absint( $post_data['id'] ?? 0 ) );
+        if ( ! $product ) {
+            return new WP_Error( 'not_found', 'Product not found' );
+        }
         return [
             'id'        => $product->id,
             'name'      => $product->name,
@@ -1033,6 +1107,9 @@ The `items` array (populated from load data) should contain:
     ],
 ]
 ```
+
+**Note:** The `name` attribute (`'items'` in this example) is used as the data key for both saving and loading. The
+field's array key (`order_items`) can be different — data resolution uses `name` for lookup.
 
 ### Notes
 
@@ -1161,6 +1238,53 @@ Visual card selection (radio or checkbox):
 ```
 
 For checkbox mode, `value` should be an array.
+
+### Price Config
+
+Stripe-compatible pricing configuration with one-time or recurring billing. Displays a type toggle, amount input,
+currency selector, and conditional recurring interval fields.
+
+```php
+'pricing' => [
+    'type'        => 'price_config',
+    'name'        => 'pricing',
+    'label'       => 'Price',
+    'description' => 'Set the price and billing period.',
+
+    // Values (populated from load data or set directly)
+    'amount'                    => 1999,     // In cents — displayed as 19.99
+    'currency'                  => 'USD',
+    'recurring_interval'        => 'month',  // null for one-time
+    'recurring_interval_count'  => 1,        // null for one-time
+],
+```
+
+**Type toggle:** Switches between "One-time" and "Recurring". When "One-time" is selected, the interval fields are
+hidden and saved as `null`.
+
+**Amount:** Entered as a decimal (19.99) and automatically converted to cents (1999) during sanitization using the
+`to_currency_cents()` helper if available.
+
+**Currency:** Populated from the `arraypress/currencies` library if installed (`get_currency_options()`), otherwise
+falls back to common currencies (USD, EUR, GBP, CAD, AUD, JPY).
+
+**Recurring intervals:** Stripe-supported values: `day`, `week`, `month`, `year`. The interval count allows expressions
+like "every 3 months" or "every 2 weeks".
+
+**Saved data shape:**
+
+```php
+[
+    'pricing' => [
+        'amount'                   => 1999,    // In cents
+        'currency'                 => 'USD',
+        'recurring_interval'       => 'month', // null if one-time
+        'recurring_interval_count' => 1,       // null if one-time
+    ],
+]
+```
+
+Maps directly to Stripe Price fields: `unit_amount`, `currency`, `recurring.interval`, `recurring.interval_count`.
 
 ### Accordion
 
@@ -1303,30 +1427,32 @@ Sanitizer::register_component_sanitizer( 'my_component', function ( $value ) {
 
 Field type sanitizers:
 
-| Type                             | Sanitizer                                  |
-|----------------------------------|--------------------------------------------|
-| `text`, `tel`, `hidden`          | `sanitize_text_field`                      |
-| `textarea`                       | `sanitize_textarea_field`                  |
-| `email`                          | `sanitize_email`                           |
-| `url`                            | `esc_url_raw`                              |
-| `password`                       | `trim()`                                   |
-| `number`                         | `intval()` or `floatval()` (auto-detected) |
-| `date`                           | Validates `Y-m-d` format                   |
-| `select`, `ajax_select`, `radio` | `sanitize_text_field`                      |
-| `toggle`                         | Returns `'1'` or `'0'`                     |
-| `color`                          | `sanitize_hex_color`                       |
+| Type                    | Sanitizer                                                        |
+|-------------------------|------------------------------------------------------------------|
+| `text`, `tel`, `hidden` | `sanitize_text_field`                                            |
+| `textarea`              | `sanitize_textarea_field`                                        |
+| `email`                 | `sanitize_email`                                                 |
+| `url`                   | `esc_url_raw`                                                    |
+| `password`              | `trim()`                                                         |
+| `number`                | `intval()` or `floatval()` (auto-detected)                       |
+| `date`                  | Validates `Y-m-d` format                                         |
+| `select`, `radio`       | `sanitize_text_field`                                            |
+| `ajax_select`           | `sanitize_text_field` or array of sanitized strings (multi/tags) |
+| `toggle`                | Returns `'1'` or `'0'`                                           |
+| `color`                 | `sanitize_hex_color`                                             |
 
 Component sanitizers:
 
-| Type             | Behavior                                                   |
-|------------------|------------------------------------------------------------|
-| `tags`           | Array of `sanitize_text_field` values                      |
-| `card_choice`    | `sanitize_text_field` (or array for checkbox mode)         |
-| `feature_list`   | Removes empty items, sanitizes text                        |
-| `key_value_list` | Removes rows with empty keys, `sanitize_key` on keys       |
-| `line_items`     | Validates IDs, sanitizes names, enforces min quantity of 1 |
-| `files`          | Validates URLs and attachment IDs, removes invalid entries |
-| `image_gallery`  | Validates attachment IDs, verifies they are images         |
+| Type             | Behavior                                                           |
+|------------------|--------------------------------------------------------------------|
+| `tags`           | Array of `sanitize_text_field` values                              |
+| `card_choice`    | `sanitize_text_field` (or array for checkbox mode)                 |
+| `feature_list`   | Removes empty items, sanitizes text                                |
+| `key_value_list` | Removes rows with empty keys, `sanitize_key` on keys               |
+| `line_items`     | Validates IDs, sanitizes names, enforces min quantity of 1         |
+| `files`          | Validates URLs and attachment IDs, removes invalid entries         |
+| `image_gallery`  | Validates attachment IDs, verifies they are images                 |
+| `price_config`   | Converts decimal to cents, validates interval, uppercases currency |
 
 ---
 
@@ -1529,11 +1655,12 @@ Assets::enqueue();
 Assets::enqueue_component( 'line-items' );
 Assets::enqueue_component( 'image-gallery' );
 Assets::enqueue_component( 'ajax-select' );
+Assets::enqueue_component( 'price-config' );
 ```
 
 Available component asset names: `file-manager`, `image-gallery`, `notes`, `line-items`, `feature-list`,
 `key-value-list`, `ajax-select`, `tags`, `accordion`, `card-choice`, `timeline`, `price-summary`, `payment-method`,
-`action-buttons`, `action-menu`, `articles`, `stats`, `progress-steps`.
+`action-buttons`, `action-menu`, `articles`, `stats`, `progress-steps`, `price-config`.
 
 ### Using the Registry
 
@@ -1669,20 +1796,21 @@ Sanitizer::register_component_sanitizer( 'my_custom', function ( $value ) {
 
 ### Form Components (input fields)
 
-| Type                                              | Description                     |
-|---------------------------------------------------|---------------------------------|
-| `text`, `email`, `url`, `tel`, `password`, `date` | Standard input fields           |
-| `number`                                          | Numeric input with min/max/step |
-| `textarea`                                        | Multi-line text                 |
-| `select`                                          | Dropdown (single or multi)      |
-| `ajax_select`                                     | Searchable dropdown with AJAX   |
-| `toggle`                                          | Switch/checkbox                 |
-| `radio`                                           | Radio button group              |
-| `color`                                           | Color picker                    |
-| `tags`                                            | Tag input                       |
-| `card_choice`                                     | Visual card selection           |
-| `hidden`                                          | Hidden input                    |
-| `group`                                           | Nested field group with layout  |
+| Type                                              | Description                                          |
+|---------------------------------------------------|------------------------------------------------------|
+| `text`, `email`, `url`, `tel`, `password`, `date` | Standard input fields                                |
+| `number`                                          | Numeric input with min/max/step                      |
+| `textarea`                                        | Multi-line text                                      |
+| `select`                                          | Dropdown (single or multi)                           |
+| `ajax_select`                                     | Select2 searchable dropdown (single, multi, or tags) |
+| `toggle`                                          | Switch/checkbox                                      |
+| `radio`                                           | Radio button group                                   |
+| `color`                                           | Color picker                                         |
+| `tags`                                            | Tag input                                            |
+| `card_choice`                                     | Visual card selection                                |
+| `price_config`                                    | Stripe pricing (one-time or recurring)               |
+| `hidden`                                          | Hidden input                                         |
+| `group`                                           | Nested field group with layout                       |
 
 ### Layout Components
 

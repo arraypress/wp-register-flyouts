@@ -150,6 +150,11 @@ class Assets {
 			'style'  => 'css/components/progress-steps.css',
 			'deps'   => []
 		],
+		'price-config' => [
+			'script' => 'js/components/price-config.js',
+			'style'  => 'css/components/price-config.css',
+			'deps'   => []
+		]
 	];
 
 	/**

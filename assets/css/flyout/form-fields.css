@@ -2,7 +2,7 @@
  * Form Field Components
  * Basic form inputs, toggles, and field groups
  *
- * @version 1.0.0
+ * @version 1.2.0
  */
 
 /* ========================================
@@ -27,15 +27,20 @@
     margin-left: 2px;
 }
 
-.wp-flyout-field input[type="text"],
-.wp-flyout-field input[type="email"],
-.wp-flyout-field input[type="number"],
-.wp-flyout-field input[type="url"],
-.wp-flyout-field input[type="tel"],
-.wp-flyout-field input[type="date"],
-.wp-flyout-field input[type="password"],
-.wp-flyout-field textarea,
-.wp-flyout-field select {
+/*
+ * Input styling — excludes Select2 internals.
+ * Select2 creates input/textarea elements inside .select2-container
+ * that must NOT inherit our field sizing/padding.
+ */
+.wp-flyout-field > input[type="text"],
+.wp-flyout-field > input[type="email"],
+.wp-flyout-field > input[type="number"],
+.wp-flyout-field > input[type="url"],
+.wp-flyout-field > input[type="tel"],
+.wp-flyout-field > input[type="date"],
+.wp-flyout-field > input[type="password"],
+.wp-flyout-field > textarea,
+.wp-flyout-field > select:not(.wp-flyout-ajax-select) {
     width: 100%;
     padding: 8px;
     border: 1px solid #8c8f94;
@@ -45,20 +50,20 @@
     transition: border-color 0.15s;
 }
 
-.wp-flyout-field input:focus,
-.wp-flyout-field textarea:focus,
-.wp-flyout-field select:focus {
+.wp-flyout-field > input:focus,
+.wp-flyout-field > textarea:focus,
+.wp-flyout-field > select:not(.wp-flyout-ajax-select):focus {
     border-color: var(--wp-flyout-primary);
     box-shadow: 0 0 0 1px var(--wp-flyout-primary);
     outline: 2px solid transparent;
 }
 
-.wp-flyout-field textarea {
+.wp-flyout-field > textarea {
     resize: vertical;
     min-height: 80px;
 }
 
-.wp-flyout-field select {
+.wp-flyout-field > select:not(.wp-flyout-ajax-select) {
     max-width: none;
     appearance: none;
     background-image: url('data:image/svg+xml;charset=UTF-8,%3csvg xmlns="http://www.w3.org/2000/svg" width="14" height="8" viewBox="0 0 14 8"%3e%3cpath fill="%23646970" d="M7 8L0 0h14L7 8z"/%3e%3c/svg%3e');
@@ -246,10 +251,3 @@
 .wp-flyout-field-wrapper.conditional-field[style*="display: none"] {
     opacity: 0;
 }
-
-/* Disabled state for hidden conditional fields */
-/*.wp-flyout-field-wrapper.conditional-field:not(:visible) input,*/
-/*.wp-flyout-field-wrapper.conditional-field:not(:visible) select,*/
-/*.wp-flyout-field-wrapper.conditional-field:not(:visible) textarea {*/
-/*    pointer-events: none;*/
-/*}*/

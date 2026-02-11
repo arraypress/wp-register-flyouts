@@ -1,76 +1,45 @@
 /**
  * WP Flyout - Line Items Component
- * Modern product selection and line item management
+ * Clean, modern product selection and line item management
  *
- * @version 4.0.0
+ * @version 5.0.0
  */
 
 .wp-flyout-line-items {
-    margin: 20px 0;
+    margin: 16px 0;
 }
 
-/* Product selector */
+/* ==========================================================================
+   PRODUCT SELECTOR
+   Flat, inline — feels like part of the table, not a separate card
+   ========================================================================== */
+
 .line-items-selector {
     display: flex;
-    gap: 12px;
-    align-items: flex-start;
-    margin-bottom: 20px;
-    padding: 20px;
-    background: linear-gradient(135deg, #f6f7f7 0%, #fff 100%);
-    border: 1px solid #dcdcde;
-    border-radius: 8px;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+    gap: 10px;
+    align-items: center;
+    padding: 12px 0;
+    margin-bottom: 0;
+    border-bottom: 1px solid #e0e0e0;
 }
 
-/* Select2 container inside line items selector */
 .line-items-selector .select2-container {
     flex: 1;
-    min-width: 250px;
+    min-width: 0;
 }
 
-/* Match single select height to the add button */
-.line-items-selector .select2-container--default .select2-selection--single {
-    height: 36px;
-    border: 1px solid #8c8f94;
-    border-radius: 4px;
-    background: #fff;
-    padding: 0 8px;
-    transition: border-color 0.15s;
-}
-
-.line-items-selector .select2-container--default .select2-selection--single .select2-selection__rendered {
-    line-height: 34px;
-    padding-left: 0;
-    color: #2c3338;
-    font-size: 14px;
-}
-
-.line-items-selector .select2-container--default .select2-selection--single .select2-selection__arrow {
-    height: 34px;
-}
-
-.line-items-selector .select2-container--default .select2-selection--single .select2-selection__placeholder {
-    color: #a7aaad;
-}
-
-/* Focus state inside selector */
-.line-items-selector .select2-container--default.select2-container--focus .select2-selection--single,
-.line-items-selector .select2-container--default.select2-container--open .select2-selection--single {
-    border-color: var(--wp-flyout-primary, #2271b1);
-    box-shadow: 0 0 0 1px var(--wp-flyout-primary, #2271b1);
-    outline: 2px solid transparent;
-}
-
-/* Add item button */
+/* Add item button — compact, aligned with select */
 .line-items-selector button[data-action="add-item"] {
     cursor: pointer;
-    transition: all 0.2s;
+    transition: all 0.15s;
     white-space: nowrap;
     display: inline-flex;
     align-items: center;
-    gap: 6px;
-    height: 36px;
-    line-height: 34px;
+    gap: 4px;
+    height: 28px;
+    line-height: 26px;
+    padding: 0 12px;
+    font-size: 13px;
 }
 
 .line-items-selector button[data-action="add-item"]:active {
@@ -78,30 +47,34 @@
 }
 
 .line-items-selector button[data-action="add-item"]:disabled {
-    opacity: 0.6;
+    opacity: 0.5;
     cursor: not-allowed;
     transform: none;
 }
 
-/* Loading spinner for button */
+.line-items-selector button[data-action="add-item"] .dashicons {
+    font-size: 16px;
+    width: 16px;
+    height: 16px;
+    line-height: 16px;
+}
+
+/* Loading spinner */
 .line-items-selector button .dashicons.spin {
-    animation: spin 1s linear infinite;
+    animation: li-spin 0.8s linear infinite;
 }
 
-@keyframes spin {
-    to {
-        transform: rotate(360deg);
-    }
+@keyframes li-spin {
+    to { transform: rotate(360deg); }
 }
 
-/* Items table container */
+/* ==========================================================================
+   TABLE
+   Clean lines, no heavy borders or box shadows
+   ========================================================================== */
+
 .line-items-table {
-    margin-bottom: 20px;
-    border: 1px solid #dcdcde;
-    border-radius: 8px;
-    overflow: hidden;
-    background: #fff;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+    margin-bottom: 0;
 }
 
 .line-items-table table {
@@ -110,87 +83,90 @@
     margin: 0;
 }
 
-/* Table header */
-.line-items-table thead {
-    background: linear-gradient(180deg, #f9f9fa 0%, #f3f4f5 100%);
-    border-bottom: 1px solid #dcdcde;
-}
-
-.line-items-table th {
-    padding: 12px 15px;
+/* Header — light, understated */
+.line-items-table thead th {
+    padding: 10px 12px;
     text-align: left;
-    font-weight: 600;
-    font-size: 13px;
-    color: #1e1e1e;
+    font-weight: 500;
+    font-size: 11px;
+    color: #8c8f94;
     text-transform: uppercase;
-    letter-spacing: 0.5px;
+    letter-spacing: 0.4px;
+    border-bottom: 1px solid #e0e0e0;
+    background: none;
 }
 
-/* Table body */
+/* Rows */
 .line-items-table tbody tr {
     border-bottom: 1px solid #f0f0f1;
-    transition: background-color 0.15s;
+    transition: background-color 0.1s;
 }
 
 .line-items-table tbody tr:last-child {
-    border-bottom: none;
+    border-bottom: 1px solid #e0e0e0;
 }
 
 .line-items-table tbody tr:hover {
-    background: #f8f9fa;
+    background: #fafafa;
 }
 
 .line-items-table td {
-    padding: 15px;
+    padding: 12px;
     vertical-align: middle;
-    font-size: 14px;
+    font-size: 13px;
+    color: #1e1e1e;
 }
 
-/* Column specific styles */
+/* ==========================================================================
+   COLUMNS
+   ========================================================================== */
+
+/* Item — name + thumbnail */
 .column-item {
     width: auto;
-    min-width: 200px;
 }
 
 .column-item > div {
     display: flex;
     align-items: center;
-    gap: 12px;
+    gap: 10px;
 }
 
-/* Item thumbnail */
+.column-item span {
+    font-weight: 500;
+    line-height: 1.3;
+}
+
+/* Thumbnails */
 .item-thumbnail {
-    width: 48px;
-    height: 48px;
+    width: 40px;
+    height: 40px;
     object-fit: cover;
     border-radius: 6px;
-    border: 1px solid #e5e5e5;
     flex-shrink: 0;
 }
 
 .item-thumbnail-placeholder {
-    width: 48px;
-    height: 48px;
-    background: linear-gradient(135deg, #f0f0f1 0%, #f9f9fa 100%);
-    border: 1px solid #dcdcde;
+    width: 40px;
+    height: 40px;
+    background: #f0f0f1;
     border-radius: 6px;
     display: flex;
     align-items: center;
     justify-content: center;
-    color: #8c8f94;
+    color: #c3c4c7;
     flex-shrink: 0;
 }
 
 .item-thumbnail-placeholder .dashicons {
-    font-size: 24px;
-    width: 24px;
-    height: 24px;
-    opacity: 0.5;
+    font-size: 20px;
+    width: 20px;
+    height: 20px;
 }
 
-/* Quantity column */
+/* Quantity */
 .column-quantity {
-    width: 100px;
+    width: 72px;
     text-align: center;
 }
 
@@ -199,18 +175,20 @@
 }
 
 .quantity-input {
-    width: 70px;
-    padding: 6px 10px;
+    width: 56px;
+    padding: 4px 6px;
     text-align: center;
     border: 1px solid #dcdcde;
     border-radius: 4px;
-    font-size: 14px;
+    font-size: 13px;
     font-weight: 500;
-    transition: all 0.15s;
+    color: #1e1e1e;
+    background: #fff;
+    transition: border-color 0.15s;
 }
 
 .quantity-input:hover {
-    border-color: #949494;
+    border-color: #8c8f94;
 }
 
 .quantity-input:focus {
@@ -219,35 +197,33 @@
     outline: none;
 }
 
-/* Price columns */
-.column-price,
-.column-total {
-    width: 120px;
+/* Price */
+.column-price {
+    width: 100px;
     text-align: right;
-    font-weight: 600;
-    color: #1e1e1e;
+    color: #50575e;
+    font-variant-numeric: tabular-nums;
 }
 
-.column-price th,
-.column-total th {
+.column-price th {
     text-align: right;
 }
 
 /* Editable price input */
 .price-input {
-    width: 90px;
-    padding: 6px 10px;
+    width: 80px;
+    padding: 4px 6px;
     text-align: right;
     border: 1px solid #dcdcde;
     border-radius: 4px;
-    font-size: 14px;
-    font-weight: 600;
-    transition: all 0.15s;
+    font-size: 13px;
+    font-weight: 500;
     color: #1e1e1e;
+    transition: border-color 0.15s;
 }
 
 .price-input:hover {
-    border-color: #949494;
+    border-color: #8c8f94;
 }
 
 .price-input:focus {
@@ -256,31 +232,40 @@
     outline: none;
 }
 
-/* Item total */
-.item-total {
-    color: #135e96;
-    font-size: 15px;
+/* Total */
+.column-total {
+    width: 100px;
+    text-align: right;
 }
 
-/* Actions column */
+.column-total th {
+    text-align: right;
+}
+
+.item-total {
+    font-weight: 600;
+    color: #1e1e1e;
+    font-variant-numeric: tabular-nums;
+}
+
+/* Actions */
 .column-actions {
-    width: 50px;
+    width: 40px;
     text-align: center;
 }
 
 .column-actions button[data-action="remove-item"] {
-    padding: 6px;
-    background: #fff;
-    border: 1px solid #dcdcde;
-    border-radius: 4px;
-    color: #646970;
+    padding: 4px;
+    background: none;
+    border: none;
+    color: #c3c4c7;
     cursor: pointer;
-    transition: all 0.15s;
+    transition: color 0.15s;
+    border-radius: 4px;
+    line-height: 1;
 }
 
 .column-actions button[data-action="remove-item"]:hover {
-    background: #fcf0f1;
-    border-color: #d63638;
     color: #d63638;
 }
 
@@ -291,66 +276,69 @@
     display: block;
 }
 
-/* Empty state */
+/* ==========================================================================
+   EMPTY STATE
+   ========================================================================== */
+
 .line-items-empty {
-    padding: 60px 40px;
+    padding: 48px 24px;
     text-align: center;
-    background: linear-gradient(135deg, #f6f7f7 0%, #fff 100%);
-    border: 2px dashed #dcdcde;
-    border-radius: 8px;
+    border: 1px dashed #dcdcde;
+    border-radius: 6px;
+    margin: 16px 0;
 }
 
 .line-items-empty p {
-    margin: 0 0 20px 0;
-    font-size: 15px;
-    color: #646970;
+    margin: 0;
+    font-size: 13px;
+    color: #8c8f94;
 }
 
 .line-items-empty .dashicons {
-    font-size: 48px;
-    width: 48px;
-    height: 48px;
+    font-size: 32px;
+    width: 32px;
+    height: 32px;
     color: #dcdcde;
-    margin-bottom: 15px;
+    margin-bottom: 8px;
 }
 
-.line-item .column-quantity,
-.line-item .column-price,
-.line-item .column-total {
-    text-align: left;
-}
+/* ==========================================================================
+   TOTAL
+   Clean bottom bar, not a card
+   ========================================================================== */
 
-/* Total section */
 .line-items-total {
-    background: linear-gradient(135deg, #f9f9fa 0%, #fff 100%);
-    padding: 20px;
-    border: 1px solid #dcdcde;
-    border-radius: 8px;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
     display: flex;
     justify-content: space-between;
     align-items: center;
+    padding: 14px 12px;
+    border-top: 2px solid #1e1e1e;
+    margin-top: 0;
 }
 
 .total-label {
-    font-size: 17px;
+    font-size: 13px;
     font-weight: 600;
-    color: #1e1e1e;
+    color: #50575e;
     text-transform: uppercase;
-    letter-spacing: 0.5px;
+    letter-spacing: 0.3px;
 }
 
 .total-amount {
-    font-size: 24px;
+    font-size: 18px;
     font-weight: 700;
-    color: #135e96;
+    color: #1e1e1e;
     font-variant-numeric: tabular-nums;
 }
 
-/* Loading state */
+/* ==========================================================================
+   STATES
+   ========================================================================== */
+
+/* Loading */
 .wp-flyout-line-items.loading {
     position: relative;
-    min-height: 200px;
+    min-height: 120px;
 }
 
 .wp-flyout-line-items.loading::after {
@@ -358,26 +346,39 @@
     position: absolute;
     top: 50%;
     left: 50%;
-    width: 30px;
-    height: 30px;
-    margin: -15px 0 0 -15px;
-    border: 3px solid #f3f4f6;
+    width: 24px;
+    height: 24px;
+    margin: -12px 0 0 -12px;
+    border: 2px solid #e0e0e0;
     border-top-color: #2271b1;
     border-radius: 50%;
-    animation: spinner 0.6s linear infinite;
+    animation: li-spin 0.6s linear infinite;
 }
 
-@keyframes spinner {
-    to {
-        transform: rotate(360deg);
-    }
+/* Row highlight on add */
+.line-item-highlight {
+    animation: li-highlight 0.8s ease-out;
 }
 
-/* Responsive */
+@keyframes li-highlight {
+    0%   { background-color: #fcf9e8; }
+    100% { background-color: transparent; }
+}
+
+/* Non-editable price */
+.wp-flyout-line-items:not([data-editable-price="1"]) .column-price {
+    font-variant-numeric: tabular-nums;
+}
+
+/* ==========================================================================
+   RESPONSIVE
+   ========================================================================== */
+
 @media screen and (max-width: 782px) {
     .line-items-selector {
         flex-direction: column;
-        padding: 15px;
+        align-items: stretch;
+        padding: 12px 0;
     }
 
     .line-items-selector .select2-container {
@@ -387,56 +388,33 @@
     .line-items-selector button {
         width: 100%;
         justify-content: center;
+        height: 36px;
+        line-height: 34px;
     }
 
     .line-items-table {
         overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
     }
 
     .line-items-table table {
-        min-width: 600px;
+        min-width: 500px;
     }
 
     .item-thumbnail,
     .item-thumbnail-placeholder {
-        width: 36px;
-        height: 36px;
-    }
-
-    .quantity-input {
-        width: 60px;
-    }
-
-    .price-input {
-        width: 80px;
+        width: 32px;
+        height: 32px;
     }
 
     .line-items-total {
         flex-direction: column;
         align-items: flex-start;
-        gap: 10px;
+        gap: 4px;
+        padding: 12px;
     }
 
     .total-amount {
-        font-size: 20px;
-    }
-}
-
-/* When price is not editable, show as plain text */
-.wp-flyout-line-items:not([data-editable-price="1"]) .column-price {
-    font-variant-numeric: tabular-nums;
-}
-
-/* Highlight row on add/update */
-.line-item-highlight {
-    animation: highlight 1s ease-out;
-}
-
-@keyframes highlight {
-    0% {
-        background-color: #ffffcc;
-    }
-    100% {
-        background-color: transparent;
+        font-size: 16px;
     }
 }

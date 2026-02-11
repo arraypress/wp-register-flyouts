@@ -150,7 +150,7 @@ class Assets {
 			'style'  => 'css/components/progress-steps.css',
 			'deps'   => []
 		],
-		'price-config' => [
+		'price-config'   => [
 			'script' => 'js/components/price-config.js',
 			'style'  => 'css/components/price-config.css',
 			'deps'   => []
@@ -259,8 +259,7 @@ class Assets {
 				__FILE__,
 				'js/libraries/select2.min.js',
 				[ 'jquery' ],
-				'4.1.0-rc.0',
-				true
+				$version
 			);
 		}
 
@@ -270,7 +269,7 @@ class Assets {
 				__FILE__,
 				'css/libraries/select2.min.css',
 				[],
-				'4.1.0-rc.0'
+				$version
 			);
 		}
 	}

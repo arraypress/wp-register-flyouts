@@ -480,12 +480,13 @@ class Sanitizer {
 	/**
 	 * Sanitize price config data
 	 *
-	 * Converts decimal amount to cents and validates interval.
+	 * Converts decimal amounts to cents and validates interval.
 	 */
 	public static function sanitize_price_config( $value ): array {
 		if ( ! is_array( $value ) ) {
 			return [
 				'amount'                   => 0,
+				'compare_at_amount'        => 0,
 				'currency'                 => 'USD',
 				'recurring_interval'       => null,
 				'recurring_interval_count' => null,
@@ -494,12 +495,21 @@ class Sanitizer {
 
 		$currency = strtoupper( sanitize_text_field( $value['currency'] ?? 'USD' ) );
 
-		// Convert decimal to cents using currency library if available
-		$raw_amount = $value['amount'] ?? 0;
+		// Convert decimal amounts to cents using currency library if available
+		$raw_amount     = $value['amount'] ?? 0;
+		$raw_compare_at = $value['compare_at_amount'] ?? 0;
+
 		if ( function_exists( 'to_currency_cents' ) ) {
-			$amount = to_currency_cents( (float) $raw_amount, $currency );
+			$amount            = to_currency_cents( (float) $raw_amount, $currency );
+			$compare_at_amount = to_currency_cents( (float) $raw_compare_at, $currency );
 		} else {
-			$amount = (int) round( (float) $raw_amount * 100 );
+			$amount            = (int) round( (float) $raw_amount * 100 );
+			$compare_at_amount = (int) round( (float) $raw_compare_at * 100 );
+		}
+
+		// Compare-at must be higher than amount to make sense, otherwise discard
+		if ( $compare_at_amount <= $amount ) {
+			$compare_at_amount = 0;
 		}
 
 		$valid_intervals = [ 'day', 'week', 'month', 'year' ];
@@ -516,6 +526,7 @@ class Sanitizer {
 
 		return [
 			'amount'                   => $amount,
+			'compare_at_amount'        => $compare_at_amount,
 			'currency'                 => $currency,
 			'recurring_interval'       => $interval,
 			'recurring_interval_count' => $interval_count,

@@ -79,7 +79,7 @@
 }
 
 /* ==========================================================================
-   AMOUNT + CURRENCY ROW
+   AMOUNT + COMPARE AT + CURRENCY ROW
    ========================================================================== */
 
 .price-config-amount-row {
@@ -88,13 +88,15 @@
     align-items: flex-end;
 }
 
-.price-config-amount {
+.price-config-amount,
+.price-config-compare-at {
     flex: 1;
     min-width: 0;
 }
 
 /* Sub-labels — small, muted, uppercase */
 .price-config-amount label,
+.price-config-compare-at label,
 .price-config-currency label,
 .price-config-interval > label {
     display: block;
@@ -107,7 +109,8 @@
 }
 
 /* Match standard .wp-flyout-field input styling */
-.price-config-amount input {
+.price-config-amount input,
+.price-config-compare-at input {
     width: 100%;
     padding: 8px;
     border: 1px solid #8c8f94;
@@ -117,13 +120,15 @@
     transition: border-color 0.15s;
 }
 
-.price-config-amount input:focus {
+.price-config-amount input:focus,
+.price-config-compare-at input:focus {
     border-color: #2271b1;
     box-shadow: 0 0 0 1px #2271b1;
     outline: none;
 }
 
-.price-config-amount input::placeholder {
+.price-config-amount input::placeholder,
+.price-config-compare-at input::placeholder {
     color: #c3c4c7;
 }
 

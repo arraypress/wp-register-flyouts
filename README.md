@@ -1253,6 +1253,7 @@ currency selector, and conditional recurring interval fields.
 
     // Values (populated from load data or set directly)
     'amount'                    => 1999,     // In cents — displayed as 19.99
+    'compare_at_amount'         => 2999,     // In cents — displayed as 29.99 (must be higher than amount, or 0)
     'currency'                  => 'USD',
     'recurring_interval'        => 'month',  // null for one-time
     'recurring_interval_count'  => 1,        // null for one-time
@@ -1264,6 +1265,9 @@ hidden and saved as `null`.
 
 **Amount:** Entered as a decimal (19.99) and automatically converted to cents (1999) during sanitization using the
 `to_currency_cents()` helper if available.
+
+**Compare at:** Optional strikethrough price shown to customers (e.g. "was $29.99, now $19.99"). Must be higher than
+the amount to save — if equal or lower, it's automatically zeroed out during sanitization.
 
 **Currency:** Populated from the `arraypress/currencies` library if installed (`get_currency_options()`), otherwise
 falls back to common currencies (USD, EUR, GBP, CAD, AUD, JPY).

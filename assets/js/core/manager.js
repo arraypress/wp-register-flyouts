@@ -85,7 +85,7 @@
                         alert(response.data || 'Failed to load flyout');
                     }
                 })
-                .fail(() => alert('Connection failed'));
+                .fail((jqXHR) => alert(this.parseErrorMessage(jqXHR, 'Failed to load flyout')));
         },
 
         /**
@@ -202,7 +202,6 @@
          * Validates form, sends save request, and always reloads page on success.
          *
          * @since 1.0.0
-         * @since 1.0.0 Removed conditional reload - always reloads on success
          * @param {jQuery} $flyout  Flyout element
          * @param {string} flyoutId Flyout ID
          * @param {Object} config   Flyout configuration
@@ -253,10 +252,10 @@
                         this.showAlert($flyout, response.data || 'An error occurred', 'error');
                     }
                 })
-                .fail(() => {
+                .fail((jqXHR) => {
                     this.setButtonState($saveBtn, false);
                     $body.animate({scrollTop: 0}, 300);
-                    this.showAlert($flyout, 'Connection error', 'error');
+                    this.showAlert($flyout, this.parseErrorMessage(jqXHR, 'An error occurred'), 'error');
                 });
         },
 
@@ -266,7 +265,6 @@
          * Sends delete request and always reloads page on success.
          *
          * @since 1.0.0
-         * @since 1.0.0 Removed conditional reload - always reloads on success
          * @param {jQuery} $flyout  Flyout element
          * @param {string} flyoutId Flyout ID
          * @param {Object} config   Flyout configuration
@@ -304,11 +302,35 @@
                         $body.animate({scrollTop: 0}, 300);
                     }
                 })
-                .fail(() => {
+                .fail((jqXHR) => {
                     this.setButtonState($deleteBtn, false);
-                    this.showAlert($flyout, 'Connection error', 'error');
                     $body.animate({scrollTop: 0}, 300);
+                    this.showAlert($flyout, this.parseErrorMessage(jqXHR, 'Failed to delete'), 'error');
                 });
+        },
+
+        /**
+         * Parse error message from failed AJAX response
+         *
+         * Extracts the error message from non-200 responses where
+         * wp_send_json_error() was called with an HTTP status code,
+         * causing jQuery to route to .fail() instead of .done().
+         *
+         * @since 1.0.1
+         * @param {jqXHR}  jqXHR       jQuery XMLHttpRequest object
+         * @param {string} fallback     Fallback message if parsing fails
+         * @return {string} Extracted error message or fallback
+         */
+        parseErrorMessage: function (jqXHR, fallback) {
+            try {
+                const response = JSON.parse(jqXHR.responseText);
+                if (response && response.data) {
+                    return response.data;
+                }
+            } catch (e) {
+            }
+
+            return fallback;
         },
 
         /**

@@ -41,6 +41,7 @@
 
             const $button = $(e.currentTarget);
             const $component = $button.closest('.wp-flyout-notes');
+            const $flyout = $component.closest('.wp-flyout');
             const $textarea = $component.find('textarea');
             const content = $textarea.val().trim();
 
@@ -49,9 +50,9 @@
                 return;
             }
 
-            // Get AJAX configuration from data attributes
             const ajaxAdd = $component.data('ajax-add');
             const objectType = $component.data('object-type');
+            const objectId = $flyout.find('input[name="id"]').val();
             const nonce = $component.data('add-nonce');
 
             if (!ajaxAdd) {
@@ -59,7 +60,6 @@
                 return;
             }
 
-            // Disable button and show loading
             $button.prop('disabled', true).text('Adding...');
 
             $.ajax({
@@ -69,21 +69,16 @@
                     action: ajaxAdd,
                     content: content,
                     object_type: objectType,
+                    object_id: objectId,
                     _wpnonce: nonce
                 },
                 success: function (response) {
                     if (response.success && response.data.note) {
-                        // Add the note to the list
                         const noteHtml = Notes.createNoteHtml(response.data.note);
                         const $list = $component.find('.notes-list');
 
-                        // Remove empty message if exists
                         $list.find('.no-notes').remove();
-
-                        // Add new note at the top
                         $list.prepend(noteHtml);
-
-                        // Clear textarea
                         $textarea.val('').focus();
                     } else {
                         alert(response.data?.message || 'Failed to add note');
@@ -111,10 +106,12 @@
             const $button = $(e.currentTarget);
             const $note = $button.closest('.note-item');
             const $component = $button.closest('.wp-flyout-notes');
+            const $flyout = $component.closest('.wp-flyout');
 
             const noteId = $note.data('note-id');
             const ajaxDelete = $component.data('ajax-delete');
             const objectType = $component.data('object-type');
+            const objectId = $flyout.find('input[name="id"]').val();
             const nonce = $component.data('delete-nonce');
 
             if (!ajaxDelete) {
@@ -122,7 +119,6 @@
                 return;
             }
 
-            // Disable button
             $button.prop('disabled', true);
 
             $.ajax({
@@ -132,15 +128,14 @@
                     action: ajaxDelete,
                     note_id: noteId,
                     object_type: objectType,
+                    object_id: objectId,
                     _wpnonce: nonce
                 },
                 success: function (response) {
                     if (response.success) {
-                        // Remove the note with animation
                         $note.slideUp(200, function () {
                             $note.remove();
 
-                            // Check if list is empty
                             const $list = $component.find('.notes-list');
                             if ($list.find('.note-item').length === 0) {
                                 $list.html('<p class="no-notes">No notes yet.</p>');

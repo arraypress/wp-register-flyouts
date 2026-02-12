@@ -44,9 +44,6 @@ class Image implements Renderable {
 			$this->config['id'] = 'image-picker-' . wp_generate_uuid4();
 		}
 
-		// Clamp thumbnail width
-		$this->config['thumbnail_width'] = max( 32, min( 200, (int) $this->config['thumbnail_width'] ) );
-
 		// Resolve image URL from attachment_id
 		if ( empty( $this->config['image'] ) && ! empty( $this->config['value'] ) ) {
 			$url = wp_get_attachment_image_url(
@@ -75,10 +72,10 @@ class Image implements Renderable {
 			'value'           => 0, // attachment_id
 
 			// Image display
-			'image'           => '',
-			'image_size'      => 'thumbnail',
-			'image_shape'     => 'square', // square, circle, rounded
-			'thumbnail_width' => 80,
+			'image'       => '',
+			'image_size'  => 'medium',
+			'image_shape' => 'rounded', // square, circle, rounded
+			'height'      => 200,       // Preview area height in px
 
 			// Placeholder
 			'icon'            => 'format-image',
@@ -91,14 +88,14 @@ class Image implements Renderable {
 	}
 
 	/**
-	 * Get inline size style
+	 * Get inline height style
 	 *
 	 * @return string
 	 */
-	private function get_size_style(): string {
-		$size = $this->config['thumbnail_width'];
+	private function get_height_style(): string {
+		$height = max( 80, min( 400, (int) $this->config['height'] ) );
 
-		return "width:{$size}px;height:{$size}px;";
+		return "height:{$height}px;";
 	}
 
 	/**
@@ -114,6 +111,7 @@ class Image implements Renderable {
 
 		$picker_classes = [
 			'image-picker',
+			'image-picker--field',
 			$shape_class,
 		];
 		if ( $has_image ) {
@@ -122,57 +120,57 @@ class Image implements Renderable {
 
 		ob_start();
 		?>
-		<div class="<?php echo esc_attr( implode( ' ', $picker_classes ) ); ?>"
-		     style="<?php echo esc_attr( $this->get_size_style() ); ?>"
-		     data-name="<?php echo esc_attr( $this->config['name'] ); ?>"
-		     data-size="<?php echo esc_attr( $this->config['image_size'] ); ?>"
-		     data-icon="<?php echo esc_attr( $this->config['icon'] ); ?>">
+        <div class="<?php echo esc_attr( implode( ' ', $picker_classes ) ); ?>"
+             style="<?php echo esc_attr( $this->get_height_style() ); ?>"
+             data-name="<?php echo esc_attr( $this->config['name'] ); ?>"
+             data-size="<?php echo esc_attr( $this->config['image_size'] ); ?>"
+             data-icon="<?php echo esc_attr( $this->config['icon'] ); ?>">
 
 			<?php // Current image or placeholder ?>
-			<div class="image-picker-preview">
+            <div class="image-picker-preview">
 				<?php if ( $has_image ) : ?>
-					<img src="<?php echo esc_url( $current_image ); ?>"
-					     alt=""
-					     class="image-picker-img">
+                    <img src="<?php echo esc_url( $current_image ); ?>"
+                         alt=""
+                         class="image-picker-img">
 				<?php else : ?>
-					<div class="image-picker-placeholder">
-						<span class="dashicons dashicons-<?php echo esc_attr( $this->config['icon'] ); ?>"></span>
-					</div>
+                    <div class="image-picker-placeholder">
+                        <span class="dashicons dashicons-<?php echo esc_attr( $this->config['icon'] ); ?>"></span>
+                    </div>
 				<?php endif; ?>
-			</div>
+            </div>
 
 			<?php // Hover overlay with actions ?>
-			<div class="image-picker-overlay">
-				<button type="button"
-				        class="image-picker-btn"
-				        data-action="select-image"
-				        title="<?php echo $has_image
+            <div class="image-picker-overlay">
+                <button type="button"
+                        class="image-picker-btn"
+                        data-action="select-image"
+                        title="<?php echo $has_image
 					        ? esc_attr__( 'Change image', 'wp-flyout' )
 					        : esc_attr__( 'Select image', 'wp-flyout' ); ?>">
-					<span class="dashicons dashicons-<?php echo $has_image ? 'update' : 'plus-alt2'; ?>"></span>
-				</button>
+                    <span class="dashicons dashicons-<?php echo $has_image ? 'update' : 'plus-alt2'; ?>"></span>
+                </button>
 
 				<?php if ( $has_image ) : ?>
-					<button type="button"
-					        class="image-picker-btn image-picker-remove"
-					        data-action="remove-image"
-					        title="<?php esc_attr_e( 'Remove image', 'wp-flyout' ); ?>">
-						<span class="dashicons dashicons-trash"></span>
-					</button>
+                    <button type="button"
+                            class="image-picker-btn image-picker-remove"
+                            data-action="remove-image"
+                            title="<?php esc_attr_e( 'Remove image', 'wp-flyout' ); ?>">
+                        <span class="dashicons dashicons-trash"></span>
+                    </button>
 				<?php endif; ?>
-			</div>
+            </div>
 
 			<?php // Hidden input for form submission ?>
-			<input type="hidden"
-			       name="<?php echo esc_attr( $this->config['name'] ); ?>"
-			       value="<?php echo esc_attr( (string) $attachment_id ); ?>"
-			       class="image-picker-value">
-		</div>
+            <input type="hidden"
+                   name="<?php echo esc_attr( $this->config['name'] ); ?>"
+                   value="<?php echo esc_attr( (string) $attachment_id ); ?>"
+                   class="image-picker-value">
+        </div>
 
 		<?php if ( ! empty( $this->config['empty_text'] ) && ! $has_image ) : ?>
-			<p class="image-picker-empty-text">
+            <p class="image-picker-empty-text">
 				<?php echo esc_html( $this->config['empty_text'] ); ?>
-			</p>
+            </p>
 		<?php endif; ?>
 		<?php
 

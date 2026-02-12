@@ -2,13 +2,13 @@
 /**
  * File Manager Component
  *
- * Enhanced file management with drag-and-drop sorting and media library integration
+ * File management with drag-and-drop sorting and media library integration.
+ * Supports both media library uploads and external URLs (Canva, Google Drive, etc).
  *
  * @package     ArrayPress\RegisterFlyouts\Components
  * @copyright   Copyright (c) 2025, ArrayPress Limited
  * @license     GPL2+
- * @version     1.0.0
- * @author      David Sherlock
+ * @version     2.0.0
  */
 
 declare( strict_types=1 );
@@ -16,22 +16,17 @@ declare( strict_types=1 );
 namespace ArrayPress\RegisterFlyouts\Components;
 
 use ArrayPress\RegisterFlyouts\Interfaces\Renderable;
-use ArrayPress\RegisterFlyouts\Traits\FileUtilities;
 
 /**
  * Class FileManager
  *
  * Manages file attachments with media library integration and drag-drop sorting.
- *
- * @since 6.0.0
  */
 class FileManager implements Renderable {
-    use FileUtilities;
 
     /**
      * Component configuration
      *
-     * @since 6.0.0
      * @var array
      */
     private array $config;
@@ -39,19 +34,15 @@ class FileManager implements Renderable {
     /**
      * Constructor
      *
-     * @since 6.0.0
-     *
      * @param array $config Configuration options
      */
     public function __construct( array $config = [] ) {
         $this->config = wp_parse_args( $config, self::get_defaults() );
 
-        // Auto-generate ID if not provided
         if ( empty( $this->config['id'] ) ) {
             $this->config['id'] = 'file-manager-' . wp_generate_uuid4();
         }
 
-        // Ensure items is array
         if ( ! is_array( $this->config['items'] ) ) {
             $this->config['items'] = [];
         }
@@ -60,34 +51,30 @@ class FileManager implements Renderable {
     /**
      * Get default configuration
      *
-     * @since 6.0.0
-     *
-     * @return array Default configuration values
+     * @return array
      */
     private static function get_defaults(): array {
         return [
                 'id'          => '',
                 'name'        => 'files',
                 'items'       => [],
-                'max_files'   => 0,  // 0 = unlimited
-                'reorderable' => true,
+                'max_files'   => 0,
+                'sortable'    => true,
                 'add_text'    => __( 'Add File', 'wp-flyout' ),
-                'empty_text'  => __( 'No files attached yet', 'wp-flyout' ),
-                'class'       => ''
+                'empty_text'  => __( 'No files attached yet.', 'wp-flyout' ),
+                'class'       => '',
         ];
     }
 
     /**
      * Render the component
      *
-     * @since 6.0.0
-     *
-     * @return string Generated HTML
+     * @return string
      */
     public function render(): string {
         $classes = [ 'wp-flyout-file-manager' ];
 
-        if ( $this->config['reorderable'] ) {
+        if ( $this->config['sortable'] ) {
             $classes[] = 'is-sortable';
         }
 
@@ -95,37 +82,19 @@ class FileManager implements Renderable {
             $classes[] = $this->config['class'];
         }
 
+        $count     = count( $this->config['items'] );
+        $max_files = (int) $this->config['max_files'];
+        $at_limit  = $max_files > 0 && $count >= $max_files;
+
         ob_start();
         ?>
         <div id="<?php echo esc_attr( $this->config['id'] ); ?>"
              class="<?php echo esc_attr( implode( ' ', $classes ) ); ?>"
-             data-prefix="<?php echo esc_attr( $this->config['name'] ); ?>"
-             data-max-files="<?php echo esc_attr( $this->config['max_files'] ); ?>"
-             data-template='<?php echo $this->get_template(); ?>'>
+             data-name="<?php echo esc_attr( $this->config['name'] ); ?>"
+             data-max-files="<?php echo esc_attr( (string) $max_files ); ?>">
 
-            <div class="file-manager-header">
-				<span class="file-manager-title">
-					<span class="dashicons dashicons-paperclip"></span>
-					<?php esc_html_e( 'Attachments', 'wp-flyout' ); ?>
-                    <?php if ( $this->config['max_files'] > 0 ) : ?>
-                        <span class="file-count">
-							(<span class="current-count"><?php echo count( $this->config['items'] ); ?></span>/<?php echo $this->config['max_files']; ?>)
-						</span>
-                    <?php endif; ?>
-				</span>
+            <div class="file-manager-list <?php echo $count === 0 ? 'is-empty' : ''; ?>">
 
-                <button type="button"
-                        class="button button-small file-manager-add"
-                        data-action="add"
-                        <?php if ( $this->config['max_files'] > 0 && count( $this->config['items'] ) >= $this->config['max_files'] ) : ?>
-                            disabled
-                        <?php endif; ?>>
-                    <span class="dashicons dashicons-plus-alt2"></span>
-                    <?php echo esc_html( $this->config['add_text'] ); ?>
-                </button>
-            </div>
-
-            <div class="file-manager-list <?php echo empty( $this->config['items'] ) ? 'is-empty' : ''; ?>">
                 <div class="file-manager-empty">
                     <span class="dashicons dashicons-media-document"></span>
                     <p><?php echo esc_html( $this->config['empty_text'] ); ?></p>
@@ -133,69 +102,78 @@ class FileManager implements Renderable {
 
                 <div class="file-manager-items">
                     <?php foreach ( $this->config['items'] as $index => $file ) : ?>
-                        <?php $this->render_file_item( $file, $index ); ?>
+                        <?php $this->render_item( $file, $index ); ?>
                     <?php endforeach; ?>
                 </div>
+
             </div>
+
+            <div class="file-manager-footer">
+                <button type="button"
+                        class="button button-small file-manager-add"
+                        data-action="add"
+                        <?php echo $at_limit ? 'disabled' : ''; ?>>
+                    <span class="dashicons dashicons-plus-alt2"></span>
+                    <?php echo esc_html( $this->config['add_text'] ); ?>
+                </button>
+
+                <?php if ( $max_files > 0 ) : ?>
+                    <span class="file-manager-count">
+						<span class="current-count"><?php echo $count; ?></span>/<?php echo $max_files; ?>
+					</span>
+                <?php endif; ?>
+            </div>
+
         </div>
         <?php
         return ob_get_clean();
     }
 
     /**
-     * Render single file item
-     *
-     * @since 6.0.0
-     * @access private
+     * Render a single file item
      *
      * @param array $file  File data
      * @param int   $index Item index
      *
      * @return void
      */
-    private function render_file_item( array $file, int $index ): void {
-        $file_extension = $this->get_file_extension( $file['url'] ?? '' );
-        $file_icon      = $this->get_file_icon( $file_extension );
-        $lookup_key     = $file['lookup_key'] ?? '';
+    private function render_item( array $file, int $index ): void {
+        $name          = $this->config['name'];
+        $file_name     = $file['name'] ?? '';
+        $file_url      = $file['url'] ?? '';
+        $attachment_id = $file['attachment_id'] ?? $file['id'] ?? '';
+        $lookup_key    = $file['lookup_key'] ?? '';
         ?>
         <div class="file-manager-item" data-index="<?php echo $index; ?>">
-            <?php if ( $this->config['reorderable'] ) : ?>
+
+            <?php if ( $this->config['sortable'] ) : ?>
                 <span class="file-handle" title="<?php esc_attr_e( 'Drag to reorder', 'wp-flyout' ); ?>">
-				<span class="dashicons dashicons-menu"></span>
-			</span>
+					<span class="dashicons dashicons-menu"></span>
+				</span>
             <?php endif; ?>
 
-            <div class="file-icon" data-extension="<?php echo esc_attr( $file_extension ); ?>">
-                <span class="dashicons dashicons-<?php echo esc_attr( $file_icon ); ?>"></span>
-                <?php if ( $file_extension ) : ?>
-                    <span class="file-extension"><?php echo esc_html( strtoupper( $file_extension ) ); ?></span>
-                <?php endif; ?>
-            </div>
-
-            <div class="file-details">
+            <div class="file-fields">
                 <input type="text"
-                       name="<?php echo esc_attr( $this->config['name'] ); ?>[<?php echo $index; ?>][name]"
-                       value="<?php echo esc_attr( $file['name'] ?? '' ); ?>"
+                       name="<?php echo esc_attr( "{$name}[{$index}][name]" ); ?>"
+                       value="<?php echo esc_attr( $file_name ); ?>"
                        placeholder="<?php esc_attr_e( 'File name', 'wp-flyout' ); ?>"
-                       data-field="name"
                        class="file-name-input">
 
                 <input type="url"
-                       name="<?php echo esc_attr( $this->config['name'] ); ?>[<?php echo $index; ?>][url]"
-                       value="<?php echo esc_attr( $file['url'] ?? '' ); ?>"
-                       placeholder="<?php esc_attr_e( 'File URL', 'wp-flyout' ); ?>"
-                       data-field="url"
+                       name="<?php echo esc_attr( "{$name}[{$index}][url]" ); ?>"
+                       value="<?php echo esc_attr( $file_url ); ?>"
+                       placeholder="<?php esc_attr_e( 'URL or browse media library', 'wp-flyout' ); ?>"
                        class="file-url-input">
 
                 <input type="hidden"
-                       name="<?php echo esc_attr( $this->config['name'] ); ?>[<?php echo $index; ?>][attachment_id]"
-                       value="<?php echo esc_attr( $file['attachment_id'] ?? $file['id'] ?? '' ); ?>"
-                       data-field="attachment_id">
+                       name="<?php echo esc_attr( "{$name}[{$index}][attachment_id]" ); ?>"
+                       value="<?php echo esc_attr( (string) $attachment_id ); ?>"
+                       class="file-attachment-id">
 
                 <input type="hidden"
-                       name="<?php echo esc_attr( $this->config['name'] ); ?>[<?php echo $index; ?>][lookup_key]"
+                       name="<?php echo esc_attr( "{$name}[{$index}][lookup_key]" ); ?>"
                        value="<?php echo esc_attr( $lookup_key ); ?>"
-                       data-field="lookup_key">
+                       class="file-lookup-key">
             </div>
 
             <div class="file-actions">
@@ -213,49 +191,9 @@ class FileManager implements Renderable {
                     <span class="dashicons dashicons-trash"></span>
                 </button>
             </div>
+
         </div>
         <?php
-    }
-
-    /**
-     * Get item template for JavaScript
-     *
-     * @since 6.0.0
-     * @access private
-     *
-     * @return string JavaScript template HTML
-     */
-    private function get_template(): string {
-        ob_start();
-        ?>
-        <div class="file-manager-item" data-index="{{index}}">
-        <?php if ( $this->config['reorderable'] ) : ?>
-            <span class="file-handle" title="Drag to reorder"><span class="dashicons dashicons-menu"></span></span>
-        <?php endif; ?>
-        <div class="file-icon" data-extension="{{extension}}"><span class="dashicons dashicons-{{icon}}"></span><span
-                    class="file-extension" style="{{extension_display}}">{{extension_upper}}</span></div>
-        <div class="file-details">
-            <input type="text" name="<?php echo esc_attr( $this->config['name'] ); ?>[{{index}}][name]" value="{{name}}"
-                   placeholder="File name" data-field="name" class="file-name-input">
-            <input type="url" name="<?php echo esc_attr( $this->config['name'] ); ?>[{{index}}][url]" value="{{url}}"
-                   placeholder="File URL" data-field="url" class="file-url-input">
-            <input type="hidden" name="<?php echo esc_attr( $this->config['name'] ); ?>[{{index}}][attachment_id]"
-                   value="{{attachment_id}}"
-                   data-field="attachment_id">
-            <input type="hidden" name="<?php echo esc_attr( $this->config['name'] ); ?>[{{index}}][lookup_key]"
-                   value="{{lookup_key}}"
-                   data-field="lookup_key">
-        </div>
-        <div class="file-actions">
-            <button type="button" class="file-action-btn" data-action="browse" title="Browse media library"><span
-                        class="dashicons dashicons-admin-media"></span></button>
-            <button type="button" class="file-action-btn file-remove" data-action="remove" title="Remove file"><span
-                        class="dashicons dashicons-trash"></span></button>
-        </div>
-        </div><?php
-        $html = ob_get_clean();
-
-        return str_replace( array( "\r", "\n", "\t" ), '', trim( $html ) );
     }
 
 }

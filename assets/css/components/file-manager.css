@@ -1,59 +1,9 @@
 /**
  * WP Flyout - File Manager Component
- * Modern card-based design with smooth interactions
  */
 
 .wp-flyout-file-manager {
-    margin: 20px 0;
-}
-
-/* Header */
-.file-manager-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 16px;
-    padding: 0 4px;
-}
-
-.file-manager-title {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    font-size: 14px;
-    font-weight: 600;
-    color: #1e1e1e;
-}
-
-.file-manager-title .dashicons {
-    font-size: 18px;
-    width: 18px;
-    height: 18px;
-    color: #646970;
-}
-
-.file-count {
-    font-weight: normal;
-    color: #646970;
-    font-size: 13px;
-}
-
-/* Add button */
-.file-manager-add {
-    display: inline-flex !important;
-    align-items: center;
-    gap: 6px;
-    padding: 6px 12px !important;
-    height: 32px !important;
-    min-height: 32px !important;
-    font-size: 13px !important;
-}
-
-.file-manager-add .dashicons {
-    font-size: 16px;
-    width: 16px;
-    height: 16px;
-    margin: 0 !important;
+    margin: 0;
 }
 
 /* List container */
@@ -69,13 +19,13 @@
     display: block;
 }
 
-/* Empty state - shown when is-empty class is present */
+/* Empty state */
 .file-manager-empty {
     display: none;
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    padding: 40px 20px;
+    padding: 32px 20px;
     text-align: center;
     color: #646970;
 }
@@ -89,28 +39,57 @@
 }
 
 .file-manager-empty .dashicons {
-    font-size: 48px;
-    width: 48px;
-    height: 48px;
+    font-size: 36px;
+    width: 36px;
+    height: 36px;
     color: #c3c4c7;
-    margin-bottom: 12px;
+    margin-bottom: 8px;
 }
 
 .file-manager-empty p {
     margin: 0;
-    font-size: 14px;
+    font-size: 13px;
 }
 
-/* File item card */
+/* Footer with add button */
+.file-manager-footer {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-top: 10px;
+}
+
+.file-manager-add {
+    display: inline-flex !important;
+    align-items: center;
+    gap: 5px;
+    padding: 5px 10px !important;
+    height: 30px !important;
+    min-height: 30px !important;
+    font-size: 12px !important;
+}
+
+.file-manager-add .dashicons {
+    font-size: 14px;
+    width: 14px;
+    height: 14px;
+    margin: 0 !important;
+}
+
+.file-manager-count {
+    font-size: 12px;
+    color: #646970;
+}
+
+/* File item row */
 .file-manager-item {
     display: flex;
     align-items: center;
-    gap: 12px;
-    padding: 16px;
+    gap: 10px;
+    padding: 12px;
     background: #fff;
     border-bottom: 1px solid #f0f0f1;
-    transition: all 0.2s ease;
-    position: relative;
+    transition: background 0.15s ease;
 }
 
 .file-manager-item:first-child {
@@ -131,7 +110,7 @@
 /* Sortable states */
 .file-manager-item.ui-sortable-helper {
     background: #fff;
-    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
     border-radius: 8px !important;
     opacity: 0.95;
 }
@@ -146,9 +125,10 @@
 /* Drag handle */
 .file-handle {
     cursor: move;
-    padding: 4px;
+    padding: 2px;
     color: #a7aaad;
-    transition: all 0.2s;
+    flex-shrink: 0;
+    transition: color 0.15s;
 }
 
 .file-handle:hover {
@@ -156,61 +136,30 @@
 }
 
 .file-handle .dashicons {
-    font-size: 20px;
-    width: 20px;
-    height: 20px;
+    font-size: 18px;
+    width: 18px;
+    height: 18px;
 }
 
-/* File icon */
-.file-icon {
-    position: relative;
-    width: 48px;
-    height: 48px;
-    background: #f0f6fc;
-    border-radius: 8px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    flex-shrink: 0;
-}
-
-.file-icon .dashicons {
-    font-size: 24px;
-    width: 24px;
-    height: 24px;
-    color: #2271b1;
-}
-
-.file-extension {
-    position: absolute;
-    bottom: -4px;
-    right: -4px;
-    background: #2271b1;
-    color: white;
-    font-size: 9px;
-    font-weight: 600;
-    padding: 2px 4px;
-    border-radius: 4px;
-    line-height: 1;
-}
-
-/* File details */
-.file-details {
+/* Fields */
+.file-fields {
     flex: 1;
     min-width: 0;
     display: flex;
     flex-direction: column;
-    gap: 8px;
+    gap: 6px;
 }
 
 .file-name-input,
 .file-url-input {
     border: 1px solid #dcdcde;
     border-radius: 4px;
-    padding: 6px 10px;
-    font-size: 13px;
-    transition: all 0.15s;
+    padding: 5px 8px;
+    font-size: 12px;
+    transition: border-color 0.15s;
     background: #fff;
+    width: 100%;
+    box-sizing: border-box;
 }
 
 .file-name-input {
@@ -219,33 +168,28 @@
 }
 
 .file-url-input {
-    font-size: 12px;
     color: #646970;
     background: #f6f7f7;
 }
 
-.file-url-input[readonly] {
-    cursor: default;
-    background: #f6f7f7;
-}
-
 .file-name-input:focus,
-.file-url-input:focus:not([readonly]) {
+.file-url-input:focus {
     border-color: #2271b1;
     box-shadow: 0 0 0 1px #2271b1;
     outline: none;
 }
 
-/* File actions */
+/* Actions */
 .file-actions {
     display: flex;
     gap: 4px;
     align-items: center;
+    flex-shrink: 0;
 }
 
 .file-action-btn {
-    width: 32px;
-    height: 32px;
+    width: 30px;
+    height: 30px;
     padding: 0;
     border: 1px solid #dcdcde;
     border-radius: 4px;
@@ -256,7 +200,6 @@
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    text-decoration: none;
 }
 
 .file-action-btn:hover {
@@ -266,103 +209,26 @@
 }
 
 .file-action-btn .dashicons {
-    font-size: 18px;
-    width: 18px;
-    height: 18px;
+    font-size: 16px;
+    width: 16px;
+    height: 16px;
 }
 
-/* Remove button - special styling */
 .file-remove:hover {
     background: #fcf0f1;
     border-color: #d63638;
     color: #d63638;
 }
 
-/* Different file type colors based on data-extension */
-.file-icon[data-extension="pdf"] {
-    background: #ffe5e5;
-}
-
-.file-icon[data-extension="pdf"] .dashicons {
-    color: #d63638;
-}
-
-.file-icon[data-extension="jpg"],
-.file-icon[data-extension="jpeg"],
-.file-icon[data-extension="png"],
-.file-icon[data-extension="gif"],
-.file-icon[data-extension="svg"] {
-    background: #e7f7ed;
-}
-
-.file-icon[data-extension="jpg"] .dashicons,
-.file-icon[data-extension="jpeg"] .dashicons,
-.file-icon[data-extension="png"] .dashicons,
-.file-icon[data-extension="gif"] .dashicons,
-.file-icon[data-extension="svg"] .dashicons {
-    color: #00a32a;
-}
-
-.file-icon[data-extension="mp3"],
-.file-icon[data-extension="wav"],
-.file-icon[data-extension="mp4"],
-.file-icon[data-extension="mov"] {
-    background: #fcf0ff;
-}
-
-.file-icon[data-extension="mp3"] .dashicons,
-.file-icon[data-extension="wav"] .dashicons,
-.file-icon[data-extension="mp4"] .dashicons,
-.file-icon[data-extension="mov"] .dashicons {
-    color: #8c35b1;
-}
-
-.file-icon[data-extension="xls"],
-.file-icon[data-extension="xlsx"],
-.file-icon[data-extension="csv"] {
-    background: #e5f5e7;
-}
-
-.file-icon[data-extension="xls"] .dashicons,
-.file-icon[data-extension="xlsx"] .dashicons,
-.file-icon[data-extension="csv"] .dashicons {
-    color: #007017;
-}
-
-.file-icon[data-extension="zip"],
-.file-icon[data-extension="rar"] {
-    background: #fcf9e8;
-}
-
-.file-icon[data-extension="zip"] .dashicons,
-.file-icon[data-extension="rar"] .dashicons {
-    color: #8a6116;
-}
-
 /* Responsive */
 @media screen and (max-width: 782px) {
     .file-manager-item {
         flex-wrap: wrap;
-        padding: 12px;
+        padding: 10px;
     }
 
-    .file-handle {
-        order: -1;
-    }
-
-    .file-icon {
-        width: 40px;
-        height: 40px;
-    }
-
-    .file-icon .dashicons {
-        font-size: 20px;
-        width: 20px;
-        height: 20px;
-    }
-
-    .file-details {
-        flex: 1 1 calc(100% - 120px);
+    .file-fields {
+        flex: 1 1 calc(100% - 100px);
     }
 
     .file-actions {

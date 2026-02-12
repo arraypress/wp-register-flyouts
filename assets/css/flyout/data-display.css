@@ -407,6 +407,10 @@
     border-color: #c3c4c7;
 }
 
+.image-picker--field .image-picker-placeholder {
+    min-height: 120px;
+}
+
 .image-picker--field .image-picker-placeholder .dashicons {
     font-size: 32px;
     width: 32px;

@@ -75,7 +75,6 @@ class Image implements Renderable {
 			'image'       => '',
 			'image_size'  => 'medium',
 			'image_shape' => 'rounded', // square, circle, rounded
-			'height'      => 200,       // Preview area height in px
 
 			// Placeholder
 			'icon'            => 'format-image',
@@ -85,17 +84,6 @@ class Image implements Renderable {
 			'class'           => '',
 			'required'        => false,
 		];
-	}
-
-	/**
-	 * Get inline height style
-	 *
-	 * @return string
-	 */
-	private function get_height_style(): string {
-		$height = max( 80, min( 400, (int) $this->config['height'] ) );
-
-		return "height:{$height}px;";
 	}
 
 	/**
@@ -121,7 +109,6 @@ class Image implements Renderable {
 		ob_start();
 		?>
         <div class="<?php echo esc_attr( implode( ' ', $picker_classes ) ); ?>"
-             style="<?php echo esc_attr( $this->get_height_style() ); ?>"
              data-name="<?php echo esc_attr( $this->config['name'] ); ?>"
              data-size="<?php echo esc_attr( $this->config['image_size'] ); ?>"
              data-icon="<?php echo esc_attr( $this->config['icon'] ); ?>">

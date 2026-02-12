@@ -2,12 +2,13 @@
 /**
  * EntityHeader Component
  *
- * Displays a unified header for any entity without action buttons.
+ * Displays a unified header for any entity with optional interactive image picker.
+ * Supports WordPress media library integration for selecting/replacing the header image.
  *
  * @package     ArrayPress\RegisterFlyouts\Components
  * @copyright   Copyright (c) 2025, ArrayPress Limited
  * @license     GPL2+
- * @version     1.0.0
+ * @version     2.0.0
  */
 
 declare( strict_types=1 );
@@ -36,6 +37,32 @@ class Header implements Renderable {
         if ( empty( $this->config['id'] ) ) {
             $this->config['id'] = 'entity-header-' . wp_generate_uuid4();
         }
+
+        // Resolve image from attachment_id if no image URL provided
+        if ( empty( $this->config['image'] ) && ! empty( $this->config['attachment_id'] ) ) {
+            $url = wp_get_attachment_image_url(
+                    (int) $this->config['attachment_id'],
+                    $this->config['image_size']
+            );
+            if ( $url ) {
+                $this->config['image'] = $url;
+            }
+        }
+
+        // Use fallback image if still no image
+        if ( empty( $this->config['image'] ) ) {
+            if ( ! empty( $this->config['fallback_attachment_id'] ) ) {
+                $url = wp_get_attachment_image_url(
+                        (int) $this->config['fallback_attachment_id'],
+                        $this->config['image_size']
+                );
+                if ( $url ) {
+                    $this->config['image'] = $url;
+                }
+            } elseif ( ! empty( $this->config['fallback_image'] ) ) {
+                $this->config['image'] = $this->config['fallback_image'];
+            }
+        }
     }
 
     /**
@@ -45,15 +72,32 @@ class Header implements Renderable {
      */
     private static function get_defaults(): array {
         return [
-                'id'          => '',
-                'title'       => '',
-                'subtitle'    => '',
-                'image'       => '',
-                'icon'        => '',
-                'badges'      => [],
-                'meta'        => [],
-                'description' => '',
-                'class'       => ''
+                'id'                     => '',
+                'name'                   => 'header_image',
+                'title'                  => '',
+                'subtitle'               => '',
+
+            // Image display
+                'image'                  => '',
+                'image_size'             => 'thumbnail',
+                'image_shape'            => 'square', // square, circle, rounded
+
+            // Image picker (interactive)
+                'editable'               => false,
+                'attachment_id'          => 0,
+
+            // Fallback when no image is set
+                'fallback_image'         => '',
+                'fallback_attachment_id' => 0,
+
+            // Icon (used when no image at all)
+                'icon'                   => '',
+
+            // Other header content
+                'badges'                 => [],
+                'meta'                   => [],
+                'description'            => '',
+                'class'                  => ''
         ];
     }
 
@@ -72,17 +116,21 @@ class Header implements Renderable {
             $classes[] = $this->config['class'];
         }
 
+        $has_visual = $this->config['image'] || $this->config['icon'] || $this->config['editable'];
+
         ob_start();
         ?>
         <div id="<?php echo esc_attr( $this->config['id'] ); ?>"
              class="<?php echo esc_attr( implode( ' ', $classes ) ); ?>">
 
-            <?php if ( $this->config['image'] || $this->config['icon'] ) : ?>
+            <?php if ( $has_visual ) : ?>
                 <div class="entity-header-visual">
-                    <?php if ( $this->config['image'] ) : ?>
+                    <?php if ( $this->config['editable'] ) : ?>
+                        <?php $this->render_editable_image(); ?>
+                    <?php elseif ( $this->config['image'] ) : ?>
                         <img src="<?php echo esc_url( $this->config['image'] ); ?>"
                              alt="<?php echo esc_attr( $this->config['title'] ); ?>"
-                             class="entity-header-image">
+                             class="entity-header-image shape-<?php echo esc_attr( $this->config['image_shape'] ); ?>">
                     <?php elseif ( $this->config['icon'] ) : ?>
                         <span class="entity-header-icon dashicons dashicons-<?php echo esc_attr( $this->config['icon'] ); ?>"></span>
                     <?php endif; ?>
@@ -116,6 +164,79 @@ class Header implements Renderable {
         </div>
         <?php
         return ob_get_clean();
+    }
+
+    /**
+     * Render the editable image picker
+     *
+     * Displays the current image (or placeholder) with a clickable overlay
+     * to open the WordPress media library. Stores the attachment ID in a
+     * hidden input for form submission.
+     *
+     * @return void
+     * @since 2.0.0
+     */
+    private function render_editable_image(): void {
+        $attachment_id = (int) ( $this->config['attachment_id'] ?? 0 );
+        $current_image = $this->config['image'] ?? '';
+        $has_image     = ! empty( $current_image );
+        $shape_class   = 'shape-' . ( $this->config['image_shape'] ?? 'square' );
+
+        $picker_classes = [
+                'entity-header-image-picker',
+                $shape_class,
+        ];
+        if ( $has_image ) {
+            $picker_classes[] = 'has-image';
+        }
+        ?>
+        <div class="<?php echo esc_attr( implode( ' ', $picker_classes ) ); ?>"
+             data-name="<?php echo esc_attr( $this->config['name'] ); ?>"
+             data-size="<?php echo esc_attr( $this->config['image_size'] ); ?>"
+             data-fallback-image="<?php echo esc_attr( $this->config['fallback_image'] ?? '' ); ?>"
+             data-fallback-attachment-id="<?php echo esc_attr( (string) ( $this->config['fallback_attachment_id'] ?? 0 ) ); ?>">
+
+            <?php // Current image or placeholder ?>
+            <div class="image-picker-preview">
+                <?php if ( $has_image ) : ?>
+                    <img src="<?php echo esc_url( $current_image ); ?>"
+                         alt="<?php echo esc_attr( $this->config['title'] ); ?>"
+                         class="image-picker-img">
+                <?php else : ?>
+                    <div class="image-picker-placeholder">
+                        <span class="dashicons dashicons-<?php echo esc_attr( $this->config['icon'] ?: 'format-image' ); ?>"></span>
+                    </div>
+                <?php endif; ?>
+            </div>
+
+            <?php // Hover overlay with actions ?>
+            <div class="image-picker-overlay">
+                <button type="button"
+                        class="image-picker-btn"
+                        data-action="select-image"
+                        title="<?php echo $has_image
+                                ? esc_attr__( 'Change image', 'wp-flyout' )
+                                : esc_attr__( 'Select image', 'wp-flyout' ); ?>">
+                    <span class="dashicons dashicons-<?php echo $has_image ? 'update' : 'plus-alt2'; ?>"></span>
+                </button>
+
+                <?php if ( $has_image ) : ?>
+                    <button type="button"
+                            class="image-picker-btn image-picker-remove"
+                            data-action="remove-image"
+                            title="<?php esc_attr_e( 'Remove image', 'wp-flyout' ); ?>">
+                        <span class="dashicons dashicons-trash"></span>
+                    </button>
+                <?php endif; ?>
+            </div>
+
+            <?php // Hidden input for form submission ?>
+            <input type="hidden"
+                   name="<?php echo esc_attr( $this->config['name'] ); ?>"
+                   value="<?php echo esc_attr( (string) $attachment_id ); ?>"
+                   class="image-picker-value">
+        </div>
+        <?php
     }
 
     /**

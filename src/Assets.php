@@ -70,6 +70,11 @@ class Assets {
 			'style'  => 'css/components/image-gallery.css',
 			'deps'   => [ 'jquery-ui-sortable', 'wp-mediaelement' ]
 		],
+		'header-picker'  => [
+			'script' => 'js/components/header-picker.js',
+			'style'  => '',
+			'deps'   => [ 'wp-mediaelement' ]
+		],
 		'notes'          => [
 			'script' => 'js/components/notes.js',
 			'style'  => 'css/components/notes.css',
@@ -397,7 +402,7 @@ class Assets {
 		}
 
 		// Handle special requirements
-		if ( $component === 'file-manager' ) {
+		if ( in_array( $component, [ 'file-manager', 'header-picker' ], true ) ) {
 			wp_enqueue_media();
 		}
 

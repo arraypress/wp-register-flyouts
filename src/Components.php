@@ -3,12 +3,12 @@
  * Component Registry
  *
  * Central registry for all flyout components.
- * Updated with Timeline using 'items' field for consistency.
+ * Updated with header image picker support.
  *
  * @package     ArrayPress\RegisterFlyouts
  * @copyright   Copyright (c) 2025, ArrayPress Limited
  * @license     GPL2+
- * @version     1.0.0
+ * @version     1.1.0
  * @author      David Sherlock
  */
 
@@ -109,10 +109,24 @@ class Components {
 		// ---- Headers & Titles ----
 		self::register( 'header', [
 			'class'       => Header::class,
-			'data_fields' => [ 'title', 'subtitle', 'image', 'icon', 'badges', 'meta', 'description' ],
-			'asset'       => null,
+			'data_fields' => [
+				'title',
+				'subtitle',
+				'image',
+				'icon',
+				'badges',
+				'meta',
+				'description',
+				'attachment_id',
+				'editable',
+				'image_size',
+				'image_shape',
+				'fallback_image',
+				'fallback_attachment_id'
+			],
+			'asset'       => null, // null when not editable; dynamically resolved
 			'category'    => 'display',
-			'description' => 'Unified header for any entity'
+			'description' => 'Unified header for any entity with optional image picker'
 		] );
 
 		// ---- Alerts & Messages ----
@@ -649,12 +663,22 @@ class Components {
 	/**
 	 * Get required asset for component
 	 *
-	 * @param string $type Component type
+	 * For the header component, the asset is conditionally required
+	 * only when the 'editable' flag is set in the field config.
+	 * This is handled by the Manager's detect_components method.
+	 *
+	 * @param string $type   Component type
+	 * @param array  $config Optional field config for conditional asset detection
 	 *
 	 * @return string|null Asset handle or null if no asset required
 	 */
-	public static function get_asset( string $type ): ?string {
+	public static function get_asset( string $type, array $config = [] ): ?string {
 		self::ensure_initialized();
+
+		// Header component conditionally needs assets only when editable
+		if ( $type === 'header' ) {
+			return ! empty( $config['editable'] ) ? 'header-picker' : null;
+		}
 
 		return self::$components[ $type ]['asset'] ?? null;
 	}

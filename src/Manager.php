@@ -1022,7 +1022,7 @@ class Manager {
 		foreach ( $config['fields'] as $field ) {
 			$type = $field['type'] ?? 'text';
 
-			if ( $asset = Components::get_asset( $type ) ) {
+			if ( $asset = Components::get_asset( $type, $field ) ) {
 				$this->components[] = $asset;
 			}
 		}

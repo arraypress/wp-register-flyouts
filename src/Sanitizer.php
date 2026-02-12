@@ -88,6 +88,8 @@ class Sanitizer {
 			'hidden'      => 'sanitize_text_field',
 
 			'price_config' => [ self::class, 'sanitize_price_config' ],
+
+			'header' => [ self::class, 'sanitize_header_image' ],
 		];
 
 		// Allow early filtering before assignment
@@ -531,6 +533,31 @@ class Sanitizer {
 			'recurring_interval'       => $interval,
 			'recurring_interval_count' => $interval_count,
 		];
+	}
+
+	/**
+	 * Sanitize header image picker data.
+	 *
+	 * The header component submits an attachment ID via its hidden input.
+	 * This validates it's a real image attachment.
+	 *
+	 * @param mixed $value Raw value (attachment ID).
+	 *
+	 * @return int Sanitized attachment ID (0 if invalid).
+	 */
+	public static function sanitize_header_image( $value ): int {
+		$attachment_id = absint( $value );
+
+		if ( $attachment_id <= 0 ) {
+			return 0;
+		}
+
+		// Verify it's a valid image attachment
+		if ( ! wp_attachment_is_image( $attachment_id ) ) {
+			return 0;
+		}
+
+		return $attachment_id;
 	}
 
 	// ========================================

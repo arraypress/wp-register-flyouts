@@ -51,21 +51,30 @@
         openMediaLibrary: function ($picker) {
             var self = this;
 
-            var frame = wp.media({
-                title: 'Select Image',
-                button: {
-                    text: 'Use This Image'
-                },
-                library: {
-                    type: 'image'
-                },
-                multiple: false
-            });
+            // Reuse existing frame if already created for this picker
+            var frame = $picker.data('media-frame');
 
-            frame.on('select', function () {
-                var attachment = frame.state().get('selection').first().toJSON();
-                self.setImage($picker, attachment);
-            });
+            if (!frame) {
+                frame = wp.media({
+                    title: 'Select Image',
+                    button: {
+                        text: 'Use This Image'
+                    },
+                    library: {
+                        type: 'image'
+                    },
+                    multiple: false
+                });
+
+                frame.on('select', function () {
+                    var attachment = frame.state().get('selection').first().toJSON();
+                    self.setImage($picker, attachment);
+                    frame.close();
+                });
+
+                // Cache the frame on the picker element
+                $picker.data('media-frame', frame);
+            }
 
             frame.open();
         },

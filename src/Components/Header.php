@@ -38,6 +38,9 @@ class Header implements Renderable {
             $this->config['id'] = 'entity-header-' . wp_generate_uuid4();
         }
 
+        // Sanitize thumbnail width
+        $this->config['thumbnail_width'] = max( 32, min( 200, (int) $this->config['thumbnail_width'] ) );
+
         // Resolve image from attachment_id if no image URL provided
         if ( empty( $this->config['image'] ) && ! empty( $this->config['attachment_id'] ) ) {
             $url = wp_get_attachment_image_url(
@@ -81,6 +84,7 @@ class Header implements Renderable {
                 'image'                  => '',
                 'image_size'             => 'thumbnail',
                 'image_shape'            => 'square', // square, circle, rounded
+                'thumbnail_width'        => 60,       // Display size in pixels (always square)
 
             // Image picker (interactive)
                 'editable'               => false,
@@ -99,6 +103,17 @@ class Header implements Renderable {
                 'description'            => '',
                 'class'                  => ''
         ];
+    }
+
+    /**
+     * Get the inline style string for the configured thumbnail dimensions.
+     *
+     * @return string
+     */
+    private function get_size_style(): string {
+        $width = $this->config['thumbnail_width'];
+
+        return sprintf( 'width:%dpx;height:%dpx;', $width, $width );
     }
 
     /**
@@ -130,9 +145,11 @@ class Header implements Renderable {
                     <?php elseif ( $this->config['image'] ) : ?>
                         <img src="<?php echo esc_url( $this->config['image'] ); ?>"
                              alt="<?php echo esc_attr( $this->config['title'] ); ?>"
-                             class="entity-header-image shape-<?php echo esc_attr( $this->config['image_shape'] ); ?>">
+                             class="entity-header-image shape-<?php echo esc_attr( $this->config['image_shape'] ); ?>"
+                             style="<?php echo esc_attr( $this->get_size_style() ); ?>">
                     <?php elseif ( $this->config['icon'] ) : ?>
-                        <span class="entity-header-icon dashicons dashicons-<?php echo esc_attr( $this->config['icon'] ); ?>"></span>
+                        <span class="entity-header-icon dashicons dashicons-<?php echo esc_attr( $this->config['icon'] ); ?>"
+                              style="<?php echo esc_attr( $this->get_size_style() ); ?>"></span>
                     <?php endif; ?>
                 </div>
             <?php endif; ?>
@@ -167,7 +184,7 @@ class Header implements Renderable {
     }
 
     /**
-     * Render the editable image picker
+     * Render the editable image picker.
      *
      * Displays the current image (or placeholder) with a clickable overlay
      * to open the WordPress media library. Stores the attachment ID in a
@@ -191,6 +208,7 @@ class Header implements Renderable {
         }
         ?>
         <div class="<?php echo esc_attr( implode( ' ', $picker_classes ) ); ?>"
+             style="<?php echo esc_attr( $this->get_size_style() ); ?>"
              data-name="<?php echo esc_attr( $this->config['name'] ); ?>"
              data-size="<?php echo esc_attr( $this->config['image_size'] ); ?>"
              data-fallback-image="<?php echo esc_attr( $this->config['fallback_image'] ?? '' ); ?>"
@@ -241,6 +259,8 @@ class Header implements Renderable {
 
     /**
      * Render badges
+     *
+     * @return void
      */
     private function render_badges(): void {
         foreach ( $this->config['badges'] as $badge ) {
@@ -257,14 +277,16 @@ class Header implements Renderable {
             }
             ?>
             <span class="badge badge-<?php echo esc_attr( $type ); ?>">
-                <?php echo esc_html( $text ); ?>
-            </span>
+				<?php echo esc_html( $text ); ?>
+			</span>
             <?php
         }
     }
 
     /**
      * Render meta items
+     *
+     * @return void
      */
     private function render_meta(): void {
         foreach ( $this->config['meta'] as $meta ) {
@@ -277,14 +299,14 @@ class Header implements Renderable {
             }
             ?>
             <span class="entity-header-meta-item">
-                <?php if ( $icon ) : ?>
+				<?php if ( $icon ) : ?>
                     <span class="dashicons dashicons-<?php echo esc_attr( $icon ); ?>"></span>
                 <?php endif; ?>
                 <?php if ( $label ) : ?>
                     <span class="meta-label"><?php echo esc_html( $label ); ?>:</span>
                 <?php endif; ?>
-                <span class="meta-value"><?php echo esc_html( $value ); ?></span>
-            </span>
+				<span class="meta-value"><?php echo esc_html( $value ); ?></span>
+			</span>
             <?php
         }
     }

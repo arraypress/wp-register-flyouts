@@ -1,16 +1,17 @@
 /**
- * WP Flyout Header Image Picker Component
+ * WP Flyout Image Picker Component
  *
- * Handles interactive image selection for the entity header component.
- * Integrates with WordPress Media Library for image picking.
+ * Handles interactive image selection via the WordPress Media Library.
+ * Used by both the header component (editable mode) and the standalone
+ * image field component.
  *
  * @package     ArrayPress\WPFlyout
- * @version     1.0.0
+ * @version     2.0.0
  */
 (function ($) {
     'use strict';
 
-    window.WPFlyoutHeaderPicker = {
+    window.WPFlyoutImagePicker = {
 
         init: function () {
             this.bindEvents();
@@ -18,10 +19,10 @@
 
         bindEvents: function () {
             // Select image via media library
-            $(document).on('click', '.entity-header-image-picker [data-action="select-image"]', this.handleSelect.bind(this));
+            $(document).on('click', '.image-picker [data-action="select-image"]', this.handleSelect.bind(this));
 
             // Remove image
-            $(document).on('click', '.entity-header-image-picker [data-action="remove-image"]', this.handleRemove.bind(this));
+            $(document).on('click', '.image-picker [data-action="remove-image"]', this.handleRemove.bind(this));
 
             // Re-init on flyout open
             $(document).on('wpflyout:opened flyout:ready', this.onFlyoutOpen.bind(this));
@@ -35,7 +36,7 @@
             e.preventDefault();
             e.stopPropagation();
 
-            var $picker = $(e.currentTarget).closest('.entity-header-image-picker');
+            var $picker = $(e.currentTarget).closest('.image-picker');
             this.openMediaLibrary($picker);
         },
 
@@ -43,7 +44,7 @@
             e.preventDefault();
             e.stopPropagation();
 
-            var $picker = $(e.currentTarget).closest('.entity-header-image-picker');
+            var $picker = $(e.currentTarget).closest('.image-picker');
             this.clearImage($picker);
         },
 
@@ -114,7 +115,7 @@
                 .addClass('dashicons-update');
 
             // Trigger event
-            $picker.trigger('header-image:changed', {
+            $picker.trigger('image-picker:changed', {
                 attachmentId: attachment.id,
                 url: url
             });
@@ -127,7 +128,6 @@
          */
         clearImage: function ($picker) {
             var fallbackImage = $picker.data('fallback-image') || '';
-            var fallbackAttachmentId = $picker.data('fallback-attachment-id') || 0;
 
             // Clear the hidden input (set to 0, not the fallback)
             $picker.find('.image-picker-value').val('0');
@@ -142,8 +142,8 @@
                 // Keep has-image for visual consistency but mark as fallback
                 $picker.addClass('has-image').addClass('is-fallback');
             } else {
-                // Show placeholder
-                var icon = 'format-image';
+                // Show placeholder — read icon from data attribute or default
+                var icon = $picker.data('icon') || 'format-image';
                 $preview.html(
                     '<div class="image-picker-placeholder">' +
                     '<span class="dashicons dashicons-' + icon + '"></span>' +
@@ -161,13 +161,13 @@
                 .addClass('dashicons-plus-alt2');
 
             // Trigger event
-            $picker.trigger('header-image:removed');
+            $picker.trigger('image-picker:removed');
         }
     };
 
     // Initialize on ready
     $(document).ready(function () {
-        WPFlyoutHeaderPicker.init();
+        WPFlyoutImagePicker.init();
     });
 
 })(jQuery);

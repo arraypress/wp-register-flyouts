@@ -159,7 +159,13 @@ class Assets {
 			'script' => 'js/components/price-config.js',
 			'style'  => 'css/components/price-config.css',
 			'deps'   => []
-		]
+		],
+
+		'image-picker' => [
+			'script' => 'js/components/header-picker.js',
+			'style'  => '',  // Uses data-display.css styles already loaded
+			'deps'   => [ 'wp-mediaelement' ]
+		],
 	];
 
 	/**
@@ -402,7 +408,7 @@ class Assets {
 		}
 
 		// Handle special requirements
-		if ( in_array( $component, [ 'file-manager', 'header-picker' ], true ) ) {
+		if ( in_array( $component, [ 'file-manager', 'header-picker', 'image-picker' ], true ) ) {
 			wp_enqueue_media();
 		}
 

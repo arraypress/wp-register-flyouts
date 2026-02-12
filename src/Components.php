@@ -20,6 +20,7 @@ use ArrayPress\RegisterFlyouts\Components\ActionButtons;
 use ArrayPress\RegisterFlyouts\Components\ActionMenu;
 use ArrayPress\RegisterFlyouts\Components\Articles;
 use ArrayPress\RegisterFlyouts\Components\FeatureList;
+use ArrayPress\RegisterFlyouts\Components\Image;
 use ArrayPress\RegisterFlyouts\Components\ImageGallery;
 use ArrayPress\RegisterFlyouts\Components\KeyValueList;
 use ArrayPress\RegisterFlyouts\Components\PaymentMethod;
@@ -301,6 +302,15 @@ class Components {
 			'category'    => 'form',
 			'description' => 'AJAX-powered select field'
 		] );
+
+		self::register( 'image', [
+			'class'       => Image::class,
+			'data_fields' => 'value',
+			'asset'       => 'image-picker',
+			'category'    => 'form',
+			'description' => 'Single image picker with media library integration'
+		] );
+
 	}
 
 	/**

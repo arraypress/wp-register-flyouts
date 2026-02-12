@@ -200,7 +200,7 @@ class Header implements Renderable {
         $shape_class   = 'shape-' . ( $this->config['image_shape'] ?? 'square' );
 
         $picker_classes = [
-                'entity-header-image-picker',
+                'image-picker',
                 $shape_class,
         ];
         if ( $has_image ) {
@@ -211,6 +211,7 @@ class Header implements Renderable {
              style="<?php echo esc_attr( $this->get_size_style() ); ?>"
              data-name="<?php echo esc_attr( $this->config['name'] ); ?>"
              data-size="<?php echo esc_attr( $this->config['image_size'] ); ?>"
+             data-icon="<?php echo esc_attr( $this->config['icon'] ?: 'format-image' ); ?>"
              data-fallback-image="<?php echo esc_attr( $this->config['fallback_image'] ?? '' ); ?>"
              data-fallback-attachment-id="<?php echo esc_attr( (string) ( $this->config['fallback_attachment_id'] ?? 0 ) ); ?>">
 

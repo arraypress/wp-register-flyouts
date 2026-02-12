@@ -264,7 +264,7 @@
    Dimensions set via inline style from PHP
    ======================================== */
 
-.entity-header-image-picker {
+.image-picker {
     position: relative;
     cursor: pointer;
     flex-shrink: 0;
@@ -272,7 +272,7 @@
 }
 
 /* Preview container */
-.entity-header-image-picker .image-picker-preview {
+.image-picker .image-picker-preview {
     width: 100%;
     height: 100%;
     overflow: hidden;
@@ -280,7 +280,7 @@
     border-radius: inherit;
 }
 
-.entity-header-image-picker .image-picker-img {
+.image-picker .image-picker-img {
     width: 100%;
     height: 100%;
     object-fit: cover;
@@ -288,12 +288,12 @@
 }
 
 /* Fallback image reduced opacity */
-.entity-header-image-picker .image-picker-fallback {
+.image-picker .image-picker-fallback {
     opacity: 0.6;
 }
 
 /* Placeholder (no image) */
-.entity-header-image-picker .image-picker-placeholder {
+.image-picker .image-picker-placeholder {
     width: 100%;
     height: 100%;
     background: #f6f7f7;
@@ -303,14 +303,14 @@
     color: #a7aaad;
 }
 
-.entity-header-image-picker .image-picker-placeholder .dashicons {
+.image-picker .image-picker-placeholder .dashicons {
     font-size: 24px;
     width: 24px;
     height: 24px;
 }
 
 /* Hover overlay */
-.entity-header-image-picker .image-picker-overlay {
+.image-picker .image-picker-overlay {
     position: absolute;
     inset: 0;
     background: rgba(0, 0, 0, 0.5);
@@ -323,12 +323,12 @@
     border-radius: inherit;
 }
 
-.entity-header-image-picker:hover .image-picker-overlay {
+.image-picker:hover .image-picker-overlay {
     opacity: 1;
 }
 
 /* Overlay action buttons */
-.entity-header-image-picker .image-picker-btn {
+.image-picker .image-picker-btn {
     background: rgba(255, 255, 255, 0.9);
     border: none;
     border-radius: 50%;
@@ -343,24 +343,24 @@
     transition: background 0.15s ease;
 }
 
-.entity-header-image-picker .image-picker-btn:hover {
+.image-picker .image-picker-btn:hover {
     background: #fff;
 }
 
-.entity-header-image-picker .image-picker-btn .dashicons {
+.image-picker .image-picker-btn .dashicons {
     font-size: 16px;
     width: 16px;
     height: 16px;
 }
 
 /* Remove button (red on hover) */
-.entity-header-image-picker .image-picker-remove:hover {
+.image-picker .image-picker-remove:hover {
     background: #d63638;
     color: #fff;
 }
 
 /* Hidden input */
-.entity-header-image-picker .image-picker-value {
+.image-picker .image-picker-value {
     display: none;
 }
 
@@ -368,7 +368,7 @@
    Image Picker - Shape: Circle
    ---------------------------------------- */
 
-.entity-header-image-picker.shape-circle {
+.image-picker.shape-circle {
     border-radius: 50%;
 }
 
@@ -376,7 +376,7 @@
    Image Picker - Shape: Square
    ---------------------------------------- */
 
-.entity-header-image-picker.shape-square {
+.image-picker.shape-square {
     border-radius: 0;
 }
 
@@ -384,8 +384,16 @@
    Image Picker - Shape: Rounded (default)
    ---------------------------------------- */
 
-.entity-header-image-picker.shape-rounded {
+.image-picker.shape-rounded {
     border-radius: 8px;
+}
+
+/* Empty text below picker */
+.image-picker-empty-text {
+    margin: 6px 0 0;
+    font-size: 12px;
+    color: #757575;
+    font-style: italic;
 }
 
 /* ========================================

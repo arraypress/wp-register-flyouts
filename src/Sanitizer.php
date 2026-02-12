@@ -89,7 +89,8 @@ class Sanitizer {
 
 			'price_config' => [ self::class, 'sanitize_price_config' ],
 
-			'header' => [ self::class, 'sanitize_header_image' ],
+			'header' => [ self::class, 'sanitize_image' ],
+			'image' => [ self::class, 'sanitize_image' ]
 		];
 
 		// Allow early filtering before assignment
@@ -545,7 +546,7 @@ class Sanitizer {
 	 *
 	 * @return int Sanitized attachment ID (0 if invalid).
 	 */
-	public static function sanitize_header_image( $value ): int {
+	public static function sanitize_image( $value ): int {
 		$attachment_id = absint( $value );
 
 		if ( $attachment_id <= 0 ) {

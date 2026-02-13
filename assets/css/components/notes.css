@@ -8,7 +8,6 @@
 
 /* Notes list container */
 .notes-list {
-    max-height: 400px;
     overflow-y: auto;
     margin-bottom: 15px;
     border: 1px solid var(--wp-flyout-border);

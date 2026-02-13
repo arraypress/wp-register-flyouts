@@ -60,7 +60,7 @@
             var config = this.getFlyoutConfig($component);
             var objectType = $component.data('object-type');
             var objectId = $flyout.find('input[name="id"]').val();
-            var addAction = $component.data('add-action') || 'add_note';
+            var addAction = $component.data('add-action') || 'add';
 
             $button.prop('disabled', true).text('Adding...');
 
@@ -127,7 +127,7 @@
             var config = this.getFlyoutConfig($component);
             var objectType = $component.data('object-type');
             var objectId = $flyout.find('input[name="id"]').val();
-            var deleteAction = $component.data('delete-action') || 'delete_note';
+            var deleteAction = $component.data('delete-action') || 'delete';
 
             $button.prop('disabled', true);
 

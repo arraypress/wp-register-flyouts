@@ -384,7 +384,36 @@ class Manager {
 	 * @since 4.0.0
 	 */
 	private function normalize_ajax_fields( array $field, string $field_key, $data ): array {
-		if ( ( $field['type'] ?? 'text' ) !== 'ajax_select' ) {
+		$type = $field['type'] ?? 'text';
+
+		// Convert derivative types to ajax_select with built-in callback.
+		switch ( $type ) {
+			case 'post':
+				$field['type']     = 'ajax_select';
+				$field['callback'] = SearchCallbacks::posts(
+					$field['post_type'] ?? 'post',
+					$field['query_args'] ?? []
+				);
+				break;
+
+			case 'taxonomy':
+				$field['type']     = 'ajax_select';
+				$field['callback'] = SearchCallbacks::taxonomy(
+					$field['taxonomy'] ?? 'category',
+					$field['query_args'] ?? []
+				);
+				break;
+
+			case 'user':
+				$field['type']     = 'ajax_select';
+				$field['callback'] = SearchCallbacks::users(
+					$field['role'] ?? '',
+					$field['query_args'] ?? []
+				);
+				break;
+		}
+
+		if ( $field['type'] !== 'ajax_select' ) {
 			return $field;
 		}
 

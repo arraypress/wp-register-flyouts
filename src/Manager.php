@@ -393,7 +393,7 @@ class Manager {
 		$data_key = $field['name'] ?? $field_key;
 
 		// Set the REST search URL for Select2 to call.
-		$field['ajax_url'] = rest_url( RestApi::NAMESPACE . '/search' );
+		$field['ajax_url']    = rest_url( RestApi::NAMESPACE . '/search' );
 		$field['ajax_params'] = [
 			'manager'   => $this->prefix,
 			'flyout'    => $this->get_flyout_id_for_field( $field_key ),
@@ -557,7 +557,7 @@ class Manager {
 		}
 
 		// Localize REST API data for JavaScript.
-		wp_localize_script( 'wp-flyout', 'wpFlyout', [
+		wp_localize_script( 'wp-flyout-manager', 'wpFlyout', [
 			'restUrl'   => rest_url( RestApi::NAMESPACE ),
 			'restNonce' => wp_create_nonce( 'wp_rest' ),
 		] );

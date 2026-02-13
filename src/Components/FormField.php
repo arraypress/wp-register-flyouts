@@ -8,7 +8,7 @@
  * @package     ArrayPress\RegisterFlyouts\Components
  * @copyright   Copyright (c) 2025, ArrayPress Limited
  * @license     GPL2+
- * @version     6.0.0
+ * @version     7.0.0
  * @author      David Sherlock
  */
 
@@ -68,7 +68,6 @@ class FormField implements Renderable {
      * @param array $config Field configuration array.
      *
      * @since 5.0.0
-     *
      */
     public function __construct( array $config ) {
         $this->config = $this->normalize_config( $config );
@@ -77,13 +76,10 @@ class FormField implements Renderable {
     /**
      * Normalize field configuration
      *
-     * Ensures all required keys exist with appropriate defaults.
-     *
      * @param array $config Raw configuration array.
      *
      * @return array Normalized configuration.
      * @since 5.0.0
-     *
      */
     private function normalize_config( array $config ): array {
         $defaults = [
@@ -103,23 +99,18 @@ class FormField implements Renderable {
                 'condition'     => null,
         ];
 
-        // Type-specific defaults
         $type_defaults = $this->get_type_defaults( $config['type'] ?? 'text' );
 
-        // Merge all defaults
         $config = array_merge( $defaults, $type_defaults, $config );
 
-        // Auto-generate ID from name if not provided
         if ( empty( $config['id'] ) && ! empty( $config['name'] ) ) {
             $config['id'] = sanitize_key( $config['name'] );
         }
 
-        // Load value from callback if provided
         if ( is_callable( $config['data_callback'] ) ) {
             $config['value'] = call_user_func( $config['data_callback'] );
         }
 
-        // Set appropriate class based on type
         if ( empty( $config['class'] ) ) {
             $config['class'] = $this->get_default_class( (string) $config['type'] );
         }
@@ -146,8 +137,8 @@ class FormField implements Renderable {
                         'multiple' => false,
                 ],
                 'ajax_select' => [
-                        'ajax'        => '',
-                        'nonce'       => '',
+                        'ajax_url'    => '',
+                        'ajax_params' => [],
                         'options'     => [],
                         'multiple'    => false,
                         'tags'        => false,
@@ -190,7 +181,6 @@ class FormField implements Renderable {
      *
      * @return string Default CSS class.
      * @since 5.0.0
-     *
      */
     private function get_default_class( string $type ): string {
         $classes = [
@@ -211,7 +201,6 @@ class FormField implements Renderable {
      *
      * @return bool True if field should be displayed.
      * @since 5.0.0
-     *
      */
     private function should_display(): bool {
         if ( empty( $this->config['condition'] ) ) {
@@ -226,14 +215,12 @@ class FormField implements Renderable {
      *
      * @return string Generated HTML.
      * @since 5.0.0
-     *
      */
     public function render(): string {
         if ( ! $this->should_display() ) {
             return '';
         }
 
-        // Hidden fields don't need wrapper
         if ( $this->config['type'] === 'hidden' ) {
             return $this->render_hidden();
         }
@@ -244,25 +231,20 @@ class FormField implements Renderable {
                 $this->config['wrapper_class']
         ];
 
-        // Build wrapper attributes from config
         $wrapper_attrs = $this->config['wrapper_attrs'] ?? [];
 
-        // Handle classes
         if ( ! empty( $wrapper_attrs['class'] ) ) {
             $wrapper_classes[] = $wrapper_attrs['class'];
             unset( $wrapper_attrs['class'] );
         }
 
-        // Build attribute string
         $attrs_html = '';
 
-        // Add ID
         if ( ! empty( $wrapper_attrs['id'] ) ) {
             $attrs_html .= sprintf( ' id="%s"', esc_attr( $wrapper_attrs['id'] ) );
             unset( $wrapper_attrs['id'] );
         }
 
-        // Add remaining attributes
         foreach ( $wrapper_attrs as $attr => $value ) {
             if ( $attr === 'data-depends' ) {
                 $attrs_html .= sprintf( ' %s=\'%s\'', $attr, $value );
@@ -283,7 +265,7 @@ class FormField implements Renderable {
                 </label>
             <?php endif; ?>
 
-            <?php echo $this->render_field(); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
+            <?php echo $this->render_field(); ?>
 
             <?php if ( $this->config['description'] ) : ?>
                 <p class="description"><?php echo esc_html( $this->config['description'] ); ?></p>
@@ -298,11 +280,9 @@ class FormField implements Renderable {
      *
      * @return string Generated field HTML.
      * @since 5.0.0
-     *
      */
     private function render_field(): string {
-        $type = $this->config['type'];
-
+        $type     = $this->config['type'];
         $renderer = self::$type_renderers[ $type ] ?? 'render_input';
 
         if ( ! method_exists( $this, $renderer ) ) {
@@ -317,7 +297,6 @@ class FormField implements Renderable {
      *
      * @return string Generated HTML.
      * @since 5.0.0
-     *
      */
     private function render_input(): string {
         $valid_types = [ 'text', 'email', 'url', 'number', 'tel', 'password', 'date', 'search' ];
@@ -371,7 +350,6 @@ class FormField implements Renderable {
      *
      * @return string Generated HTML.
      * @since 5.0.0
-     *
      */
     private function render_hidden(): string {
         return sprintf(
@@ -386,7 +364,6 @@ class FormField implements Renderable {
      *
      * @return string Generated HTML.
      * @since 5.0.0
-     *
      */
     private function render_textarea(): string {
         return sprintf(
@@ -409,7 +386,6 @@ class FormField implements Renderable {
      *
      * @return string Generated HTML.
      * @since 5.0.0
-     *
      */
     private function render_select(): string {
         ob_start();
@@ -445,7 +421,6 @@ class FormField implements Renderable {
      *
      * @return string Generated HTML.
      * @since 5.0.0
-     *
      */
     private function render_toggle(): string {
         $is_checked = ! empty( $this->config['value'] ) || ! empty( $this->config['checked'] );
@@ -469,15 +444,15 @@ class FormField implements Renderable {
     /**
      * Render AJAX select field using Select2
      *
-     * Outputs a <select> element with data attributes that the JS layer
-     * uses to initialize Select2 with AJAX search and hydration support.
+     * Outputs a <select> element with REST API data attributes that the
+     * JS layer uses to initialize Select2 with search and hydration support.
      *
-     * @return string Generated HTML
-     * @since 6.0.0
+     * @return string Generated HTML.
+     * @since 7.0.0
      */
     private function render_ajax_select(): string {
-        $ajax_action = $this->config['ajax'] ?? '';
-        $nonce       = $this->config['nonce'] ?? '';
+        $ajax_url    = $this->config['ajax_url'] ?? '';
+        $ajax_params = $this->config['ajax_params'] ?? [];
         $multiple    = ! empty( $this->config['multiple'] );
         $tags        = ! empty( $this->config['tags'] );
 
@@ -486,8 +461,8 @@ class FormField implements Renderable {
         <select id="<?php echo esc_attr( $this->config['id'] ); ?>"
                 name="<?php echo esc_attr( $this->config['name'] ); ?><?php echo $multiple ? '[]' : ''; ?>"
                 class="wp-flyout-ajax-select <?php echo esc_attr( $this->config['class'] ); ?>"
-                data-ajax-action="<?php echo esc_attr( $ajax_action ); ?>"
-                data-nonce="<?php echo esc_attr( $nonce ); ?>"
+                data-ajax-url="<?php echo esc_url( $ajax_url ); ?>"
+                data-ajax-params='<?php echo esc_attr( wp_json_encode( $ajax_params ) ); ?>'
                 data-placeholder="<?php echo esc_attr( $this->config['placeholder'] ); ?>"
                 <?php if ( $multiple ) : ?>
                     multiple="multiple"
@@ -498,9 +473,7 @@ class FormField implements Renderable {
                 <?php echo $this->config['required'] ? 'required' : ''; ?>
                 <?php echo $this->config['disabled'] ? 'disabled' : ''; ?>>
 
-            <?php
-            // Render pre-loaded options (from hydration callback or server-side resolution)
-            if ( ! empty( $this->config['options'] ) && is_array( $this->config['options'] ) ) :
+            <?php if ( ! empty( $this->config['options'] ) && is_array( $this->config['options'] ) ) :
                 $current_value = $this->config['value'];
                 $current_values = is_array( $current_value ) ? $current_value : [ $current_value ];
 
@@ -510,10 +483,8 @@ class FormField implements Renderable {
                     <option value="<?php echo esc_attr( $value ); ?>"<?php echo $is_selected ? ' selected' : ''; ?>>
                         <?php echo esc_html( $label ); ?>
                     </option>
-                <?php
-                endforeach;
-            endif;
-            ?>
+                <?php endforeach;
+            endif; ?>
         </select>
         <?php
         return ob_get_clean();
@@ -563,7 +534,6 @@ class FormField implements Renderable {
      *
      * @return string Generated HTML.
      * @since 5.0.0
-     *
      */
     private function render_radio(): string {
         ob_start();
@@ -590,7 +560,6 @@ class FormField implements Renderable {
      *
      * @return string Generated HTML.
      * @since 5.0.0
-     *
      */
     private function render_color(): string {
         $value = $this->config['value'] ?: $this->config['default'];

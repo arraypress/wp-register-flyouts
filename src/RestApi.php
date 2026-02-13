@@ -103,12 +103,12 @@ class RestApi {
 					'type'              => 'string',
 					'sanitize_callback' => 'sanitize_key',
 				],
-				'term'      => [
+				'term' => [
 					'required' => false,
 					'type'     => 'string',
 					'default'  => '',
 				],
-				'include'   => [
+				'include' => [
 					'required' => false,
 					'type'     => 'string',
 					'default'  => '',
@@ -143,7 +143,7 @@ class RestApi {
 				'type'              => 'string',
 				'sanitize_callback' => 'sanitize_key',
 			],
-			'flyout'  => [
+			'flyout' => [
 				'required'          => true,
 				'type'              => 'string',
 				'sanitize_callback' => 'sanitize_key',
@@ -470,57 +470,42 @@ class RestApi {
 			);
 		}
 
-		// Unified callback (preferred).
-		if ( ! empty( $field['callback'] ) && is_callable( $field['callback'] ) ) {
-			$ids = null;
-			if ( ! empty( $include ) ) {
-				$raw_ids = is_string( $include ) ? explode( ',', $include ) : (array) $include;
-				$ids     = array_map( 'absint', array_filter( $raw_ids ) );
-				$term    = '';
-			}
-
-			$result = call_user_func( $field['callback'], $term, $ids );
-
-			if ( is_wp_error( $result ) ) {
-				return $result;
-			}
-
-			// Normalize to Select2 format: [ { id, text }, ... ]
-			$formatted = [];
-			if ( is_array( $result ) ) {
-				foreach ( $result as $value => $label ) {
-					$formatted[] = [
-						'id'   => (string) $value,
-						'text' => (string) $label,
-					];
-				}
-			}
-
-			return new WP_REST_Response( [
-				'success' => true,
-				'results' => $formatted,
-			] );
+		if ( empty( $field['callback'] ) || ! is_callable( $field['callback'] ) ) {
+			return new WP_Error(
+				'flyout_search_no_callback',
+				sprintf( __( 'No search callback defined for field "%s".', 'arraypress' ), $field_key ),
+				[ 'status' => 500 ]
+			);
 		}
 
-		// Legacy search_callback fallback.
-		if ( ! empty( $field['search_callback'] ) && is_callable( $field['search_callback'] ) ) {
-			$result = call_user_func( $field['search_callback'], $term );
-
-			if ( is_wp_error( $result ) ) {
-				return $result;
-			}
-
-			return new WP_REST_Response( [
-				'success' => true,
-				'results' => $result,
-			] );
+		$ids = null;
+		if ( ! empty( $include ) ) {
+			$raw_ids = is_string( $include ) ? explode( ',', $include ) : (array) $include;
+			$ids     = array_map( 'absint', array_filter( $raw_ids ) );
+			$term    = '';
 		}
 
-		return new WP_Error(
-			'flyout_search_no_callback',
-			sprintf( __( 'No search callback defined for field "%s".', 'arraypress' ), $field_key ),
-			[ 'status' => 500 ]
-		);
+		$result = call_user_func( $field['callback'], $term, $ids );
+
+		if ( is_wp_error( $result ) ) {
+			return $result;
+		}
+
+		// Normalize to Select2 format: [ { id, text }, ... ]
+		$formatted = [];
+		if ( is_array( $result ) ) {
+			foreach ( $result as $value => $label ) {
+				$formatted[] = [
+					'id'   => (string) $value,
+					'text' => (string) $label,
+				];
+			}
+		}
+
+		return new WP_REST_Response( [
+			'success' => true,
+			'results' => $formatted,
+		] );
 	}
 
 	/**
@@ -556,7 +541,7 @@ class RestApi {
 		}
 
 		// Action callbacks receive all request params.
-		$params               = $request->get_json_params();
+		$params = $request->get_json_params();
 		$params['id']         = $item_id;
 		$params['action_key'] = $action_key;
 
@@ -619,23 +604,22 @@ class RestApi {
 		foreach ( $fields as $field ) {
 			$type = $field['type'] ?? '';
 
-			// Notes component: match action key to add/delete callbacks.
-			if ( $type === 'notes' ) {
-				$add_action    = $field['add_action'] ?? 'add_note';
-				$delete_action = $field['delete_action'] ?? 'delete_note';
-
-				if ( $action_key === $add_action && ! empty( $field['add_callback'] ) && is_callable( $field['add_callback'] ) ) {
-					return $field['add_callback'];
+			// Direct callback on field (e.g. add_callback, delete_callback).
+			if ( ! empty( $field['callback'] ) && is_callable( $field['callback'] ) ) {
+				if ( ( $field['action'] ?? '' ) === $action_key ) {
+					return $field['callback'];
 				}
-
-				if ( $action_key === $delete_action && ! empty( $field['delete_callback'] ) && is_callable( $field['delete_callback'] ) ) {
-					return $field['delete_callback'];
-				}
-
-				continue;
 			}
 
-			// Determine which key holds the action items.
+			if ( $action_key === 'add' && ! empty( $field['add_callback'] ) && is_callable( $field['add_callback'] ) ) {
+				return $field['add_callback'];
+			}
+
+			if ( $action_key === 'delete' && ! empty( $field['delete_callback'] ) && is_callable( $field['delete_callback'] ) ) {
+				return $field['delete_callback'];
+			}
+
+			// Action buttons/menu: search within items array.
 			$items = [];
 			if ( $type === 'action_buttons' ) {
 				$items = $field['buttons'] ?? [];
@@ -646,7 +630,6 @@ class RestApi {
 			}
 
 			foreach ( $items as $item ) {
-				// Skip separators.
 				if ( isset( $item['type'] ) && $item['type'] === 'separator' ) {
 					continue;
 				}

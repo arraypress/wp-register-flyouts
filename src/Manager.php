@@ -384,15 +384,13 @@ class Manager {
 	 * @since 4.0.0
 	 */
 	private function normalize_ajax_fields( array $field, string $field_key, $data ): array {
-		$type = $field['type'] ?? 'text';
-
-		if ( $type !== 'ajax_select' ) {
+		if ( ( $field['type'] ?? 'text' ) !== 'ajax_select' ) {
 			return $field;
 		}
 
 		$data_key = $field['name'] ?? $field_key;
 
-		// Set the REST search URL for Select2 to call.
+		// Set the REST search URL for Select2.
 		$field['ajax_url']    = rest_url( RestApi::NAMESPACE . '/search' );
 		$field['ajax_params'] = [
 			'manager'   => $this->prefix,
@@ -405,14 +403,10 @@ class Manager {
 			$field['value'] = Components::resolve_value( $data_key, $data );
 		}
 
-		// Hydrate options using the callback if we have a value but no options.
-		if ( ! empty( $field['value'] ) && empty( $field['options'] ) ) {
-			if ( ! empty( $field['callback'] ) && is_callable( $field['callback'] ) ) {
-				$ids              = is_array( $field['value'] ) ? $field['value'] : [ $field['value'] ];
-				$field['options'] = call_user_func( $field['callback'], '', $ids );
-			} elseif ( ! empty( $field['options_callback'] ) && is_callable( $field['options_callback'] ) ) {
-				$field['options'] = call_user_func( $field['options_callback'], $field['value'], $data );
-			}
+		// Hydrate options from callback if we have a value but no options.
+		if ( ! empty( $field['value'] ) && empty( $field['options'] ) && ! empty( $field['callback'] ) && is_callable( $field['callback'] ) ) {
+			$ids              = is_array( $field['value'] ) ? $field['value'] : [ $field['value'] ];
+			$field['options'] = call_user_func( $field['callback'], '', $ids );
 		}
 
 		return $field;

@@ -56,8 +56,8 @@ class Notes implements Renderable {
                 'placeholder'   => __( 'Add a note... (Shift+Enter to submit)', 'arraypress' ),
                 'empty_text'    => __( 'No notes yet.', 'arraypress' ),
                 'object_type'   => '',
-                'add_action'    => 'add_note',
-                'delete_action' => 'delete_note',
+                'add_action'    => 'add',
+                'delete_action' => 'delete',
                 'class'         => ''
         ];
     }

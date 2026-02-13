@@ -639,8 +639,7 @@ class RestApi {
 	/**
 	 * Find an action callback by action key within the fields array.
 	 *
-	 * Searches fields for a matching {action_key}_callback key, then
-	 * searches action_buttons and action_menu items for a matching action.
+	 * Searches action_buttons, action_menu, and notes field types for matching action keys.
 	 *
 	 * @param array  $fields     Flat fields array from flyout config.
 	 * @param string $action_key Action key to find.
@@ -651,10 +650,11 @@ class RestApi {
 		foreach ( $fields as $field ) {
 			$type = $field['type'] ?? '';
 
-			// Check for {action_key}_callback on the field (e.g. add_callback, delete_callback).
-			$callback_key = $action_key . '_callback';
-			if ( ! empty( $field[ $callback_key ] ) && is_callable( $field[ $callback_key ] ) ) {
-				return $field[ $callback_key ];
+			// Direct callback on field (e.g. refund_form with action + callback).
+			if ( ! empty( $field['callback'] ) && is_callable( $field['callback'] ) ) {
+				if ( ( $field['action'] ?? '' ) === $action_key ) {
+					return $field['callback'];
+				}
 			}
 
 			// Action buttons/menu: search within items array.

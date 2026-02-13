@@ -222,6 +222,9 @@ class LineItems implements Renderable {
                 <input type="hidden"
                        name="<?php echo esc_attr( $this->config['name'] ); ?>[<?php echo $index; ?>][name]"
                        value="<?php echo esc_attr( $item['name'] ?? '' ); ?>">
+                <input type="hidden"
+                       name="<?php echo esc_attr( $this->config['name'] ); ?>[<?php echo $index; ?>][thumbnail]"
+                       value="<?php echo esc_url( $item['thumbnail'] ?? '' ); ?>">
             </td>
 
             <?php if ( $this->config['show_quantity'] ) : ?>
@@ -294,6 +297,8 @@ class LineItems implements Renderable {
                            value="{{item_id}}">
                     <input type="hidden" name="<?php echo esc_attr( $this->config['name'] ); ?>[{{index}}][name]"
                            value="{{name}}">
+                    <input type="hidden" name="<?php echo esc_attr( $this->config['name'] ); ?>[{{index}}][thumbnail]"
+                           value="{{thumbnail}}">
                 </td>
 
                 <?php if ( $this->config['show_quantity'] ) : ?>

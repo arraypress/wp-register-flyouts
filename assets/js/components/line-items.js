@@ -181,6 +181,7 @@
                 .replace(/{{price}}/g, price)
                 .replace(/{{price_formatted}}/g, formatter.format(price / 100))
                 .replace(/{{total_formatted}}/g, formatter.format(price / 100))
+                .replace(/{{thumbnail}}/g, this.escapeHtml(product.thumbnail || ''))
                 .replace(/{{thumbnail_html}}/g, thumbnailHtml);
 
             var $newRow = $(html);

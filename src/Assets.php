@@ -148,6 +148,11 @@ class Assets {
 			'style'  => 'css/components/price-config.css',
 			'deps'   => []
 		],
+		'refund-form' => [
+			'script' => 'js/components/refund-form.js',
+			'style'  => 'css/components/refund-form.css',
+			'deps'   => []
+		],
 	];
 
 	/**

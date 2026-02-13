@@ -1,0 +1,229 @@
+/**
+ * WP Flyout - Refund Form Component
+ *
+ * @version 1.0.0
+ */
+
+.wp-flyout-refund-form {
+    margin: 20px 0;
+}
+
+/* ==========================================================================
+   TRIGGER BUTTON
+   ========================================================================== */
+
+.refund-trigger {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.refund-trigger .dashicons {
+    font-size: 16px;
+    width: 16px;
+    height: 16px;
+    line-height: 16px;
+}
+
+/* ==========================================================================
+   PANEL
+   ========================================================================== */
+
+.refund-panel {
+    margin-top: 12px;
+    padding: 16px;
+    background: #f6f7f7;
+    border: 1px solid var(--wp-flyout-border, #c3c4c7);
+    border-radius: 6px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+/* ==========================================================================
+   SUMMARY LINE
+   ========================================================================== */
+
+.refund-summary {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 8px;
+    font-size: 13px;
+    color: var(--wp-flyout-text-muted, #646970);
+    padding-bottom: 12px;
+    border-bottom: 1px solid var(--wp-flyout-border, #c3c4c7);
+}
+
+.refund-summary-item {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.refund-summary-label {
+    font-weight: 500;
+}
+
+.refund-summary-value {
+    color: var(--wp-flyout-text, #1e1e1e);
+}
+
+.refund-summary-refunded {
+    color: #d63638;
+}
+
+.refund-summary-sep {
+    color: #c3c4c7;
+}
+
+/* Fully refunded badge */
+.refund-fully-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 2px 8px;
+    border-radius: 3px;
+    font-size: 11px;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    background: #fce8e8;
+    color: #d63638;
+}
+
+.wp-flyout-refund-form.is-fully-refunded {
+    padding: 12px 16px;
+    background: #f6f7f7;
+    border: 1px solid var(--wp-flyout-border, #c3c4c7);
+    border-radius: 6px;
+}
+
+.wp-flyout-refund-form.is-fully-refunded .refund-summary {
+    padding-bottom: 0;
+    border-bottom: none;
+}
+
+/* ==========================================================================
+   FIELDS
+   ========================================================================== */
+
+.refund-field {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.refund-field label {
+    font-size: 11px;
+    font-weight: 500;
+    color: #8c8f94;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+}
+
+/* Amount input with currency prefix */
+.refund-amount-wrap {
+    display: flex;
+    align-items: stretch;
+    border: 1px solid #8c8f94;
+    border-radius: 4px;
+    overflow: hidden;
+    transition: border-color 0.15s;
+}
+
+.refund-amount-wrap:focus-within {
+    border-color: #2271b1;
+    box-shadow: 0 0 0 1px #2271b1;
+}
+
+.refund-currency-symbol {
+    display: flex;
+    align-items: center;
+    padding: 8px 10px;
+    background: #f0f0f1;
+    font-size: 13px;
+    font-weight: 500;
+    color: #50575e;
+    border-right: 1px solid #8c8f94;
+    white-space: nowrap;
+}
+
+.refund-amount-input {
+    flex: 1;
+    padding: 8px;
+    border: none;
+    font-size: 14px;
+    background: #fff;
+    outline: none;
+    min-width: 0;
+}
+
+.refund-amount-input:focus {
+    outline: none;
+    box-shadow: none;
+}
+
+/* Reason select */
+.refund-reason-select,
+.refund-custom-input {
+    width: 100%;
+    padding: 8px;
+    border: 1px solid #8c8f94;
+    border-radius: 4px;
+    font-size: 14px;
+    background: #fff;
+    transition: border-color 0.15s;
+}
+
+.refund-reason-select {
+    cursor: pointer;
+    appearance: none;
+    background-image: url('data:image/svg+xml;charset=UTF-8,%3csvg xmlns="http://www.w3.org/2000/svg" width="14" height="8" viewBox="0 0 14 8"%3e%3cpath fill="%23646970" d="M7 8L0 0h14L7 8z"/%3e%3c/svg%3e');
+    background-repeat: no-repeat;
+    background-position: right 8px center;
+    background-size: 10px 6px;
+    padding-right: 28px;
+}
+
+.refund-reason-select:focus,
+.refund-custom-input:focus {
+    border-color: #2271b1;
+    box-shadow: 0 0 0 1px #2271b1;
+    outline: none;
+}
+
+/* ==========================================================================
+   ACTIONS
+   ========================================================================== */
+
+.refund-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding-top: 4px;
+}
+
+.refund-submit {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.refund-submit .button-spinner {
+    display: none;
+}
+
+.refund-submit .button-spinner .dashicons {
+    font-size: 16px;
+    width: 16px;
+    height: 16px;
+    animation: wp-flyout-spin 1s linear infinite;
+}
+
+.refund-cancel {
+    color: var(--wp-flyout-text-muted, #646970) !important;
+}
+
+.refund-cancel:hover {
+    color: var(--wp-flyout-text, #1e1e1e) !important;
+}

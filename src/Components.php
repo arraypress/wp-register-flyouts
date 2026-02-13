@@ -30,6 +30,7 @@ use ArrayPress\RegisterFlyouts\Components\FileManager;
 use ArrayPress\RegisterFlyouts\Components\Notes;
 use ArrayPress\RegisterFlyouts\Components\LineItems;
 use ArrayPress\RegisterFlyouts\Components\Accordion;
+use ArrayPress\RegisterFlyouts\Components\RefundForm;
 use ArrayPress\RegisterFlyouts\Components\Stats;
 use ArrayPress\RegisterFlyouts\Components\Timeline;
 use ArrayPress\RegisterFlyouts\Components\Header;
@@ -245,6 +246,14 @@ class Components {
 			'asset'       => 'gallery',
 			'category'    => 'interactive',
 			'description' => 'Multi-image gallery with media library and reordering'
+		] );
+
+		self::register( 'refund_form', [
+			'class'       => RefundForm::class,
+			'data_fields' => [ 'amount_paid', 'amount_refunded', 'currency' ],
+			'asset'       => 'refund-form',
+			'category'    => 'interactive',
+			'description' => 'Inline refund form for full or partial refunds'
 		] );
 	}
 

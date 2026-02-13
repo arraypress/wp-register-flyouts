@@ -165,7 +165,8 @@
 }
 
 .price-config-preset-select {
-    padding: 8px;
+    padding: 8px !important;
+    max-width: none !important;
 }
 
 /* Custom interval row */

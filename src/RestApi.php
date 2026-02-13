@@ -103,12 +103,12 @@ class RestApi {
 					'type'              => 'string',
 					'sanitize_callback' => 'sanitize_key',
 				],
-				'term' => [
+				'term'      => [
 					'required' => false,
 					'type'     => 'string',
 					'default'  => '',
 				],
-				'include' => [
+				'include'   => [
 					'required' => false,
 					'type'     => 'string',
 					'default'  => '',
@@ -143,7 +143,7 @@ class RestApi {
 				'type'              => 'string',
 				'sanitize_callback' => 'sanitize_key',
 			],
-			'flyout' => [
+			'flyout'  => [
 				'required'          => true,
 				'type'              => 'string',
 				'sanitize_callback' => 'sanitize_key',
@@ -470,6 +470,9 @@ class RestApi {
 			);
 		}
 
+		// Resolve derivative types to their built-in callbacks.
+		$field = self::resolve_field_callback( $field );
+
 		if ( empty( $field['callback'] ) || ! is_callable( $field['callback'] ) ) {
 			return new WP_Error(
 				'flyout_search_no_callback',
@@ -541,7 +544,7 @@ class RestApi {
 		}
 
 		// Action callbacks receive all request params.
-		$params = $request->get_json_params();
+		$params               = $request->get_json_params();
 		$params['id']         = $item_id;
 		$params['action_key'] = $action_key;
 
@@ -565,6 +568,49 @@ class RestApi {
 	// =========================================================================
 	// FIELD & ACTION RESOLUTION
 	// =========================================================================
+
+	/**
+	 * Resolve derivative field types to their built-in callbacks.
+	 *
+	 * Converts post, taxonomy, and user types to ajax_select with
+	 * the appropriate SearchCallbacks closure.
+	 *
+	 * @param array $field Field configuration.
+	 *
+	 * @return array Field with callback resolved.
+	 */
+	private static function resolve_field_callback( array $field ): array {
+		if ( ! empty( $field['callback'] ) && is_callable( $field['callback'] ) ) {
+			return $field;
+		}
+
+		$type = $field['type'] ?? '';
+
+		switch ( $type ) {
+			case 'post':
+				$field['callback'] = SearchCallbacks::posts(
+					$field['post_type'] ?? 'post',
+					$field['query_args'] ?? []
+				);
+				break;
+
+			case 'taxonomy':
+				$field['callback'] = SearchCallbacks::taxonomy(
+					$field['taxonomy'] ?? 'category',
+					$field['query_args'] ?? []
+				);
+				break;
+
+			case 'user':
+				$field['callback'] = SearchCallbacks::users(
+					$field['role'] ?? '',
+					$field['query_args'] ?? []
+				);
+				break;
+		}
+
+		return $field;
+	}
 
 	/**
 	 * Find a field configuration by key within the flat fields array.

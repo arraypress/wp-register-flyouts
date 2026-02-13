@@ -8,7 +8,7 @@
  * @package     ArrayPress\RegisterFlyouts
  * @copyright   Copyright (c) 2025, ArrayPress Limited
  * @license     GPL2+
- * @version     2.0.0
+ * @version     3.0.0
  * @since       1.0.0
  */
 
@@ -27,17 +27,15 @@ namespace ArrayPress\RegisterFlyouts;
 class Assets {
 
 	/**
-	 * Core CSS files to always load
+	 * Core CSS file
 	 *
-	 * @var array<string>
-	 * @since 1.0.0
+	 * Single consolidated stylesheet covering flyout shell, layout,
+	 * form fields, tabs, footer, and responsive breakpoints.
+	 *
+	 * @var string
+	 * @since 3.0.0
 	 */
-	private static array $core_styles = [
-		'css/flyout/core.css',
-		'css/flyout/form-fields.css',
-		'css/flyout/ui-elements.css',
-		'css/flyout/data-display.css'
-	];
+	private static string $core_style = 'css/wp-flyout.css';
 
 	/**
 	 * Core JavaScript files
@@ -65,7 +63,7 @@ class Assets {
 			'style'  => 'css/components/file-manager.css',
 			'deps'   => [ 'jquery-ui-sortable' ]
 		],
-		'gallery'  => [
+		'gallery'        => [
 			'script' => 'js/components/gallery.js',
 			'style'  => 'css/components/gallery.css',
 			'deps'   => [ 'jquery-ui-sortable', 'wp-mediaelement' ]
@@ -190,20 +188,15 @@ class Assets {
 		// Register Select2 if not already registered
 		self::register_select2( $version );
 
-		// Register core CSS files
-		$css_deps = [ 'dashicons' ];
-		foreach ( self::$core_styles as $css_file ) {
-			$handle = 'wp-flyout-' . basename( $css_file, '.css' );
-			wp_register_composer_style(
-				$handle,
-				$base_file,
-				$css_file,
-				$css_deps,
-				$version
-			);
-			$css_deps                    = [ $handle ];
-			self::$last_handles['style'] = $handle;
-		}
+		// Register core CSS (single consolidated file)
+		wp_register_composer_style(
+			'wp-flyout',
+			$base_file,
+			self::$core_style,
+			[ 'dashicons' ],
+			$version
+		);
+		self::$last_handles['style'] = 'wp-flyout';
 
 		// Register core JavaScript files
 		$js_deps = [ 'jquery' ];
@@ -325,7 +318,7 @@ class Assets {
 			self::register_assets();
 		}
 
-		// Enqueue all core styles
+		// Enqueue core style
 		wp_enqueue_style( self::$last_handles['style'] );
 
 		// Enqueue all core scripts

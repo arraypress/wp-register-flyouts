@@ -76,38 +76,44 @@ class Notes implements Renderable {
 
         ob_start();
         ?>
-        <div id="<?php echo esc_attr( $this->config['id'] ); ?>"
-             class="<?php echo esc_attr( implode( ' ', $classes ) ); ?>"
-             data-name="<?php echo esc_attr( $this->config['name'] ); ?>"
-             data-object-type="<?php echo esc_attr( $this->config['object_type'] ); ?>"
-             data-add-action="<?php echo esc_attr( $this->config['add_action'] ); ?>"
-             data-delete-action="<?php echo esc_attr( $this->config['delete_action'] ); ?>">
-
+        <div class="wp-flyout-field field-type-notes">
             <?php if ( ! empty( $this->config['label'] ) ) : ?>
-                <label class="wp-flyout-component-label"><?php echo esc_html( $this->config['label'] ); ?></label>
+                <label><?php echo esc_html( $this->config['label'] ); ?></label>
             <?php endif; ?>
 
-            <div class="notes-list">
-                <?php if ( empty( $this->config['items'] ) ) : ?>
-                    <p class="no-notes"><?php echo esc_html( $this->config['empty_text'] ); ?></p>
-                <?php else : ?>
-                    <?php foreach ( $this->config['items'] as $note ) : ?>
-                        <?php $this->render_note( $note ); ?>
-                    <?php endforeach; ?>
-                <?php endif; ?>
-            </div>
+            <div id="<?php echo esc_attr( $this->config['id'] ); ?>"
+                 class="<?php echo esc_attr( implode( ' ', $classes ) ); ?>"
+                 data-name="<?php echo esc_attr( $this->config['name'] ); ?>"
+                 data-object-type="<?php echo esc_attr( $this->config['object_type'] ); ?>"
+                 data-add-action="<?php echo esc_attr( $this->config['add_action'] ); ?>"
+                 data-delete-action="<?php echo esc_attr( $this->config['delete_action'] ); ?>">
 
-            <?php if ( $this->config['editable'] && $this->config['add_action'] ) : ?>
-                <div class="note-add-form">
+                <?php if ( ! empty( $this->config['label'] ) ) : ?>
+                    <label class="wp-flyout-component-label"><?php echo esc_html( $this->config['label'] ); ?></label>
+                <?php endif; ?>
+
+                <div class="notes-list">
+                    <?php if ( empty( $this->config['items'] ) ) : ?>
+                        <p class="no-notes"><?php echo esc_html( $this->config['empty_text'] ); ?></p>
+                    <?php else : ?>
+                        <?php foreach ( $this->config['items'] as $note ) : ?>
+                            <?php $this->render_note( $note ); ?>
+                        <?php endforeach; ?>
+                    <?php endif; ?>
+                </div>
+
+                <?php if ( $this->config['editable'] && $this->config['add_action'] ) : ?>
+                    <div class="note-add-form">
                     <textarea placeholder="<?php echo esc_attr( $this->config['placeholder'] ); ?>"
                               rows="3"></textarea>
-                    <p>
-                        <button type="button" class="button button-primary" data-action="add-note">
-                            Add Note
-                        </button>
-                    </p>
-                </div>
-            <?php endif; ?>
+                        <p>
+                            <button type="button" class="button button-primary" data-action="add-note">
+                                Add Note
+                            </button>
+                        </p>
+                    </div>
+                <?php endif; ?>
+            </div>
         </div>
         <?php
         return ob_get_clean();

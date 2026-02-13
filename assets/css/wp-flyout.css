@@ -1118,6 +1118,14 @@
     color: var(--wp-flyout-text-muted);
 }
 
+.wp-flyout-actions .button-link-delete {
+    border-color: #d63638;
+}
+
+.wp-flyout-actions .button-link-delete:hover {
+    border-color: #a02a2c;
+}
+
 /* ========================================
    RESPONSIVE
    ======================================== */

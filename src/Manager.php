@@ -269,7 +269,7 @@ class Manager {
 			$actions[] = [
 				'text'  => __( 'Delete', 'wp-flyout' ),
 				'style' => 'link-delete',
-				'class' => 'wp-flyout-delete',
+				'class' => 'wp-flyout-delete button-link-delete',
 			];
 		}
 

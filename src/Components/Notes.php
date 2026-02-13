@@ -88,10 +88,6 @@ class Notes implements Renderable {
                  data-add-action="<?php echo esc_attr( $this->config['add_action'] ); ?>"
                  data-delete-action="<?php echo esc_attr( $this->config['delete_action'] ); ?>">
 
-                <?php if ( ! empty( $this->config['label'] ) ) : ?>
-                    <label class="wp-flyout-component-label"><?php echo esc_html( $this->config['label'] ); ?></label>
-                <?php endif; ?>
-
                 <div class="notes-list">
                     <?php if ( empty( $this->config['items'] ) ) : ?>
                         <p class="no-notes"><?php echo esc_html( $this->config['empty_text'] ); ?></p>

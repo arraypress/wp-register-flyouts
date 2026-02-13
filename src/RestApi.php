@@ -657,6 +657,12 @@ class RestApi {
 				}
 			}
 
+			// Convention-based: {action_key}_callback (e.g. add_callback, delete_callback).
+			$callback_key = $action_key . '_callback';
+			if ( ! empty( $field[ $callback_key ] ) && is_callable( $field[ $callback_key ] ) ) {
+				return $field[ $callback_key ];
+			}
+
 			// Action buttons/menu: search within items array.
 			if ( $type === 'action_buttons' ) {
 				$items = $field['buttons'] ?? [];

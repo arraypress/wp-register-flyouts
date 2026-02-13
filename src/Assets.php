@@ -116,7 +116,7 @@ class Assets {
 			'deps'   => []
 		],
 		'price-summary'  => [
-			'script' => 'js/components/price-summary.js',
+			'script' => '',
 			'style'  => 'css/components/price-summary.css',
 			'deps'   => []
 		],

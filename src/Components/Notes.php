@@ -51,6 +51,7 @@ class Notes implements Renderable {
         return [
                 'id'            => '',
                 'name'          => 'notes',
+                'label'         => '',
                 'items'         => [],
                 'editable'      => true,
                 'placeholder'   => __( 'Add a note... (Shift+Enter to submit)', 'arraypress' ),
@@ -81,6 +82,10 @@ class Notes implements Renderable {
              data-object-type="<?php echo esc_attr( $this->config['object_type'] ); ?>"
              data-add-action="<?php echo esc_attr( $this->config['add_action'] ); ?>"
              data-delete-action="<?php echo esc_attr( $this->config['delete_action'] ); ?>">
+
+            <?php if ( ! empty( $this->config['label'] ) ) : ?>
+                <label class="wp-flyout-component-label"><?php echo esc_html( $this->config['label'] ); ?></label>
+            <?php endif; ?>
 
             <div class="notes-list">
                 <?php if ( empty( $this->config['items'] ) ) : ?>

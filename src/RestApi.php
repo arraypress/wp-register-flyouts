@@ -573,7 +573,7 @@ class RestApi {
 	 * Resolve derivative field types to their built-in callbacks.
 	 *
 	 * Converts post, taxonomy, and user types to ajax_select with
-	 * the appropriate SearchCallbacks closure.
+	 * the appropriate Callbacks\Search closure.
 	 *
 	 * @param array $field Field configuration.
 	 *
@@ -588,21 +588,21 @@ class RestApi {
 
 		switch ( $type ) {
 			case 'post':
-				$field['callback'] = SearchCallbacks::posts(
+				$field['callback'] = Callbacks\Search::posts(
 					$field['post_type'] ?? 'post',
 					$field['query_args'] ?? []
 				);
 				break;
 
 			case 'taxonomy':
-				$field['callback'] = SearchCallbacks::taxonomy(
+				$field['callback'] = Callbacks\Search::taxonomy(
 					$field['taxonomy'] ?? 'category',
 					$field['query_args'] ?? []
 				);
 				break;
 
 			case 'user':
-				$field['callback'] = SearchCallbacks::users(
+				$field['callback'] = Callbacks\Search::users(
 					$field['role'] ?? '',
 					$field['query_args'] ?? []
 				);
@@ -639,7 +639,8 @@ class RestApi {
 	/**
 	 * Find an action callback by action key within the fields array.
 	 *
-	 * Searches action_buttons, action_menu, and notes field types for matching action keys.
+	 * Searches fields for a matching {action_key}_callback key, then
+	 * searches action_buttons and action_menu items for a matching action.
 	 *
 	 * @param array  $fields     Flat fields array from flyout config.
 	 * @param string $action_key Action key to find.
@@ -650,23 +651,13 @@ class RestApi {
 		foreach ( $fields as $field ) {
 			$type = $field['type'] ?? '';
 
-			// Direct callback on field (e.g. add_callback, delete_callback).
-			if ( ! empty( $field['callback'] ) && is_callable( $field['callback'] ) ) {
-				if ( ( $field['action'] ?? '' ) === $action_key ) {
-					return $field['callback'];
-				}
-			}
-
-			if ( $action_key === 'add' && ! empty( $field['add_callback'] ) && is_callable( $field['add_callback'] ) ) {
-				return $field['add_callback'];
-			}
-
-			if ( $action_key === 'delete' && ! empty( $field['delete_callback'] ) && is_callable( $field['delete_callback'] ) ) {
-				return $field['delete_callback'];
+			// Check for {action_key}_callback on the field (e.g. add_callback, delete_callback).
+			$callback_key = $action_key . '_callback';
+			if ( ! empty( $field[ $callback_key ] ) && is_callable( $field[ $callback_key ] ) ) {
+				return $field[ $callback_key ];
 			}
 
 			// Action buttons/menu: search within items array.
-			$items = [];
 			if ( $type === 'action_buttons' ) {
 				$items = $field['buttons'] ?? [];
 			} elseif ( $type === 'action_menu' ) {

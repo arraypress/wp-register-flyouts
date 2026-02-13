@@ -14,9 +14,9 @@
 
 declare( strict_types=1 );
 
-namespace ArrayPress\RegisterFlyouts;
+namespace ArrayPress\RegisterFlyouts\Callbacks;
 
-class SearchCallbacks {
+class Search {
 
 	/**
 	 * Create a post search callback.

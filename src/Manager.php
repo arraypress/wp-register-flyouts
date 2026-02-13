@@ -390,7 +390,7 @@ class Manager {
 		switch ( $type ) {
 			case 'post':
 				$field['type']     = 'ajax_select';
-				$field['callback'] = SearchCallbacks::posts(
+				$field['callback'] = Callbacks\Search::posts(
 					$field['post_type'] ?? 'post',
 					$field['query_args'] ?? []
 				);
@@ -398,7 +398,7 @@ class Manager {
 
 			case 'taxonomy':
 				$field['type']     = 'ajax_select';
-				$field['callback'] = SearchCallbacks::taxonomy(
+				$field['callback'] = Callbacks\Search::taxonomy(
 					$field['taxonomy'] ?? 'category',
 					$field['query_args'] ?? []
 				);
@@ -406,7 +406,7 @@ class Manager {
 
 			case 'user':
 				$field['type']     = 'ajax_select';
-				$field['callback'] = SearchCallbacks::users(
+				$field['callback'] = Callbacks\Search::users(
 					$field['role'] ?? '',
 					$field['query_args'] ?? []
 				);

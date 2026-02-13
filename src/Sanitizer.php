@@ -79,6 +79,11 @@ class Sanitizer {
 			'radio'          => 'sanitize_text_field',
 			'toggle'         => [ self::class, 'sanitize_toggle' ],
 
+			// Derivative types (resolve to ajax_select at render time)
+			'post'           => [ self::class, 'sanitize_ajax_select' ],
+			'taxonomy'       => [ self::class, 'sanitize_ajax_select' ],
+			'user'           => [ self::class, 'sanitize_ajax_select' ],
+
 			// Special inputs
 			'color'          => 'sanitize_hex_color',
 			'hidden'         => 'sanitize_text_field',
@@ -514,25 +519,6 @@ class Sanitizer {
 	public static function register( string $type, callable $sanitizer ): void {
 		self::ensure_initialized();
 		self::$sanitizers[ $type ] = $sanitizer;
-
-		do_action( 'wp_flyout_registered_sanitizer', $type, $sanitizer );
-	}
-
-	/**
-	 * Unregister a sanitizer.
-	 *
-	 * @param string $type Type identifier.
-	 *
-	 * @return bool True if sanitizer was unregistered.
-	 */
-	public static function unregister( string $type ): bool {
-		if ( isset( self::$sanitizers[ $type ] ) ) {
-			unset( self::$sanitizers[ $type ] );
-
-			return true;
-		}
-
-		return false;
 	}
 
 	/**
@@ -544,38 +530,6 @@ class Sanitizer {
 		self::ensure_initialized();
 
 		return self::$sanitizers;
-	}
-
-	// =========================================================================
-	// BACKWARDS COMPATIBILITY
-	// =========================================================================
-
-	/**
-	 * Register a field sanitizer.
-	 *
-	 * @deprecated Use Sanitizer::register() instead.
-	 *
-	 * @param string   $type      Field type.
-	 * @param callable $sanitizer Sanitizer callback.
-	 *
-	 * @return void
-	 */
-	public static function register_field_sanitizer( string $type, callable $sanitizer ): void {
-		self::register( $type, $sanitizer );
-	}
-
-	/**
-	 * Register a component sanitizer.
-	 *
-	 * @deprecated Use Sanitizer::register() instead.
-	 *
-	 * @param string   $type      Component type.
-	 * @param callable $sanitizer Sanitizer callback.
-	 *
-	 * @return void
-	 */
-	public static function register_component_sanitizer( string $type, callable $sanitizer ): void {
-		self::register( $type, $sanitizer );
 	}
 
 	// =========================================================================

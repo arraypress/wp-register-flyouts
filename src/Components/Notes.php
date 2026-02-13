@@ -2,12 +2,12 @@
 /**
  * Notes Component
  *
- * Displays notes with optional add/delete functionality via AJAX.
+ * Displays notes with optional add/delete functionality via REST API.
  *
  * @package     ArrayPress\RegisterFlyouts\Components
  * @copyright   Copyright (c) 2025, ArrayPress Limited
  * @license     GPL2+
- * @version     1.0.0
+ * @version     2.0.0
  */
 
 declare( strict_types=1 );
@@ -33,12 +33,10 @@ class Notes implements Renderable {
     public function __construct( array $config = [] ) {
         $this->config = wp_parse_args( $config, self::get_defaults() );
 
-        // Auto-generate ID if not provided
         if ( empty( $this->config['id'] ) ) {
             $this->config['id'] = 'notes-' . wp_generate_uuid4();
         }
 
-        // Ensure items is arrayed
         if ( ! is_array( $this->config['items'] ) ) {
             $this->config['items'] = [];
         }
@@ -51,18 +49,16 @@ class Notes implements Renderable {
      */
     private static function get_defaults(): array {
         return [
-                'id'           => '',
-                'name'         => 'notes',
-                'items'        => [],
-                'editable'     => true,
-                'placeholder'  => __( 'Add a note... (Shift+Enter to submit)', 'arraypress' ),
-                'empty_text'   => __( 'No notes yet.', 'arraypress' ),
-                'object_type'  => '',
-                'ajax_add'     => '',
-                'ajax_delete'  => '',
-                'add_nonce'    => '',
-                'delete_nonce' => '',
-                'class'        => ''
+                'id'            => '',
+                'name'          => 'notes',
+                'items'         => [],
+                'editable'      => true,
+                'placeholder'   => __( 'Add a note... (Shift+Enter to submit)', 'arraypress' ),
+                'empty_text'    => __( 'No notes yet.', 'arraypress' ),
+                'object_type'   => '',
+                'add_action'    => 'add_note',
+                'delete_action' => 'delete_note',
+                'class'         => ''
         ];
     }
 
@@ -83,10 +79,8 @@ class Notes implements Renderable {
              class="<?php echo esc_attr( implode( ' ', $classes ) ); ?>"
              data-name="<?php echo esc_attr( $this->config['name'] ); ?>"
              data-object-type="<?php echo esc_attr( $this->config['object_type'] ); ?>"
-             data-ajax-add="<?php echo esc_attr( $this->config['ajax_add'] ); ?>"
-             data-ajax-delete="<?php echo esc_attr( $this->config['ajax_delete'] ); ?>"
-             data-add-nonce="<?php echo esc_attr( $this->config['add_nonce'] ?? '' ); ?>"
-             data-delete-nonce="<?php echo esc_attr( $this->config['delete_nonce'] ?? '' ); ?>">
+             data-add-action="<?php echo esc_attr( $this->config['add_action'] ); ?>"
+             data-delete-action="<?php echo esc_attr( $this->config['delete_action'] ); ?>">
 
             <div class="notes-list">
                 <?php if ( empty( $this->config['items'] ) ) : ?>
@@ -98,7 +92,7 @@ class Notes implements Renderable {
                 <?php endif; ?>
             </div>
 
-            <?php if ( $this->config['editable'] && $this->config['ajax_add'] ) : ?>
+            <?php if ( $this->config['editable'] && $this->config['add_action'] ) : ?>
                 <div class="note-add-form">
                     <textarea placeholder="<?php echo esc_attr( $this->config['placeholder'] ); ?>"
                               rows="3"></textarea>
@@ -131,7 +125,7 @@ class Notes implements Renderable {
                     <span class="note-date"><?php echo esc_html( $note['formatted_date'] ); ?></span>
                 <?php endif; ?>
 
-                <?php if ( $this->config['editable'] && $this->config['ajax_delete'] && ! empty( $note['can_delete'] ) ) : ?>
+                <?php if ( $this->config['editable'] && $this->config['delete_action'] && ! empty( $note['can_delete'] ) ) : ?>
                     <button type="button" class="button-link" data-action="delete-note">
                         <span class="dashicons dashicons-trash"></span>
                     </button>

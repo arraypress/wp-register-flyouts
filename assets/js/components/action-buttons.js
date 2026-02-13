@@ -1,11 +1,10 @@
 /**
  * ActionButtons Component JavaScript
  *
- * Handles AJAX action button clicks with automatic success/error handling.
- * Works with WP_Error returns and standard wp_send_json responses.
+ * Handles action button clicks via REST API with automatic success/error handling.
  *
  * @package ArrayPress\WPFlyout
- * @version 1.0.0
+ * @version 2.0.0
  */
 (function ($) {
     'use strict';
@@ -16,158 +15,150 @@
          * Initialize the component
          */
         init: function () {
-            const self = this;
+            var self = this;
 
-            // Bind button clicks using delegation
-            $(document)
-                .on('click', '.wp-flyout-action-btn', function (e) {
-                    e.preventDefault();
-                    self.handleAction($(this));
-                });
+            $(document).on('click', '.wp-flyout-action-btn', function (e) {
+                e.preventDefault();
+                self.handleAction($(this));
+            });
         },
 
         /**
          * Handle action button click
-         *
-         * @param {jQuery} $button Button element
          */
         handleAction: function ($button) {
             // Check for confirmation
-            const confirmMsg = $button.data('confirm');
+            var confirmMsg = $button.data('confirm');
             if (confirmMsg && !confirm(confirmMsg)) {
                 return;
             }
 
-            // Get action and nonce
-            const action = $button.data('action');
-            const nonce = $button.data('nonce');
-
+            var action = $button.data('action');
             if (!action) {
                 console.error('ActionButtons: No action specified');
                 return;
             }
 
-            // Gather all data attributes
-            const buttonData = $button.data();
-            const requestData = {
-                action: 'wp_flyout_action_' + action,
-                _wpnonce: nonce
-            };
-
-            // Add all other data attributes (excluding our control attributes)
-            Object.keys(buttonData).forEach(key => {
-                if (!['action', 'nonce', 'confirm'].includes(key)) {
-                    requestData[key] = buttonData[key];
-                }
-            });
+            // Get flyout context
+            var $flyout = $button.closest('.wp-flyout');
+            var config = $flyout.data() || {};
+            var itemId = $flyout.find('input[name="id"]').val() || config.data?.id || 0;
 
             // Set loading state
             this.setButtonState($button, true);
 
-            // Make AJAX request
-            $.post(ajaxurl, requestData)
-                .done((response) => {
-                    this.handleResponse(response, $button);
+            // Make REST API request
+            var self = this;
+
+            fetch(wpFlyout.restUrl + '/action', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-WP-Nonce': wpFlyout.restNonce
+                },
+                credentials: 'same-origin',
+                body: JSON.stringify({
+                    manager: config.manager,
+                    flyout: config.flyout,
+                    action_key: action,
+                    item_id: itemId
                 })
-                .fail(() => {
-                    this.handleError('Connection failed. Please try again.', $button);
+            })
+                .then(function (response) {
+                    return response.json().then(function (json) {
+                        if (!response.ok) {
+                            throw new Error(json.message || 'Request failed');
+                        }
+                        return json;
+                    });
                 })
-                .always(() => {
-                    this.setButtonState($button, false);
+                .then(function (response) {
+                    self.handleResponse(response, $button);
+                })
+                .catch(function (error) {
+                    self.handleError(error.message || 'Connection failed. Please try again.', $button);
+                })
+                .finally(function () {
+                    self.setButtonState($button, false);
                 });
         },
 
         /**
-         * Handle AJAX response
-         *
-         * @param {Object} response Server response
-         * @param {jQuery} $button Button element
+         * Handle response
          */
         handleResponse: function (response, $button) {
-            const $flyout = $button.closest('.wp-flyout');
-            const $body = $flyout.find('.wp-flyout-body');
+            var $flyout = $button.closest('.wp-flyout');
+            var $body = $flyout.find('.wp-flyout-body');
 
             if (response.success) {
-                const message = response.data?.message || 'Action completed successfully';
+                var message = response.message || 'Action completed successfully';
                 this.showAlert($flyout, message, 'success');
-                $body.animate({scrollTop: 0}, 300);
+                $body.animate({ scrollTop: 0 }, 300);
 
-                // Only reload if explicitly requested
-                if (response.data?.reload === true) {
-                    setTimeout(() => {
+                if (response.reload === true) {
+                    setTimeout(function () {
                         location.reload();
                     }, 1500);
-                } else if (response.data?.refresh_flyout === true) {
-                    // Optional: refresh just this flyout's content
-                    setTimeout(() => {
-                        this.reloadFlyout($flyout);
+                } else if (response.refresh_flyout === true) {
+                    setTimeout(function () {
+                        ActionButtons.reloadFlyout($flyout);
                     }, 1500);
                 }
 
-                // Update UI elements if data provided
-                if (response.data?.updates) {
-                    this.updateUI(response.data.updates);
+                if (response.updates) {
+                    this.updateUI(response.updates);
                 }
 
-                $button.trigger('actionbuttons:success', response.data);
+                $button.trigger('actionbuttons:success', response);
             } else {
-                const errorMsg = response.data || 'An error occurred';
+                var errorMsg = response.message || 'An error occurred';
                 this.showAlert($flyout, errorMsg, 'error');
-                $body.animate({scrollTop: 0}, 300);
+                $body.animate({ scrollTop: 0 }, 300);
                 $button.trigger('actionbuttons:error', errorMsg);
             }
         },
 
-        // New method to update specific UI elements
+        /**
+         * Update specific UI elements
+         */
         updateUI: function (updates) {
-            Object.keys(updates).forEach(selector => {
+            Object.keys(updates).forEach(function (selector) {
                 $(selector).html(updates[selector]);
             });
         },
 
         /**
          * Handle connection error
-         *
-         * @param {string} message Error message
-         * @param {jQuery} $button Button element
          */
         handleError: function (message, $button) {
-            const $flyout = $button.closest('.wp-flyout');
-            const $body = $flyout.find('.wp-flyout-body');
+            var $flyout = $button.closest('.wp-flyout');
+            var $body = $flyout.find('.wp-flyout-body');
 
             this.showAlert($flyout, message, 'error');
-            $body.animate({scrollTop: 0}, 300);
+            $body.animate({ scrollTop: 0 }, 300);
 
             $button.trigger('actionbuttons:error', message);
         },
 
         /**
          * Set button loading state
-         *
-         * @param {jQuery} $button Button element
-         * @param {boolean} loading Whether button is loading
          */
         setButtonState: function ($button, loading) {
             if (loading) {
                 $button.prop('disabled', true).addClass('loading');
-                $button.find('.button-text, .dashicons:not(.spin)').hide(); // Hide icon too
+                $button.find('.button-text, .dashicons:not(.spin)').hide();
                 $button.find('.button-spinner').show();
             } else {
                 $button.prop('disabled', false).removeClass('loading');
-                $button.find('.button-text, .dashicons:not(.spin)').show(); // Show icon again
+                $button.find('.button-text, .dashicons:not(.spin)').show();
                 $button.find('.button-spinner').hide();
             }
         },
 
         /**
          * Show alert message in flyout
-         *
-         * @param {jQuery} $flyout Flyout container
-         * @param {string} message Alert message
-         * @param {string} type Alert type (success/error)
          */
         showAlert: function ($flyout, message, type) {
-            // Use WPFlyoutAlert if available
             if (window.WPFlyoutAlert) {
                 $flyout.find('.wp-flyout-alert').remove();
                 WPFlyoutAlert.show(message, type, {
@@ -177,42 +168,32 @@
                     dismissible: true
                 });
             } else {
-                // Fallback to console
                 console[type === 'error' ? 'error' : 'log'](message);
             }
         },
 
         /**
          * Reload flyout content
-         *
-         * @param {jQuery} $flyout Flyout container
          */
         reloadFlyout: function ($flyout) {
-            // Find the original trigger that opened this flyout
-            const flyoutId = $flyout.attr('id');
-            const $trigger = $('[data-flyout-instance="' + flyoutId + '"]');
+            var flyoutId = $flyout.attr('id');
+            var $trigger = $('[data-flyout-instance="' + flyoutId + '"]');
 
             if ($trigger.length) {
-                // Close current flyout
                 WPFlyout.close(flyoutId);
-
-                // Re-trigger after brief delay
-                setTimeout(() => {
+                setTimeout(function () {
                     $trigger.click();
                 }, 300);
             } else {
-                // If no trigger found, just reload the page as fallback
                 location.reload();
             }
         }
     };
 
-    // Initialize on document ready
     $(function () {
         ActionButtons.init();
     });
 
-    // Export for external use
     window.WPFlyoutActionButtons = ActionButtons;
 
 })(jQuery);

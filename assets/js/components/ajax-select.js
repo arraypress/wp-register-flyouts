@@ -1,15 +1,15 @@
 /**
  * AJAX Select Component - Select2 Integration
  *
- * Initializes Select2 on ajax select elements with AJAX search
- * and hydration support via WordPress admin-ajax.php.
+ * Initializes Select2 on ajax select elements with search
+ * and hydration support via WordPress REST API.
  *
  * Supports two attribute patterns:
- * - New: data-ajax-action (used by FormField ajax_select)
+ * - New: data-ajax-url + data-ajax-params (REST API)
  * - Legacy: data-ajax (used by LineItems product selector)
  *
  * @package ArrayPress\WPFlyout
- * @version 5.0.0
+ * @version 6.0.0
  */
 (function ($) {
     'use strict';
@@ -17,7 +17,7 @@
     const AjaxSelect = {
 
         init: function () {
-            const self = this;
+            var self = this;
 
             $(function () {
                 self.initAll(document);
@@ -29,17 +29,10 @@
         },
 
         initAll: function (container) {
-            const self = this;
+            var self = this;
 
-            // New pattern: .wp-flyout-ajax-select with data-ajax-action
+            // REST pattern: .wp-flyout-ajax-select with data-ajax-url
             $(container).find('.wp-flyout-ajax-select').each(function () {
-                if (!$(this).data('select2')) {
-                    self.initOne($(this));
-                }
-            });
-
-            // Legacy pattern: select[data-ajax] (e.g. line items product selector)
-            $(container).find('select[data-ajax]').each(function () {
                 if (!$(this).data('select2')) {
                     self.initOne($(this));
                 }
@@ -47,45 +40,44 @@
         },
 
         initOne: function ($select) {
-            // Skip if already initialized
             if ($select.data('select2')) {
                 return;
             }
 
-            // Support both attribute names
-            const action = $select.data('ajax-action') || $select.data('ajax') || '';
-            const nonce = $select.data('nonce') || '';
-            const placeholder = $select.data('placeholder') || 'Type to search...';
-            const tags = $select.data('tags') === true || $select.data('tags') === 'true';
+            var ajaxUrl = $select.data('ajax-url') || '';
+            var ajaxParams = $select.data('ajax-params') || {};
+            var placeholder = $select.data('placeholder') || 'Type to search...';
+            var tags = $select.data('tags') === true || $select.data('tags') === 'true';
 
-            if (!action) {
-                console.warn('AjaxSelect: No ajax action specified', $select[0]);
+            if (!ajaxUrl) {
+                console.warn('AjaxSelect: No ajax URL specified', $select[0]);
                 return;
             }
 
-            const config = {
+            var config = {
                 placeholder: placeholder,
                 allowClear: true,
                 width: '100%',
                 tags: tags,
                 minimumInputLength: 0,
                 ajax: {
-                    url: window.ajaxurl || '/wp-admin/admin-ajax.php',
-                    type: 'POST',
+                    url: ajaxUrl,
+                    type: 'GET',
                     dataType: 'json',
                     delay: 250,
+                    headers: {
+                        'X-WP-Nonce': wpFlyout.restNonce
+                    },
                     data: function (params) {
-                        return {
-                            action: action,
-                            search: params.term || '',
-                            _wpnonce: nonce
-                        };
+                        var data = $.extend({}, ajaxParams, {
+                            term: params.term || ''
+                        });
+                        return data;
                     },
                     processResults: function (response) {
-                        if (response.success && Array.isArray(response.data)) {
+                        if (response.success && Array.isArray(response.results)) {
                             return {
-                                results: response.data.map(function (item) {
-                                    // Handle both {id,text} and {value,text} formats
+                                results: response.results.map(function (item) {
                                     return {
                                         id: String(item.id || item.value),
                                         text: String(item.text)
@@ -93,14 +85,14 @@
                                 })
                             };
                         }
-                        return {results: []};
+                        return { results: [] };
                     },
                     cache: true
                 }
             };
 
             // Scope dropdown to flyout body if inside one
-            const $flyoutBody = $select.closest('.wp-flyout-body');
+            var $flyoutBody = $select.closest('.wp-flyout-body');
             if ($flyoutBody.length) {
                 config.dropdownParent = $flyoutBody;
             }
@@ -108,19 +100,19 @@
             $select.select2(config);
 
             // Hydrate pre-selected options that need labels
-            this.hydrateIfNeeded($select, action, nonce);
+            this.hydrateIfNeeded($select, ajaxUrl, ajaxParams);
         },
 
-        hydrateIfNeeded: function ($select, action, nonce) {
-            const $options = $select.find('option[selected], option:selected');
+        hydrateIfNeeded: function ($select, ajaxUrl, ajaxParams) {
+            var $options = $select.find('option[selected], option:selected');
             if (!$options.length) {
                 return;
             }
 
-            const needsHydration = [];
+            var needsHydration = [];
             $options.each(function () {
-                const text = $.trim($(this).text());
-                const val = $(this).val();
+                var text = $.trim($(this).text());
+                var val = $(this).val();
                 if (val && (text === 'Loading...' || text === '' || text === val)) {
                     needsHydration.push(val);
                 }
@@ -130,20 +122,24 @@
                 return;
             }
 
+            // Build hydration URL with params
+            var params = $.extend({}, ajaxParams, {
+                include: needsHydration.join(',')
+            });
+
             $.ajax({
-                url: window.ajaxurl || '/wp-admin/admin-ajax.php',
-                type: 'POST',
+                url: ajaxUrl,
+                type: 'GET',
                 dataType: 'json',
-                data: {
-                    action: action,
-                    include: needsHydration.join(','),
-                    _wpnonce: nonce
+                data: params,
+                headers: {
+                    'X-WP-Nonce': wpFlyout.restNonce
                 },
                 success: function (response) {
-                    if (response.success && Array.isArray(response.data)) {
-                        response.data.forEach(function (item) {
-                            const id = String(item.id || item.value);
-                            const $option = $select.find('option[value="' + id + '"]');
+                    if (response.success && Array.isArray(response.results)) {
+                        response.results.forEach(function (item) {
+                            var id = String(item.id || item.value);
+                            var $option = $select.find('option[value="' + id + '"]');
                             if ($option.length) {
                                 $option.text(item.text);
                             }

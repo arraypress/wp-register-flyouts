@@ -1,11 +1,11 @@
 <?php
 /**
- * Line Items Component - Simplified
+ * Line Items Component
  *
  * @package     ArrayPress\RegisterFlyouts\Components
  * @copyright   Copyright (c) 2025, ArrayPress Limited
  * @license     GPL2+
- * @version     3.1.0
+ * @version     4.0.0
  */
 
 declare( strict_types=1 );
@@ -13,6 +13,7 @@ declare( strict_types=1 );
 namespace ArrayPress\RegisterFlyouts\Components;
 
 use ArrayPress\RegisterFlyouts\Interfaces\Renderable;
+use ArrayPress\RegisterFlyouts\RestApi;
 use ArrayPress\RegisterFlyouts\Traits\HtmlAttributes;
 use function esc_currency_e;
 
@@ -55,10 +56,10 @@ class LineItems implements Renderable {
                 'items'         => [],
                 'currency'      => 'USD',
                 'show_quantity' => true,
-                'ajax_search'   => '',
-                'ajax_details'  => '',
-                'nonce'         => '',
-                'details_nonce' => '',
+                'search_key'    => '',       // Field key for the ajax_select search
+                'details_key'   => '',       // Action key for fetching product details
+                'manager'       => '',       // Manager prefix (set by normalize_ajax_fields)
+                'flyout'        => '',       // Flyout ID (set by normalize_ajax_fields)
                 'placeholder'   => 'Search for products...',
                 'empty_text'    => 'No items added yet.',
                 'add_text'      => 'Add Item',
@@ -78,6 +79,7 @@ class LineItems implements Renderable {
             $quantity = (int) ( $item['quantity'] ?? 1 );
             $total    += $price * $quantity;
         }
+
         return $total;
     }
 
@@ -93,11 +95,12 @@ class LineItems implements Renderable {
         }
 
         $data = [
-                'name'           => $this->config['name'],
-                'currency'       => $this->config['currency'],
-                'show-quantity'  => $this->config['show_quantity'] ? '1' : '0',
-                'details-action' => $this->config['ajax_details'],
-                'details-nonce'  => $this->config['details_nonce']
+                'name'          => $this->config['name'],
+                'currency'      => $this->config['currency'],
+                'show-quantity' => $this->config['show_quantity'] ? '1' : '0',
+                'manager'       => $this->config['manager'],
+                'flyout'        => $this->config['flyout'],
+                'details-key'   => $this->config['details_key'],
         ];
 
         ob_start();
@@ -106,7 +109,7 @@ class LineItems implements Renderable {
              class="<?php echo esc_attr( implode( ' ', $classes ) ); ?>"
                 <?php echo $this->build_data_attributes( $data ); ?>>
 
-            <?php if ( $this->config['ajax_search'] ) : ?>
+            <?php if ( $this->config['search_key'] ) : ?>
                 <?php $this->render_product_selector(); ?>
             <?php endif; ?>
 
@@ -123,15 +126,23 @@ class LineItems implements Renderable {
 
     /**
      * Render product selector
+     *
+     * Uses REST /search endpoint via data-ajax-url and data-ajax-params.
      */
     private function render_product_selector(): void {
+        $search_url = rest_url( RestApi::NAMESPACE . '/search' );
+
+        $ajax_params = wp_json_encode( [
+                'manager'   => $this->config['manager'],
+                'flyout'    => $this->config['flyout'],
+                'field_key' => $this->config['search_key'],
+        ] );
         ?>
         <div class="line-items-selector">
-            <select class="product-ajax-select"
-                    data-ajax="<?php echo esc_attr( $this->config['ajax_search'] ); ?>"
-                    data-placeholder="<?php echo esc_attr( $this->config['placeholder'] ); ?>"
-                    data-nonce="<?php echo esc_attr( $this->config['nonce'] ); ?>"
-                    data-details-nonce="<?php echo esc_attr( $this->config['details_nonce'] ); ?>">
+            <select class="wp-flyout-ajax-select product-ajax-select"
+                    data-ajax-url="<?php echo esc_url( $search_url ); ?>"
+                    data-ajax-params='<?php echo esc_attr( $ajax_params ); ?>'
+                    data-placeholder="<?php echo esc_attr( $this->config['placeholder'] ); ?>">
             </select>
             <button type="button" class="button button-primary" data-action="add-item">
                 <span class="dashicons dashicons-plus-alt"></span>
@@ -322,4 +333,5 @@ class LineItems implements Renderable {
         </script>
         <?php
     }
+
 }

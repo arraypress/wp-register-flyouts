@@ -1,14 +1,14 @@
 <?php
 /**
- * WP Flyout Manager - Standardized Implementation
+ * WP Flyout Manager
  *
- * Manages flyout registration, AJAX handling, and automatic data mapping.
- * Fixed version with memory optimization, proper sanitization, and error handling.
+ * Manages flyout registration, building, trigger generation, and asset management.
+ * AJAX handling has been replaced by the REST API (RestApi.php).
  *
  * @package     ArrayPress\RegisterFlyouts
  * @copyright   Copyright (c) 2025, ArrayPress Limited
  * @license     GPL2+
- * @version     3.0.0
+ * @version     4.0.0
  * @author      David Sherlock
  */
 
@@ -19,14 +19,12 @@ namespace ArrayPress\RegisterFlyouts;
 use ArrayPress\RegisterFlyouts\Components\FormField;
 use ArrayPress\RegisterFlyouts\Core\Flyout;
 use ArrayPress\RegisterFlyouts\Parts\ActionBar;
-use Exception;
-use Throwable;
 
 /**
  * Class Manager
  *
- * Orchestrates flyout operations with automatic data resolution.
- * Uses standardized nonce handling where all components use action names as nonce keys.
+ * Orchestrates flyout registration, building, and asset management.
+ * All data transport is handled by RestApi via the REST API.
  *
  * @since 1.0.0
  */
@@ -37,7 +35,7 @@ class Manager {
 	// =========================================================================
 
 	/**
-	 * Unique prefix for this manager instance
+	 * Unique prefix for this manager instance.
 	 *
 	 * @since 1.0.0
 	 * @var string
@@ -45,7 +43,7 @@ class Manager {
 	private string $prefix;
 
 	/**
-	 * Registered flyout configurations
+	 * Registered flyout configurations.
 	 *
 	 * @since 1.0.0
 	 * @var array
@@ -53,18 +51,7 @@ class Manager {
 	private array $flyouts = [];
 
 	/**
-	 * Registered AJAX endpoints (minimal data to avoid memory leaks)
-	 *
-	 * Stores only callback and capability instead of entire config arrays
-	 * to prevent memory bloat with many fields.
-	 *
-	 * @since 2.0.0
-	 * @var array<string, array{callback: callable, capability: string, type: string}>
-	 */
-	private array $ajax_endpoints = [];
-
-	/**
-	 * Admin pages where assets should load
+	 * Admin pages where assets should load.
 	 *
 	 * @since 1.0.0
 	 * @var array
@@ -72,7 +59,7 @@ class Manager {
 	private array $admin_pages = [];
 
 	/**
-	 * Components required across all flyouts
+	 * Components required across all flyouts.
 	 *
 	 * @since 1.0.0
 	 * @var array
@@ -80,7 +67,7 @@ class Manager {
 	private array $components = [];
 
 	/**
-	 * Whether assets have been enqueued
+	 * Whether assets have been enqueued.
 	 *
 	 * @since 1.0.0
 	 * @var bool
@@ -92,20 +79,22 @@ class Manager {
 	// =========================================================================
 
 	/**
-	 * Constructor
+	 * Constructor.
 	 *
-	 * @param string $prefix Unique prefix for this manager instance
+	 * @param string $prefix Unique prefix for this manager instance.
 	 *
 	 * @since 1.0.0
 	 */
 	public function __construct( string $prefix ) {
 		$this->prefix = sanitize_key( $prefix );
 
-		// Single AJAX handler for all actions
-		add_action( 'wp_ajax_wp_flyout_' . $this->prefix, [ $this, 'handle_ajax' ] );
-		add_action( 'wp_ajax_nopriv_wp_flyout_' . $this->prefix, [ $this, 'handle_ajax' ] );
+		// Register this manager in the global registry.
+		Registry::register( $this->prefix, $this );
 
-		// Auto-enqueue assets on admin pages
+		// Ensure REST routes are registered (safe to call multiple times).
+		RestApi::register();
+
+		// Auto-enqueue assets on admin pages.
 		add_action( 'admin_enqueue_scripts', [ $this, 'maybe_enqueue_assets' ] );
 	}
 
@@ -114,12 +103,12 @@ class Manager {
 	// =========================================================================
 
 	/**
-	 * Register a flyout with declarative configuration
+	 * Register a flyout with declarative configuration.
 	 *
-	 * @param string $id     Unique flyout identifier
-	 * @param array  $config Flyout configuration array
+	 * @param string $id     Unique flyout identifier.
+	 * @param array  $config Flyout configuration array.
 	 *
-	 * @return self Returns instance for method chaining
+	 * @return self Returns instance for method chaining.
 	 * @since 1.0.0
 	 */
 	public function register_flyout( string $id, array $config ): self {
@@ -140,524 +129,24 @@ class Manager {
 
 		$config = wp_parse_args( $config, $defaults );
 
-		// Apply filters for extensibility
+		// Apply filters for extensibility.
 		$config = apply_filters( 'wp_flyout_register_config', $config, $id, $this->prefix );
 		$config = apply_filters( "wp_flyout_{$this->prefix}_{$id}_config", $config );
 
-		// Auto-detect required components
+		// Auto-detect required components.
 		$this->detect_components( $config );
 
-		// Track admin pages for asset loading
+		// Track admin pages for asset loading.
 		if ( ! empty( $config['admin_pages'] ) ) {
 			$this->admin_pages = array_unique(
 				array_merge( $this->admin_pages, $config['admin_pages'] )
 			);
 		}
 
-		// Store flyout configuration
+		// Store flyout configuration.
 		$this->flyouts[ $id ] = $config;
 
-		// Register AJAX endpoints for components with callbacks
-		$this->register_component_endpoints( $id, $this->flyouts[ $id ] );
-
-		// Register action button endpoints
-		$this->register_action_button_endpoints( $id, $config );
-
 		return $this;
-	}
-
-	// =========================================================================
-	// AJAX ENDPOINT REGISTRATION
-	// =========================================================================
-
-	/**
-	 * Register AJAX endpoints for components
-	 *
-	 * Handles two patterns:
-	 * - Unified callback: 'callback' key for ajax_select (handles both search + hydration)
-	 * - Legacy callbacks: 'search_callback', 'details_callback', etc.
-	 *
-	 * @param string $flyout_id Flyout identifier
-	 * @param array  $config    Flyout configuration (passed by reference to update)
-	 *
-	 * @return void
-	 * @since 3.0.0
-	 */
-	private function register_component_endpoints( string $flyout_id, array &$config ): void {
-		$capability = $config['capability'];
-
-		foreach ( $config['fields'] as $field_key => &$field ) {
-			$field_name = $field['name'] ?? $field_key;
-			$type       = $field['type'] ?? 'text';
-
-			// Handle unified callback for ajax_select
-			if ( $type === 'ajax_select' && isset( $field['callback'] ) && is_callable( $field['callback'] ) ) {
-				$action_name = $this->generate_action_name( $flyout_id, $field_name, 'ajax_search' );
-
-				// Store action name for frontend
-				$field['ajax']                  = $action_name;
-				$field['ajax_search']           = $action_name;
-				$field['ajax_search_nonce_key'] = $action_name;
-
-				// Store the unified callback
-				$this->ajax_endpoints[ $action_name ] = [
-					'callback'   => $field['callback'],
-					'capability' => $capability,
-					'type'       => 'unified_callback',
-				];
-
-				add_action( 'wp_ajax_' . $action_name, [ $this, 'handle_unified_ajax' ] );
-				continue;
-			}
-
-			// Legacy callback mappings for other components
-			$callback_mappings = [
-				'search_callback'  => 'ajax_search',
-				'details_callback' => 'ajax_details',
-				'add_callback'     => 'ajax_add',
-				'delete_callback'  => 'ajax_delete',
-				'options_callback' => 'ajax_options',
-			];
-
-			foreach ( $callback_mappings as $callback_key => $ajax_key ) {
-				if ( ! isset( $field[ $callback_key ] ) || ! is_callable( $field[ $callback_key ] ) ) {
-					continue;
-				}
-
-				$action_name = $this->generate_action_name( $flyout_id, $field_name, $ajax_key );
-
-				// Store action name in field config for frontend use
-				$field[ $ajax_key ]                = $action_name;
-				$field[ $ajax_key . '_nonce_key' ] = $action_name;
-
-				// Store minimal endpoint data
-				$this->ajax_endpoints[ $action_name ] = [
-					'callback'   => $field[ $callback_key ],
-					'capability' => $capability,
-					'type'       => 'field',
-				];
-
-				add_action( 'wp_ajax_' . $action_name, [ $this, 'handle_field_ajax' ] );
-			}
-		}
-	}
-
-	/**
-	 * Generate AJAX action name
-	 *
-	 * @param string $flyout_id  Flyout identifier
-	 * @param string $field_name Field name
-	 * @param string $ajax_key   AJAX key (e.g. 'ajax_search')
-	 *
-	 * @return string Generated action name
-	 * @since 2.0.0
-	 */
-	private function generate_action_name( string $flyout_id, string $field_name, string $ajax_key ): string {
-		$suffix = str_replace( 'ajax_', '', $ajax_key );
-
-		return sprintf( 'wp_flyout_%s_%s_%s_%s',
-			$this->prefix,
-			$flyout_id,
-			sanitize_key( $field_name ),
-			$suffix
-		);
-	}
-
-	/**
-	 * Handle unified callback AJAX requests (ajax_select)
-	 *
-	 * Routes to the single callback with either search term or IDs for hydration.
-	 * The callback signature is: function( string $search = '', ?array $ids = null ): array
-	 *
-	 * @return void Sends JSON response and exits
-	 * @since 3.0.0
-	 */
-	public function handle_unified_ajax(): void {
-		try {
-			$action_name = $_POST['action'] ?? '';
-
-			if ( ! isset( $this->ajax_endpoints[ $action_name ] ) ) {
-				wp_send_json_error( 'Invalid endpoint' );
-			}
-
-			$endpoint = $this->ajax_endpoints[ $action_name ];
-
-			// Security checks
-			if ( ! check_ajax_referer( $action_name, '_wpnonce', false ) ) {
-				wp_send_json_error( 'Security check failed' );
-			}
-
-			if ( ! current_user_can( $endpoint['capability'] ) ) {
-				wp_send_json_error( 'Insufficient permissions' );
-			}
-
-			// Determine if this is a search or hydration request
-			$search = sanitize_text_field( $_POST['search'] ?? '' );
-			$ids    = null;
-
-			if ( ! empty( $_POST['include'] ) ) {
-				// Hydration request — resolve IDs to labels
-				$raw_ids = $_POST['include'];
-				if ( is_string( $raw_ids ) ) {
-					$raw_ids = explode( ',', $raw_ids );
-				}
-				$ids    = array_map( 'absint', array_filter( (array) $raw_ids ) );
-				$search = '';
-			}
-
-			// Call the unified callback
-			$result = call_user_func( $endpoint['callback'], $search, $ids );
-
-			if ( is_wp_error( $result ) ) {
-				wp_send_json_error( $result->get_error_message() );
-			}
-
-			// Normalize result to [ { value: x, label: y }, ... ] for Select2
-			$formatted = [];
-			if ( is_array( $result ) ) {
-				foreach ( $result as $value => $label ) {
-					$formatted[] = [
-						'id'   => (string) $value,
-						'text' => (string) $label,
-					];
-				}
-			}
-
-			wp_send_json_success( $formatted );
-
-		} catch ( Throwable $e ) {
-			wp_send_json_error( 'Operation failed: ' . $e->getMessage() );
-		}
-	}
-
-	/**
-	 * Handle field AJAX requests (legacy callbacks)
-	 *
-	 * @return void Sends JSON response and exits
-	 * @since 2.0.0
-	 */
-	public function handle_field_ajax(): void {
-		try {
-			$action_name = $_POST['action'] ?? '';
-
-			if ( ! isset( $this->ajax_endpoints[ $action_name ] ) ) {
-				wp_send_json_error( 'Invalid endpoint' );
-			}
-
-			$endpoint = $this->ajax_endpoints[ $action_name ];
-
-			// Security checks
-			if ( ! check_ajax_referer( $action_name, '_wpnonce', false ) ) {
-				wp_send_json_error( 'Security check failed' );
-			}
-
-			if ( ! current_user_can( $endpoint['capability'] ) ) {
-				wp_send_json_error( 'Insufficient permissions' );
-			}
-
-			// Execute callback with error boundary
-			$result = call_user_func( $endpoint['callback'], $_POST );
-
-			if ( is_wp_error( $result ) ) {
-				wp_send_json_error( $result->get_error_message() );
-			}
-
-			wp_send_json_success( $result );
-
-		} catch ( Throwable $e ) {
-			wp_send_json_error( 'Operation failed: ' . $e->getMessage() );
-		}
-	}
-
-	/**
-	 * Register AJAX endpoints for action components (buttons and menus)
-	 *
-	 * @param string $flyout_id Flyout identifier
-	 * @param array  $config    Flyout configuration
-	 *
-	 * @return void
-	 * @since 1.0.0
-	 */
-	private function register_action_button_endpoints( string $flyout_id, array $config ): void {
-		$capability = $config['capability'];
-
-		foreach ( $config['fields'] as $field ) {
-			$type = $field['type'] ?? '';
-
-			$items = [];
-			if ( $type === 'action_buttons' ) {
-				$items = $field['buttons'] ?? [];
-			} elseif ( $type === 'action_menu' ) {
-				$items = $field['items'] ?? [];
-			} else {
-				continue;
-			}
-
-			foreach ( $items as $item ) {
-				if ( isset( $item['type'] ) && $item['type'] === 'separator' ) {
-					continue;
-				}
-
-				if ( empty( $item['callback'] ) || ! is_callable( $item['callback'] ) ) {
-					continue;
-				}
-
-				$action      = $item['action'] ?? uniqid( 'action_' );
-				$action_name = 'wp_flyout_action_' . $action;
-
-				if ( isset( $this->ajax_endpoints[ $action_name ] ) ) {
-					continue;
-				}
-
-				$this->ajax_endpoints[ $action_name ] = [
-					'callback'   => $item['callback'],
-					'capability' => $capability,
-					'type'       => 'action',
-				];
-
-				add_action( 'wp_ajax_' . $action_name, [ $this, 'handle_action_ajax' ] );
-			}
-		}
-	}
-
-	/**
-	 * Handle action button AJAX requests
-	 *
-	 * @return void Sends JSON response and exits
-	 * @since 2.0.0
-	 */
-	public function handle_action_ajax(): void {
-		try {
-			$action_name = $_POST['action'] ?? '';
-
-			if ( ! isset( $this->ajax_endpoints[ $action_name ] ) ) {
-				wp_send_json_error( 'Invalid action' );
-			}
-
-			$endpoint = $this->ajax_endpoints[ $action_name ];
-
-			if ( ! check_ajax_referer( $action_name, '_wpnonce', false ) ) {
-				wp_send_json_error( 'Security check failed' );
-			}
-
-			if ( ! current_user_can( $endpoint['capability'] ) ) {
-				wp_send_json_error( 'Insufficient permissions' );
-			}
-
-			$result = call_user_func( $endpoint['callback'], $_POST );
-
-			if ( is_wp_error( $result ) ) {
-				wp_send_json_error( $result->get_error_message() );
-			}
-
-			if ( is_array( $result ) && isset( $result['message'] ) ) {
-				wp_send_json_success( $result );
-			}
-
-			wp_send_json_success( [ 'message' => 'Action completed successfully' ] );
-
-		} catch ( Throwable $e ) {
-			wp_send_json_error( 'Action failed: ' . $e->getMessage() );
-		}
-	}
-
-	// =========================================================================
-	// AJAX REQUEST HANDLING
-	// =========================================================================
-
-	/**
-	 * Central AJAX handler with security checks
-	 *
-	 * @return void Sends JSON response and exits
-	 * @since 1.0.0
-	 */
-	public function handle_ajax(): void {
-		try {
-			$request = $this->validate_request();
-			$config  = $this->flyouts[ $request['flyout_id'] ];
-
-			switch ( $request['action'] ) {
-				case 'load':
-					$this->handle_load( $config, $request );
-					break;
-
-				case 'save':
-					$this->handle_save( $config, $request );
-					break;
-
-				case 'delete':
-					$this->handle_delete( $config, $request );
-					break;
-
-				default:
-					wp_send_json_error( __( 'Invalid action', 'wp-flyout' ) );
-			}
-
-		} catch ( Throwable $e ) {
-			wp_send_json_error( $e->getMessage() );
-		}
-	}
-
-	/**
-	 * Validate AJAX request and check permissions
-	 *
-	 * @return array Validated request data
-	 * @throws Exception If validation fails
-	 * @since 1.0.0
-	 */
-	private function validate_request(): array {
-		$flyout_id = sanitize_key( $_POST['flyout'] ?? '' );
-		$action    = sanitize_key( $_POST['flyout_action'] ?? 'load' );
-
-		if ( ! isset( $this->flyouts[ $flyout_id ] ) ) {
-			throw new Exception( 'Invalid flyout' );
-		}
-
-		$config = $this->flyouts[ $flyout_id ];
-
-		if ( ! check_ajax_referer( 'wp_flyout_' . $this->prefix . '_' . $flyout_id, 'nonce', false ) ) {
-			throw new Exception( 'Security check failed' );
-		}
-
-		if ( ! current_user_can( $config['capability'] ) ) {
-			throw new Exception( 'Insufficient permissions' );
-		}
-
-		return [
-			'flyout_id' => $flyout_id,
-			'action'    => $action,
-			'id'        => $_POST['id'] ?? null,
-			'form_data' => $_POST['form_data'] ?? '',
-		];
-	}
-
-	/**
-	 * Handle load action
-	 *
-	 * @param array $config  Flyout configuration
-	 * @param array $request Validated request data
-	 *
-	 * @return void Sends JSON response and exits
-	 * @since 1.0.0
-	 */
-	private function handle_load( array $config, array $request ): void {
-		$data = [];
-
-		if ( $config['load'] && is_callable( $config['load'] ) ) {
-			try {
-				$data = call_user_func( $config['load'], $request['id'] );
-
-				if ( is_wp_error( $data ) ) {
-					wp_send_json_error( $data->get_error_message() );
-				}
-
-				if ( $data === false ) {
-					wp_send_json_error( __( 'Record not found', 'wp-flyout' ) );
-				}
-			} catch ( Throwable $e ) {
-				wp_send_json_error( 'Failed to load data: ' . $e->getMessage() );
-			}
-		}
-
-		$flyout = $this->build_flyout( $config, $data, $request['id'] );
-		wp_send_json_success( [ 'html' => $flyout->render() ] );
-	}
-
-	/**
-	 * Handle save action
-	 *
-	 * @param array $config  Flyout configuration
-	 * @param array $request Validated request data
-	 *
-	 * @return void Sends JSON response and exits
-	 * @since 1.0.0
-	 */
-	private function handle_save( array $config, array $request ): void {
-		if ( ! $config['save'] || ! is_callable( $config['save'] ) ) {
-			wp_send_json_error( __( 'Save not configured', 'wp-flyout' ) );
-		}
-
-		parse_str( $request['form_data'], $raw_data );
-
-		$normalized_fields = $this->normalize_fields( $config['fields'] );
-		$form_data         = Sanitizer::sanitize_form_data( $raw_data, $normalized_fields );
-
-		$form_data = apply_filters( 'wp_flyout_before_save', $form_data, $config, $this->prefix );
-
-		if ( ! empty( $config['validate'] ) && is_callable( $config['validate'] ) ) {
-			try {
-				$validation = call_user_func( $config['validate'], $form_data );
-
-				if ( is_wp_error( $validation ) ) {
-					wp_send_json_error( $validation->get_error_message() );
-				}
-
-				if ( $validation === false ) {
-					wp_send_json_error( __( 'Validation failed', 'wp-flyout' ) );
-				}
-			} catch ( Throwable $e ) {
-				wp_send_json_error( 'Validation error: ' . $e->getMessage() );
-			}
-		}
-
-		$id = $form_data['id'] ?? $request['id'] ?? null;
-
-		try {
-			$result = call_user_func( $config['save'], $id, $form_data );
-
-			do_action( 'wp_flyout_after_save', $result, $id, $form_data, $config, $this->prefix );
-
-			if ( is_wp_error( $result ) ) {
-				wp_send_json_error( $result->get_error_message() );
-			}
-
-			if ( $result === false ) {
-				wp_send_json_error( __( 'Save failed', 'wp-flyout' ) );
-			}
-
-			wp_send_json_success( [
-				'message' => __( 'Saved successfully', 'wp-flyout' )
-			] );
-		} catch ( Throwable $e ) {
-			wp_send_json_error( 'Save operation failed: ' . $e->getMessage() );
-		}
-	}
-
-	/**
-	 * Handle delete action
-	 *
-	 * @param array $config  Flyout configuration
-	 * @param array $request Validated request data
-	 *
-	 * @return void Sends JSON response and exits
-	 * @since 1.0.0
-	 */
-	private function handle_delete( array $config, array $request ): void {
-		if ( ! $config['delete'] || ! is_callable( $config['delete'] ) ) {
-			wp_send_json_error( __( 'Delete not configured', 'wp-flyout' ) );
-		}
-
-		$id = apply_filters( 'wp_flyout_before_delete', $request['id'], $config, $this->prefix );
-
-		try {
-			$result = call_user_func( $config['delete'], $id );
-
-			do_action( 'wp_flyout_after_delete', $result, $id, $config, $this->prefix );
-
-			if ( is_wp_error( $result ) ) {
-				wp_send_json_error( $result->get_error_message() );
-			}
-
-			if ( $result === false ) {
-				wp_send_json_error( __( 'Delete failed', 'wp-flyout' ) );
-			}
-
-			wp_send_json_success( [
-				'message' => __( 'Deleted successfully', 'wp-flyout' )
-			] );
-		} catch ( Throwable $e ) {
-			wp_send_json_error( 'Delete operation failed: ' . $e->getMessage() );
-		}
 	}
 
 	// =========================================================================
@@ -665,24 +154,21 @@ class Manager {
 	// =========================================================================
 
 	/**
-	 * Build flyout interface
+	 * Build flyout interface.
 	 *
-	 * @param array  $config Flyout configuration
-	 * @param mixed  $data   Data for field population
-	 * @param string $id     Record ID if editing
+	 * @param array  $config Flyout configuration.
+	 * @param mixed  $data   Data for field population.
+	 * @param string $id     Record ID if editing.
 	 *
-	 * @return Flyout Configured flyout instance
+	 * @return Flyout Configured flyout instance.
 	 * @since 1.0.0
 	 */
-	private function build_flyout( array $config, $data, $id = null ): Flyout {
+	public function build_flyout( array $config, $data, $id = null ): Flyout {
 		$flyout_instance_id = $config['id'] ?? uniqid() . '_' . ( $id ?: 'new' );
 		$flyout             = new Flyout( $flyout_instance_id );
 
-		$title    = sanitize_text_field( $_POST['title'] ?? '' ) ?: $config['title'];
-		$subtitle = sanitize_text_field( $_POST['subtitle'] ?? '' ) ?: $config['subtitle'];
-
-		$flyout->set_title( $title );
-		$flyout->set_subtitle( $subtitle );
+		$flyout->set_title( $config['title'] );
+		$flyout->set_subtitle( $config['subtitle'] );
 		$flyout->set_size( $config['size'] );
 
 		$flyout = apply_filters( 'wp_flyout_build_flyout', $flyout, $config, $data, $this->prefix );
@@ -714,12 +200,12 @@ class Manager {
 	}
 
 	/**
-	 * Build tab interface for flyout
+	 * Build tab interface for flyout.
 	 *
-	 * @param Flyout $flyout Flyout instance
-	 * @param array  $tabs   Tab configurations
-	 * @param array  $fields All field configurations
-	 * @param mixed  $data   Data for field population
+	 * @param Flyout $flyout Flyout instance.
+	 * @param array  $tabs   Tab configurations.
+	 * @param array  $fields All field configurations.
+	 * @param mixed  $data   Data for field population.
 	 *
 	 * @return void
 	 * @since 1.0.0
@@ -747,11 +233,11 @@ class Manager {
 	}
 
 	/**
-	 * Render action buttons for footer
+	 * Render action buttons for footer.
 	 *
-	 * @param array $actions Action button configurations
+	 * @param array $actions Action button configurations.
 	 *
-	 * @return string Generated HTML
+	 * @return string Generated HTML.
 	 * @since 1.0.0
 	 */
 	private function render_actions( array $actions ): string {
@@ -761,11 +247,11 @@ class Manager {
 	}
 
 	/**
-	 * Get default action buttons based on configuration
+	 * Get default action buttons based on configuration.
 	 *
-	 * @param array $config Flyout configuration
+	 * @param array $config Flyout configuration.
 	 *
-	 * @return array Default action buttons
+	 * @return array Default action buttons.
 	 * @since 1.0.0
 	 */
 	private function get_default_actions( array $config ): array {
@@ -795,12 +281,12 @@ class Manager {
 	// =========================================================================
 
 	/**
-	 * Render fields from configuration
+	 * Render fields from configuration.
 	 *
-	 * @param array $fields Field configurations
-	 * @param mixed $data   Data object or array for field population
+	 * @param array $fields Field configurations.
+	 * @param mixed $data   Data object or array for field population.
 	 *
-	 * @return string Generated HTML
+	 * @return string Generated HTML.
 	 * @since 1.0.0
 	 */
 	private function render_fields( array $fields, $data ): string {
@@ -811,24 +297,24 @@ class Manager {
 		$normalized_fields = $this->normalize_fields( $fields );
 
 		foreach ( $normalized_fields as $field_key => $field ) {
-			// Process conditional dependencies
+			// Process conditional dependencies.
 			if ( isset( $field['depends'] ) ) {
 				$field = $this->process_field_dependencies( $field, $field_key );
 			}
 
-			// Apply field-specific filters
+			// Apply field-specific filters.
 			$field = apply_filters( 'wp_flyout_render_field', $field, $field_key, $data, $this->prefix );
 			$field = apply_filters( "wp_flyout_render_field_{$field_key}", $field, $data, $this->prefix );
 
-			// Normalize AJAX fields
+			// Normalize AJAX fields (search URL, hydration).
 			$field = $this->normalize_ajax_fields( $field, $field_key, $data );
 
 			$type = $field['type'] ?? 'text';
 
-			// Use field name for data lookup (field name may differ from field key)
+			// Use field name for data lookup (field name may differ from field key).
 			$data_key = $field['name'] ?? $field_key;
 
-			// Render field based on type
+			// Render field based on type.
 			if ( Components::is_component( $type ) ) {
 				$resolved_data = Components::resolve_data( $type, $data_key, $data );
 
@@ -856,14 +342,16 @@ class Manager {
 	}
 
 	/**
-	 * Normalize field configurations
+	 * Normalize field configurations.
 	 *
-	 * @param array $fields Field configurations
+	 * Ensures every field has a 'name' key and uses string keys.
 	 *
-	 * @return array Normalized fields
+	 * @param array $fields Field configurations.
+	 *
+	 * @return array Normalized fields.
 	 * @since 1.0.0
 	 */
-	private function normalize_fields( array $fields ): array {
+	public function normalize_fields( array $fields ): array {
 		$fields = apply_filters( 'wp_flyout_before_normalize_fields', $fields, $this->prefix );
 
 		$normalized = [];
@@ -884,61 +372,46 @@ class Manager {
 	}
 
 	/**
-	 * Normalize AJAX field configurations
+	 * Normalize AJAX field configurations for REST API.
 	 *
-	 * Centralizes AJAX-related field processing including nonce generation
-	 * and ajax_select specific handling with unified callback support.
+	 * Sets the REST search URL and handles hydration for ajax_select fields.
 	 *
-	 * @param array  $field     Field configuration
-	 * @param string $field_key Field identifier
-	 * @param mixed  $data      Data source for value resolution
+	 * @param array  $field     Field configuration.
+	 * @param string $field_key Field identifier.
+	 * @param mixed  $data      Data source for value resolution.
 	 *
-	 * @return array Normalized field configuration
-	 * @since 3.0.0
+	 * @return array Normalized field configuration.
+	 * @since 4.0.0
 	 */
 	private function normalize_ajax_fields( array $field, string $field_key, $data ): array {
 		$type = $field['type'] ?? 'text';
 
-		// Generate nonces for any AJAX actions
-		$ajax_actions = [
-			'ajax_search'  => 'nonce',
-			'ajax_add'     => 'add_nonce',
-			'ajax_delete'  => 'delete_nonce',
-			'ajax_details' => 'details_nonce',
-		];
-
-		foreach ( $ajax_actions as $action => $nonce_field ) {
-			$nonce_key = $action . '_nonce_key';
-			if ( ! empty( $field[ $nonce_key ] ) ) {
-				$field[ $nonce_field ] = wp_create_nonce( $field[ $nonce_key ] );
-			}
+		if ( $type !== 'ajax_select' ) {
+			return $field;
 		}
 
-		// Special handling for ajax_select fields
-		if ( $type === 'ajax_select' ) {
-			// Map ajax_search to ajax for compatibility
-			if ( ! empty( $field['ajax_search'] ) && empty( $field['ajax'] ) ) {
-				$field['ajax'] = $field['ajax_search'];
-			}
+		$data_key = $field['name'] ?? $field_key;
 
-			// Use field name for data lookup
-			$data_key = $field['name'] ?? $field_key;
+		// Set the REST search URL for Select2 to call.
+		$field['ajax_url'] = rest_url( RestApi::NAMESPACE . '/search' );
+		$field['ajax_params'] = [
+			'manager'   => $this->prefix,
+			'flyout'    => $this->get_flyout_id_for_field( $field_key ),
+			'field_key' => $data_key,
+		];
 
-			// Resolve value if not already set
-			if ( ! isset( $field['value'] ) && $data ) {
-				$field['value'] = Components::resolve_value( $data_key, $data );
-			}
+		// Resolve value if not already set.
+		if ( ! isset( $field['value'] ) && $data ) {
+			$field['value'] = Components::resolve_value( $data_key, $data );
+		}
 
-			// Hydrate options using unified callback if we have a value but no options
-			if ( ! empty( $field['value'] ) && empty( $field['options'] ) ) {
-				if ( ! empty( $field['callback'] ) && is_callable( $field['callback'] ) ) {
-					// Unified callback: pass IDs for hydration
-					$ids              = is_array( $field['value'] ) ? $field['value'] : [ $field['value'] ];
-					$field['options'] = call_user_func( $field['callback'], '', $ids );
-				} elseif ( ! empty( $field['options_callback'] ) && is_callable( $field['options_callback'] ) ) {
-					// Legacy options_callback
-					$field['options'] = call_user_func( $field['options_callback'], $field['value'], $data );
-				}
+		// Hydrate options using the callback if we have a value but no options.
+		if ( ! empty( $field['value'] ) && empty( $field['options'] ) ) {
+			if ( ! empty( $field['callback'] ) && is_callable( $field['callback'] ) ) {
+				$ids              = is_array( $field['value'] ) ? $field['value'] : [ $field['value'] ];
+				$field['options'] = call_user_func( $field['callback'], '', $ids );
+			} elseif ( ! empty( $field['options_callback'] ) && is_callable( $field['options_callback'] ) ) {
+				$field['options'] = call_user_func( $field['options_callback'], $field['value'], $data );
 			}
 		}
 
@@ -946,13 +419,13 @@ class Manager {
 	}
 
 	/**
-	 * Process field dependencies for conditional display
+	 * Process field dependencies for conditional display.
 	 *
-	 * @param array  $field     Field configuration
-	 * @param string $field_key Field identifier
+	 * @param array  $field     Field configuration.
+	 * @param string $field_key Field identifier.
 	 *
-	 * @return array Modified field configuration with dependency data
-	 * @since 12.1.0
+	 * @return array Modified field configuration with dependency data.
+	 * @since 1.0.0
 	 */
 	private function process_field_dependencies( array $field, string $field_key ): array {
 		if ( ! isset( $field['depends'] ) ) {
@@ -1011,9 +484,9 @@ class Manager {
 	// =========================================================================
 
 	/**
-	 * Detect and register required components from configuration
+	 * Detect and register required components from configuration.
 	 *
-	 * @param array $config Flyout configuration
+	 * @param array $config Flyout configuration.
 	 *
 	 * @return void
 	 * @since 1.0.0
@@ -1035,9 +508,9 @@ class Manager {
 	// =========================================================================
 
 	/**
-	 * Maybe enqueue assets based on current admin page
+	 * Maybe enqueue assets based on current admin page.
 	 *
-	 * @param string $hook_suffix Current admin page hook
+	 * @param string $hook_suffix Current admin page hook.
 	 *
 	 * @return void
 	 * @since 1.0.0
@@ -1053,40 +526,25 @@ class Manager {
 	}
 
 	/**
-	 * Determine if assets should be enqueued
+	 * Determine if assets should be enqueued.
 	 *
-	 * @param string $hook_suffix Current admin page hook
+	 * Only loads on explicitly declared admin pages. No fallback list.
 	 *
-	 * @return bool True if assets should load
-	 * @since 1.0.0
+	 * @param string $hook_suffix Current admin page hook.
+	 *
+	 * @return bool True if assets should load.
+	 * @since 4.0.0
 	 */
 	private function should_enqueue( string $hook_suffix ): bool {
-		if ( ! empty( $this->admin_pages ) ) {
-			return in_array( $hook_suffix, $this->admin_pages, true );
+		if ( empty( $this->admin_pages ) ) {
+			return false;
 		}
 
-		$default_pages = [
-			'index.php',
-			'edit.php',
-			'post.php',
-			'post-new.php',
-			'users.php',
-			'user-edit.php',
-			'profile.php',
-			'options-general.php',
-			'tools.php',
-		];
-
-		if ( str_starts_with( $hook_suffix, 'toplevel_page_' ) ||
-		     str_starts_with( $hook_suffix, 'page_' ) ) {
-			return true;
-		}
-
-		return in_array( $hook_suffix, $default_pages, true );
+		return in_array( $hook_suffix, $this->admin_pages, true );
 	}
 
 	/**
-	 * Enqueue required assets
+	 * Enqueue required assets.
 	 *
 	 * @return void
 	 * @since 1.0.0
@@ -1098,6 +556,12 @@ class Manager {
 			Assets::enqueue_component( $component );
 		}
 
+		// Localize REST API data for JavaScript.
+		wp_localize_script( 'wp-flyout', 'wpFlyout', [
+			'restUrl'   => rest_url( RestApi::NAMESPACE ),
+			'restNonce' => wp_create_nonce( 'wp_rest' ),
+		] );
+
 		$this->assets_enqueued = true;
 	}
 
@@ -1106,13 +570,13 @@ class Manager {
 	// =========================================================================
 
 	/**
-	 * Render a trigger button
+	 * Render a trigger button.
 	 *
-	 * @param string $flyout_id Flyout identifier
-	 * @param array  $data      Data attributes to pass
-	 * @param array  $args      Button configuration
+	 * @param string $flyout_id Flyout identifier.
+	 * @param array  $data      Data attributes to pass.
+	 * @param array  $args      Button configuration.
 	 *
-	 * @return void Outputs HTML
+	 * @return void Outputs HTML.
 	 * @since 1.0.0
 	 */
 	public function button( string $flyout_id, array $data = [], array $args = [] ): void {
@@ -1120,13 +584,13 @@ class Manager {
 	}
 
 	/**
-	 * Get trigger button HTML
+	 * Get trigger button HTML.
 	 *
-	 * @param string $flyout_id Flyout identifier
-	 * @param array  $data      Data attributes to pass
-	 * @param array  $args      Button configuration
+	 * @param string $flyout_id Flyout identifier.
+	 * @param array  $data      Data attributes to pass.
+	 * @param array  $args      Button configuration.
 	 *
-	 * @return string Button HTML or empty string if unauthorized
+	 * @return string Button HTML or empty string if unauthorized.
 	 * @since 1.0.0
 	 */
 	public function get_button( string $flyout_id, array $data = [], array $args = [] ): string {
@@ -1160,14 +624,14 @@ class Manager {
 	}
 
 	/**
-	 * Create a trigger link
+	 * Create a trigger link.
 	 *
-	 * @param string $flyout_id Flyout identifier
-	 * @param string $text      Link text
-	 * @param array  $data      Data attributes to pass
-	 * @param array  $args      Additional link arguments
+	 * @param string $flyout_id Flyout identifier.
+	 * @param string $text      Link text.
+	 * @param array  $data      Data attributes to pass.
+	 * @param array  $args      Additional link arguments.
 	 *
-	 * @return string Link HTML or empty string if unauthorized
+	 * @return string Link HTML or empty string if unauthorized.
 	 * @since 1.0.0
 	 */
 	public function link( string $flyout_id, string $text, array $data = [], array $args = [] ): string {
@@ -1189,13 +653,15 @@ class Manager {
 	}
 
 	/**
-	 * Build trigger element attributes
+	 * Build trigger element attributes.
 	 *
-	 * @param string $flyout_id Flyout identifier
-	 * @param array  $data      Data attributes
-	 * @param string $class     Additional CSS classes
+	 * REST nonce is global (via wp_localize_script), so no per-flyout nonce needed.
 	 *
-	 * @return array Attributes array
+	 * @param string $flyout_id Flyout identifier.
+	 * @param array  $data      Data attributes.
+	 * @param string $class     Additional CSS classes.
+	 *
+	 * @return array Attributes array.
 	 * @since 1.0.0
 	 */
 	private function build_trigger_attributes( string $flyout_id, array $data, string $class = '' ): array {
@@ -1203,7 +669,6 @@ class Manager {
 			'class'               => trim( 'wp-flyout-trigger ' . $class ),
 			'data-flyout-manager' => $this->prefix,
 			'data-flyout'         => $flyout_id,
-			'data-flyout-nonce'   => wp_create_nonce( 'wp_flyout_' . $this->prefix . '_' . $flyout_id ),
 		];
 
 		foreach ( $data as $key => $value ) {
@@ -1218,9 +683,21 @@ class Manager {
 	// =========================================================================
 
 	/**
-	 * Get all registered flyouts
+	 * Get a specific flyout configuration.
 	 *
-	 * @return array Flyout configurations
+	 * @param string $flyout_id Flyout identifier.
+	 *
+	 * @return array|null Flyout config or null if not found.
+	 * @since 4.0.0
+	 */
+	public function get_flyout( string $flyout_id ): ?array {
+		return $this->flyouts[ $flyout_id ] ?? null;
+	}
+
+	/**
+	 * Get all registered flyouts.
+	 *
+	 * @return array Flyout configurations.
 	 * @since 1.0.0
 	 */
 	public function get_flyouts(): array {
@@ -1228,11 +705,11 @@ class Manager {
 	}
 
 	/**
-	 * Check if flyout is registered
+	 * Check if flyout is registered.
 	 *
-	 * @param string $flyout_id Flyout identifier
+	 * @param string $flyout_id Flyout identifier.
 	 *
-	 * @return bool True if flyout exists
+	 * @return bool True if flyout exists.
 	 * @since 1.0.0
 	 */
 	public function has_flyout( string $flyout_id ): bool {
@@ -1240,9 +717,9 @@ class Manager {
 	}
 
 	/**
-	 * Get manager prefix
+	 * Get manager prefix.
 	 *
-	 * @return string Manager prefix
+	 * @return string Manager prefix.
 	 * @since 1.0.0
 	 */
 	public function get_prefix(): string {
@@ -1254,11 +731,11 @@ class Manager {
 	// =========================================================================
 
 	/**
-	 * Check if current user can access flyout
+	 * Check if current user can access flyout.
 	 *
-	 * @param string $flyout_id Flyout identifier
+	 * @param string $flyout_id Flyout identifier.
 	 *
-	 * @return bool True if user has required capability
+	 * @return bool True if user has required capability.
 	 * @since 1.0.0
 	 */
 	private function can_access( string $flyout_id ): bool {
@@ -1269,6 +746,33 @@ class Manager {
 		$config = $this->flyouts[ $flyout_id ];
 
 		return current_user_can( $config['capability'] );
+	}
+
+	/**
+	 * Find which flyout a field belongs to.
+	 *
+	 * Used by normalize_ajax_fields to set the flyout param on search URLs.
+	 *
+	 * @param string $field_key Field key to look up.
+	 *
+	 * @return string Flyout ID or empty string.
+	 * @since 4.0.0
+	 */
+	private function get_flyout_id_for_field( string $field_key ): string {
+		foreach ( $this->flyouts as $flyout_id => $config ) {
+			if ( isset( $config['fields'][ $field_key ] ) ) {
+				return $flyout_id;
+			}
+
+			// Check by name attribute.
+			foreach ( $config['fields'] as $key => $field ) {
+				if ( ( $field['name'] ?? $key ) === $field_key ) {
+					return $flyout_id;
+				}
+			}
+		}
+
+		return '';
 	}
 
 }

@@ -1,9 +1,10 @@
 /**
  * Line Items Component JavaScript
  *
- * Uses Select2 (via WPFlyoutAjaxSelect) for product search.
+ * Uses Select2 (via WPFlyoutAjaxSelect) for product search via REST API.
+ * Fetches product details via REST /action endpoint.
  *
- * @version 4.0.0
+ * @version 5.0.0
  */
 (function ($) {
     'use strict';
@@ -11,7 +12,7 @@
     const LineItems = {
 
         init: function () {
-            const self = this;
+            var self = this;
 
             $(document)
                 .on('click', '.wp-flyout-line-items [data-action="add-item"]', function (e) {
@@ -35,10 +36,10 @@
         },
 
         initComponent: function ($container) {
-            const self = this;
+            var self = this;
 
             $container.find('.wp-flyout-line-items').each(function () {
-                const $component = $(this);
+                var $component = $(this);
 
                 if ($component.data('lineItemsInitialized')) {
                     return;
@@ -47,7 +48,7 @@
                 $component.data('lineItemsInitialized', true);
 
                 // Initialize Select2 on the product search select
-                const $select = $component.find('.product-ajax-select');
+                var $select = $component.find('.product-ajax-select');
                 if ($select.length && !$select.data('select2')) {
                     if (typeof WPFlyoutAjaxSelect !== 'undefined') {
                         WPFlyoutAjaxSelect.initOne($select);
@@ -61,22 +62,21 @@
         handleAdd: function (e) {
             e.preventDefault();
 
-            const $button = $(e.currentTarget);
-            const $component = $button.closest('.wp-flyout-line-items');
-            const $select = $component.find('.product-ajax-select');
+            var $button = $(e.currentTarget);
+            var $component = $button.closest('.wp-flyout-line-items');
+            var $select = $component.find('.product-ajax-select');
 
-            // Get selected value from Select2
-            const itemId = $select.val();
+            var itemId = $select.val();
 
             if (!itemId) {
                 alert('Please select a product first');
                 return;
             }
 
-            const existingItem = this.findExistingItem($component, itemId);
+            var existingItem = this.findExistingItem($component, itemId);
             if (existingItem.length) {
-                const $qtyInput = existingItem.find('.quantity-input');
-                const currentQty = parseInt($qtyInput.val()) || 1;
+                var $qtyInput = existingItem.find('.quantity-input');
+                var currentQty = parseInt($qtyInput.val()) || 1;
                 $qtyInput.val(currentQty + 1).trigger('change');
                 this.clearSelect($select);
                 return;
@@ -85,86 +85,96 @@
             this.fetchProductDetails($component, itemId);
         },
 
+        /**
+         * Fetch product details via REST /action endpoint
+         */
         fetchProductDetails: function ($component, itemId) {
-            const self = this;
-            const $button = $component.find('[data-action="add-item"]');
-            const originalHtml = $button.html();
+            var self = this;
+            var $button = $component.find('[data-action="add-item"]');
+            var originalHtml = $button.html();
 
             $button.prop('disabled', true).html('<span class="dashicons dashicons-update spin"></span> Loading...');
 
-            const detailsAction = $component.data('details-action');
-            const detailsNonce = $component.data('details-nonce') || '';
+            var manager = $component.data('manager');
+            var flyout = $component.data('flyout');
+            var detailsKey = $component.data('details-key');
 
-            $.ajax({
-                url: window.ajaxurl || '/wp-admin/admin-ajax.php',
-                type: 'POST',
-                dataType: 'json',
-                data: {
-                    action: detailsAction,
-                    id: String(itemId),
-                    _wpnonce: detailsNonce
+            fetch(wpFlyout.restUrl + '/action', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-WP-Nonce': wpFlyout.restNonce
                 },
-                success: function (response) {
-                    if (response.success && response.data) {
-                        self.addItemToTable($component, response.data);
+                credentials: 'same-origin',
+                body: JSON.stringify({
+                    manager: manager,
+                    flyout: flyout,
+                    action_key: detailsKey,
+                    item_id: String(itemId)
+                })
+            })
+                .then(function (response) {
+                    return response.json().then(function (json) {
+                        if (!response.ok) {
+                            throw new Error(json.message || 'Request failed');
+                        }
+                        return json;
+                    });
+                })
+                .then(function (response) {
+                    if (response.success && response.product) {
+                        self.addItemToTable($component, response.product);
                         self.clearSelect($component.find('.product-ajax-select'));
                     } else {
-                        alert('Error: ' + (response.data || 'Product details not found'));
+                        alert(response.message || 'Product details not found');
                     }
-                },
-                error: function () {
-                    alert('Error loading product details');
-                },
-                complete: function () {
+                })
+                .catch(function (error) {
+                    alert(error.message || 'Error loading product details');
+                })
+                .finally(function () {
                     $button.prop('disabled', false).html(originalHtml);
-                }
-            });
+                });
         },
 
         addItemToTable: function ($component, product) {
-            let $tbody = $component.find('.line-items-list');
+            var $tbody = $component.find('.line-items-list');
 
             // Create table if it doesn't exist yet
             if (!$tbody.length) {
-                const showQty = $component.data('show-quantity') !== '0' && $component.data('show-quantity') !== false;
-                const tableHtml = `
-                    <table>
-                        <thead>
-                            <tr>
-                                <th class="column-item">Item</th>
-                                ${showQty ? '<th class="column-quantity">Qty</th>' : ''}
-                                <th class="column-price">Price</th>
-                                ${showQty ? '<th class="column-total">Total</th>' : ''}
-                                <th class="column-actions"></th>
-                            </tr>
-                        </thead>
-                        <tbody class="line-items-list"></tbody>
-                    </table>`;
+                var showQty = $component.data('show-quantity') !== '0' && $component.data('show-quantity') !== false;
+                var tableHtml = '<table><thead><tr>' +
+                    '<th class="column-item">Item</th>' +
+                    (showQty ? '<th class="column-quantity">Qty</th>' : '') +
+                    '<th class="column-price">Price</th>' +
+                    (showQty ? '<th class="column-total">Total</th>' : '') +
+                    '<th class="column-actions"></th>' +
+                    '</tr></thead><tbody class="line-items-list"></tbody></table>';
                 $component.find('.line-items-table').html(tableHtml);
                 $tbody = $component.find('.line-items-list');
             }
 
-            const template = $component.find('.line-item-template').html();
+            var template = $component.find('.line-item-template').html();
             if (!template) {
                 console.error('Line Items: Template not found');
                 return;
             }
 
-            const index = $tbody.find('.line-item').length;
-            const price = parseInt(product.price) || 0;
-            const currency = $component.data('currency') || 'USD';
-            const formatter = new Intl.NumberFormat('en-US', {
+            var index = $tbody.find('.line-item').length;
+            var price = parseInt(product.price) || 0;
+            var currency = $component.data('currency') || 'USD';
+            var formatter = new Intl.NumberFormat('en-US', {
                 style: 'currency',
                 currency: currency
             });
 
-            const thumbnailHtml = product.thumbnail ?
+            var thumbnailHtml = product.thumbnail ?
                 '<img src="' + this.escapeHtml(product.thumbnail) + '" alt="' +
                 this.escapeHtml(product.name) + '" class="item-thumbnail">' :
                 '<div class="item-thumbnail-placeholder">' +
                 '<span class="dashicons dashicons-format-image"></span></div>';
 
-            let html = template
+            var html = template
                 .replace(/{{index}}/g, index)
                 .replace(/{{item_id}}/g, product.id || '')
                 .replace(/{{name}}/g, this.escapeHtml(product.name || ''))
@@ -173,7 +183,7 @@
                 .replace(/{{total_formatted}}/g, formatter.format(price / 100))
                 .replace(/{{thumbnail_html}}/g, thumbnailHtml);
 
-            const $newRow = $(html);
+            var $newRow = $(html);
             $tbody.append($newRow);
 
             $newRow.css('background', '#ffffcc');
@@ -186,18 +196,18 @@
 
         handleRemove: function (e) {
             e.preventDefault();
-            const self = this;
+            var self = this;
 
-            const $row = $(e.currentTarget).closest('.line-item');
-            const $component = $(e.currentTarget).closest('.wp-flyout-line-items');
-            const $tbody = $row.closest('.line-items-list');
+            var $row = $(e.currentTarget).closest('.line-item');
+            var $component = $(e.currentTarget).closest('.wp-flyout-line-items');
+            var $tbody = $row.closest('.line-items-list');
 
             $row.fadeOut(300, function () {
                 $row.remove();
                 self.reindexItems($component);
 
                 if ($tbody.find('.line-item').length === 0) {
-                    const emptyHtml = '<div class="line-items-empty">' +
+                    var emptyHtml = '<div class="line-items-empty">' +
                         '<span class="dashicons dashicons-cart"></span>' +
                         '<p>No items added yet.</p></div>';
                     $component.find('.line-items-table').html(emptyHtml);
@@ -208,11 +218,11 @@
         },
 
         handleQuantityChange: function (e) {
-            const $input = $(e.currentTarget);
-            const $component = $input.closest('.wp-flyout-line-items');
-            const $row = $input.closest('.line-item');
+            var $input = $(e.currentTarget);
+            var $component = $input.closest('.wp-flyout-line-items');
+            var $row = $input.closest('.line-item');
 
-            const quantity = Math.max(1, parseInt($input.val()) || 1);
+            var quantity = Math.max(1, parseInt($input.val()) || 1);
             $input.val(quantity);
 
             this.updateRowTotal($row);
@@ -220,13 +230,13 @@
         },
 
         updateRowTotal: function ($row) {
-            const price = parseInt($row.find('[data-price]').data('price')) || 0;
-            const quantity = parseInt($row.find('.quantity-input').val()) || 1;
-            const total = price * quantity;
+            var price = parseInt($row.find('[data-price]').data('price')) || 0;
+            var quantity = parseInt($row.find('.quantity-input').val()) || 1;
+            var total = price * quantity;
 
-            const $component = $row.closest('.wp-flyout-line-items');
-            const currency = $component.data('currency') || 'USD';
-            const formatter = new Intl.NumberFormat('en-US', {
+            var $component = $row.closest('.wp-flyout-line-items');
+            var currency = $component.data('currency') || 'USD';
+            var formatter = new Intl.NumberFormat('en-US', {
                 style: 'currency',
                 currency: currency
             });
@@ -235,17 +245,17 @@
         },
 
         recalculateTotals: function ($component) {
-            let total = 0;
+            var total = 0;
 
             $component.find('.line-item').each(function () {
-                const $row = $(this);
-                const price = parseInt($row.find('[data-price]').data('price')) || 0;
-                const quantity = parseInt($row.find('.quantity-input').val()) || 1;
+                var $row = $(this);
+                var price = parseInt($row.find('[data-price]').data('price')) || 0;
+                var quantity = parseInt($row.find('.quantity-input').val()) || 1;
                 total += price * quantity;
             });
 
-            const currency = $component.data('currency') || 'USD';
-            const formatter = new Intl.NumberFormat('en-US', {
+            var currency = $component.data('currency') || 'USD';
+            var formatter = new Intl.NumberFormat('en-US', {
                 style: 'currency',
                 currency: currency
             });
@@ -256,10 +266,10 @@
         },
 
         findExistingItem: function ($component, itemId) {
-            let $found = null;
+            var $found = null;
             $component.find('.line-item').each(function () {
-                const $row = $(this);
-                const rowItemId = $row.data('item-id') || $row.find('[name*="[id]"]').val();
+                var $row = $(this);
+                var rowItemId = $row.data('item-id') || $row.find('[name*="[id]"]').val();
                 if (rowItemId == itemId) {
                     $found = $row;
                     return false;
@@ -268,9 +278,6 @@
             return $found ? $($found) : $();
         },
 
-        /**
-         * Clear the Select2 product search
-         */
         clearSelect: function ($select) {
             if ($select.data('select2')) {
                 $select.val(null).trigger('change');
@@ -279,10 +286,10 @@
 
         reindexItems: function ($component) {
             $component.find('.line-item').each(function (index) {
-                const $item = $(this);
+                var $item = $(this);
                 $item.attr('data-index', index);
                 $item.find('input').each(function () {
-                    const name = $(this).attr('name');
+                    var name = $(this).attr('name');
                     if (name) {
                         $(this).attr('name', name.replace(/\[\d+\]/, '[' + index + ']'));
                     }
@@ -291,7 +298,7 @@
         },
 
         escapeHtml: function (text) {
-            const div = document.createElement('div');
+            var div = document.createElement('div');
             div.textContent = text || '';
             return div.innerHTML;
         }

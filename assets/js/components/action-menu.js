@@ -1,7 +1,10 @@
 /**
  * ActionMenu Component JavaScript
  *
- * Handles dropdown menu interactions and AJAX actions
+ * Handles dropdown menu interactions and REST API actions.
+ *
+ * @package ArrayPress\WPFlyout
+ * @version 2.0.0
  */
 (function ($) {
     'use strict';
@@ -9,16 +12,9 @@
     const ActionMenu = {
 
         init: function () {
-            // Toggle menu
             $(document).on('click', '.action-menu-trigger', this.toggleMenu.bind(this));
-
-            // Handle menu item clicks
             $(document).on('click', '.action-menu-item', this.handleAction.bind(this));
-
-            // Close on outside click
             $(document).on('click', this.handleOutsideClick.bind(this));
-
-            // Close on escape
             $(document).on('keydown', this.handleEscape.bind(this));
         },
 
@@ -26,9 +22,9 @@
             e.preventDefault();
             e.stopPropagation();
 
-            const $trigger = $(e.currentTarget);
-            const $menu = $trigger.siblings('.action-menu-dropdown');
-            const isOpen = $trigger.attr('aria-expanded') === 'true';
+            var $trigger = $(e.currentTarget);
+            var $menu = $trigger.siblings('.action-menu-dropdown');
+            var isOpen = $trigger.attr('aria-expanded') === 'true';
 
             // Close all other menus
             $('.action-menu-trigger[aria-expanded="true"]').not($trigger).each(function () {
@@ -49,96 +45,100 @@
             e.preventDefault();
             e.stopPropagation();
 
-            const $item = $(e.currentTarget);
+            var $item = $(e.currentTarget);
 
-            // Skip disabled items
             if ($item.hasClass('is-disabled')) {
                 return;
             }
 
-            // Check for confirmation
-            const confirmMsg = $item.data('confirm');
+            var confirmMsg = $item.data('confirm');
             if (confirmMsg && !confirm(confirmMsg)) {
                 return;
             }
 
-            // Get action and nonce
-            const action = $item.data('action');
-            const nonce = $item.data('nonce');
-
+            var action = $item.data('action');
             if (!action) {
-                // Close menu if no action (might be a regular link)
                 this.closeAllMenus();
                 return;
             }
 
-            // Gather all data attributes
-            const itemData = $item.data();
-            const requestData = {
-                action: 'wp_flyout_action_' + action,
-                _wpnonce: nonce
-            };
+            // Get flyout context
+            var $flyout = $item.closest('.wp-flyout');
+            var config = $flyout.data() || {};
+            var itemId = $flyout.find('input[name="id"]').val() || config.data?.id || 0;
 
-            // Add all other data attributes
-            Object.keys(itemData).forEach(key => {
-                if (!['action', 'nonce', 'confirm'].includes(key)) {
-                    requestData[key] = itemData[key];
-                }
-            });
-
-            // Set loading state
             this.setItemState($item, true);
 
-            // Make AJAX request
-            $.post(ajaxurl, requestData)
-                .done((response) => {
-                    this.handleResponse(response, $item);
+            var self = this;
+
+            fetch(wpFlyout.restUrl + '/action', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-WP-Nonce': wpFlyout.restNonce
+                },
+                credentials: 'same-origin',
+                body: JSON.stringify({
+                    manager: config.manager,
+                    flyout: config.flyout,
+                    action_key: action,
+                    item_id: itemId
                 })
-                .fail(() => {
-                    this.handleError('Connection failed. Please try again.', $item);
+            })
+                .then(function (response) {
+                    return response.json().then(function (json) {
+                        if (!response.ok) {
+                            throw new Error(json.message || 'Request failed');
+                        }
+                        return json;
+                    });
                 })
-                .always(() => {
-                    this.setItemState($item, false);
-                    this.closeAllMenus();
+                .then(function (response) {
+                    self.handleResponse(response, $item);
+                })
+                .catch(function (error) {
+                    self.handleError(error.message || 'Connection failed. Please try again.', $item);
+                })
+                .finally(function () {
+                    self.setItemState($item, false);
+                    self.closeAllMenus();
                 });
         },
 
         handleResponse: function (response, $item) {
-            const $flyout = $item.closest('.wp-flyout');
-            const $body = $flyout.find('.wp-flyout-body');
+            var $flyout = $item.closest('.wp-flyout');
+            var $body = $flyout.find('.wp-flyout-body');
 
             if (response.success) {
-                const message = response.data?.message || 'Action completed successfully';
+                var message = response.message || 'Action completed successfully';
                 this.showAlert($flyout, message, 'success');
-                $body.animate({scrollTop: 0}, 300);
+                $body.animate({ scrollTop: 0 }, 300);
 
-                // Handle reload/refresh as needed
-                if (response.data?.reload === true) {
-                    setTimeout(() => {
+                if (response.reload === true) {
+                    setTimeout(function () {
                         location.reload();
                     }, 1500);
                 }
 
-                // Update UI elements if data provided
-                if (response.data?.updates) {
-                    this.updateUI(response.data.updates);
+                if (response.updates) {
+                    this.updateUI(response.updates);
                 }
 
-                $item.trigger('actionmenu:success', response.data);
+                $item.trigger('actionmenu:success', response);
             } else {
-                const errorMsg = response.data || 'An error occurred';
+                var errorMsg = response.message || 'An error occurred';
                 this.showAlert($flyout, errorMsg, 'error');
-                $body.animate({scrollTop: 0}, 300);
+                $body.animate({ scrollTop: 0 }, 300);
                 $item.trigger('actionmenu:error', errorMsg);
             }
         },
 
         handleError: function (message, $item) {
-            const $flyout = $item.closest('.wp-flyout');
-            const $body = $flyout.find('.wp-flyout-body');
+            var $flyout = $item.closest('.wp-flyout');
+            var $body = $flyout.find('.wp-flyout-body');
 
             this.showAlert($flyout, message, 'error');
-            $body.animate({scrollTop: 0}, 300);
+            $body.animate({ scrollTop: 0 }, 300);
 
             $item.trigger('actionmenu:error', message);
         },
@@ -146,14 +146,14 @@
         setItemState: function ($item, loading) {
             if (loading) {
                 $item.addClass('loading');
-                const $icon = $item.find('.dashicons').first();
+                var $icon = $item.find('.dashicons').first();
                 if ($icon.length) {
                     $icon.data('original-class', $icon.attr('class'));
                     $icon.attr('class', 'dashicons dashicons-update');
                 }
             } else {
                 $item.removeClass('loading');
-                const $icon = $item.find('.dashicons').first();
+                var $icon = $item.find('.dashicons').first();
                 if ($icon.length && $icon.data('original-class')) {
                     $icon.attr('class', $icon.data('original-class'));
                 }
@@ -161,7 +161,7 @@
         },
 
         updateUI: function (updates) {
-            Object.keys(updates).forEach(selector => {
+            Object.keys(updates).forEach(function (selector) {
                 $(selector).html(updates[selector]);
             });
         },
@@ -199,12 +199,10 @@
         }
     };
 
-    // Initialize on document ready
     $(function () {
         ActionMenu.init();
     });
 
-    // Export for external use
     window.WPFlyoutActionMenu = ActionMenu;
 
 })(jQuery);

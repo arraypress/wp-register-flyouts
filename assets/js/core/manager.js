@@ -1,11 +1,11 @@
 /**
- * WP Flyout Manager - Simplified version
+ * WP Flyout Manager
  *
- * Handles AJAX flyout loading, saving, and deletion.
+ * Handles flyout loading, saving, and deletion via REST API.
  * Always reloads page after successful save/delete operations.
  *
  * @package     ArrayPress\WPFlyout
- * @version     1.0.0
+ * @version     2.0.0
  */
 (function ($) {
     'use strict';
@@ -14,48 +14,74 @@
 
         /**
          * Initialize manager
-         *
-         * @since 1.0.0
-         * @return {void}
          */
         init: function () {
             $(document).on('click', '.wp-flyout-trigger', this.handleTrigger.bind(this));
         },
 
         /**
-         * Handle trigger click
+         * Make a REST API request
          *
-         * @since 1.0.0
-         * @param {jQuery.Event} e Click event
-         * @return {void}
+         * @param {string} endpoint REST endpoint path (e.g. '/load')
+         * @param {Object} data     Request body data
+         * @param {string} method   HTTP method (default: 'POST')
+         * @return {Promise} Resolves with parsed JSON response
+         */
+        api: function (endpoint, data, method) {
+            method = method || 'POST';
+
+            const options = {
+                method: method,
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-WP-Nonce': wpFlyout.restNonce
+                },
+                credentials: 'same-origin'
+            };
+
+            if (method === 'GET') {
+                const params = new URLSearchParams(data);
+                endpoint = endpoint + '?' + params.toString();
+            } else {
+                options.body = JSON.stringify(data);
+            }
+
+            return fetch(wpFlyout.restUrl + endpoint, options)
+                .then(function (response) {
+                    return response.json().then(function (json) {
+                        if (!response.ok) {
+                            throw new Error(json.message || 'Request failed');
+                        }
+                        return json;
+                    });
+                });
+        },
+
+        /**
+         * Handle trigger click
          */
         handleTrigger: function (e) {
             e.preventDefault();
 
-            const $btn = $(e.currentTarget);
-            const config = this.extractConfig($btn);
+            var $btn = $(e.currentTarget);
+            var config = this.extractConfig($btn);
 
             this.loadFlyout(config);
         },
 
         /**
          * Extract configuration from trigger button
-         *
-         * @since 1.0.0
-         * @param {jQuery} $btn Trigger button element
-         * @return {Object} Configuration object
          */
         extractConfig: function ($btn) {
-            const config = {
+            var config = {
                 flyout: $btn.data('flyout'),
                 manager: $btn.data('flyout-manager'),
-                nonce: $btn.data('flyout-nonce'),
                 data: {}
             };
 
             // Collect additional data attributes
-            $.each($btn[0].dataset, (key, value) => {
-                if (!['flyout', 'flyoutManager', 'flyoutNonce'].includes(key)) {
+            $.each($btn[0].dataset, function (key, value) {
+                if (['flyout', 'flyoutManager'].indexOf(key) === -1) {
                     config.data[key] = value;
                 }
             });
@@ -64,45 +90,48 @@
         },
 
         /**
-         * Load flyout via AJAX
-         *
-         * @since 1.0.0
-         * @param {Object} config Flyout configuration
-         * @return {void}
+         * Load flyout via REST API
          */
         loadFlyout: function (config) {
-            $.post(ajaxurl, {
-                action: 'wp_flyout_' + config.manager,
+            var self = this;
+
+            var requestData = {
+                manager: config.manager,
                 flyout: config.flyout,
-                flyout_action: 'load',
-                nonce: config.nonce,
-                ...config.data
-            })
-                .done(response => {
+                item_id: config.data.id || 0
+            };
+
+            // Pass through title/subtitle overrides
+            if (config.data.title) {
+                requestData.title = config.data.title;
+            }
+            if (config.data.subtitle) {
+                requestData.subtitle = config.data.subtitle;
+            }
+
+            this.api('/load', requestData)
+                .then(function (response) {
                     if (response.success) {
-                        this.displayFlyout(response.data.html, config);
+                        self.displayFlyout(response.html, config);
                     } else {
-                        alert(response.data || 'Failed to load flyout');
+                        alert(response.message || 'Failed to load flyout');
                     }
                 })
-                .fail((jqXHR) => alert(this.parseErrorMessage(jqXHR, 'Failed to load flyout')));
+                .catch(function (error) {
+                    alert(error.message || 'Failed to load flyout');
+                });
         },
 
         /**
          * Display flyout and setup handlers
-         *
-         * @since 1.0.0
-         * @param {string} html   Flyout HTML content
-         * @param {Object} config Flyout configuration
-         * @return {void}
          */
         displayFlyout: function (html, config) {
             // Remove existing flyouts and add new one
             $('.wp-flyout').remove();
             $('body').append(html);
 
-            const $flyout = $('.wp-flyout').last();
-            const flyoutId = $flyout.attr('id');
+            var $flyout = $('.wp-flyout').last();
+            var flyoutId = $flyout.attr('id');
 
             // Open it
             WPFlyout.open(flyoutId);
@@ -119,15 +148,11 @@
 
         /**
          * Ensure form wrapper exists
-         *
-         * @since 1.0.0
-         * @param {jQuery} $flyout Flyout element
-         * @return {void}
          */
         ensureForm: function ($flyout) {
             if (!$flyout.find('form').length) {
-                const $body = $flyout.find('.wp-flyout-body');
-                const $form = $('<form class="wp-flyout-form" novalidate></form>');
+                var $body = $flyout.find('.wp-flyout-body');
+                var $form = $('<form class="wp-flyout-form" novalidate></form>');
                 $form.append($body.children());
                 $body.append($form);
             }
@@ -135,30 +160,26 @@
 
         /**
          * Bind event handlers
-         *
-         * @since 1.0.0
-         * @param {jQuery} $flyout  Flyout element
-         * @param {string} flyoutId Flyout ID
-         * @param {Object} config   Flyout configuration
-         * @return {void}
          */
         bindHandlers: function ($flyout, flyoutId, config) {
+            var self = this;
+
             // Save button
-            $flyout.on('click', '.wp-flyout-save', e => {
+            $flyout.on('click', '.wp-flyout-save', function (e) {
                 e.preventDefault();
-                this.handleSave($flyout, flyoutId, config);
+                self.handleSave($flyout, flyoutId, config);
             });
 
             // Delete button
-            $flyout.on('click', '.wp-flyout-delete', e => {
+            $flyout.on('click', '.wp-flyout-delete', function (e) {
                 e.preventDefault();
                 if (confirm('Are you sure you want to delete this item?')) {
-                    this.handleDelete($flyout, flyoutId, config);
+                    self.handleDelete($flyout, flyoutId, config);
                 }
             });
 
-            // Close button (redundant since flyout.js handles this, but kept for safety)
-            $flyout.on('click', '.wp-flyout-close', e => {
+            // Close button
+            $flyout.on('click', '.wp-flyout-close', function (e) {
                 e.preventDefault();
                 WPFlyout.close(flyoutId);
             });
@@ -171,18 +192,14 @@
 
         /**
          * Validate form
-         *
-         * @since 1.0.0
-         * @param {jQuery} $form Form element
-         * @return {Object} Validation result with isValid flag and first invalid field
          */
         validateForm: function ($form) {
-            let isValid = true;
-            let firstInvalid = null;
+            var isValid = true;
+            var firstInvalid = null;
 
             $form.find('[required]:visible:enabled').each(function () {
-                const $field = $(this);
-                const value = $field.val();
+                var $field = $(this);
+                var value = $field.val();
 
                 if (!value || (Array.isArray(value) && !value.length)) {
                     isValid = false;
@@ -193,29 +210,68 @@
                 }
             });
 
-            return {isValid, firstInvalid};
+            return { isValid: isValid, firstInvalid: firstInvalid };
+        },
+
+        /**
+         * Collect form data as a plain object for JSON submission
+         *
+         * Handles nested field names like files[0][name], metadata[1][key], etc.
+         */
+        collectFormData: function ($form) {
+            var data = {};
+            var serialized = $form.serializeArray();
+
+            serialized.forEach(function (item) {
+                var keys = item.name.replace(/\]/g, '').split('[');
+                var current = data;
+
+                for (var i = 0; i < keys.length - 1; i++) {
+                    var key = keys[i];
+                    if (!current[key]) {
+                        // Next key is numeric? Make an array. Otherwise object.
+                        current[key] = /^\d+$/.test(keys[i + 1]) ? [] : {};
+                    }
+                    current = current[key];
+                }
+
+                var lastKey = keys[keys.length - 1];
+
+                // Handle checkboxes / multi-selects (duplicate names)
+                if (current[lastKey] !== undefined) {
+                    if (!Array.isArray(current[lastKey])) {
+                        current[lastKey] = [current[lastKey]];
+                    }
+                    current[lastKey].push(item.value);
+                } else {
+                    current[lastKey] = item.value;
+                }
+            });
+
+            // Also collect unchecked checkboxes (they don't appear in serializeArray)
+            $form.find('input[type="checkbox"]:not(:checked)').each(function () {
+                var name = $(this).attr('name');
+                if (name && data[name] === undefined) {
+                    data[name] = '0';
+                }
+            });
+
+            return data;
         },
 
         /**
          * Handle save action
-         *
-         * Validates form, sends save request, and always reloads page on success.
-         *
-         * @since 1.0.0
-         * @param {jQuery} $flyout  Flyout element
-         * @param {string} flyoutId Flyout ID
-         * @param {Object} config   Flyout configuration
-         * @return {void}
          */
         handleSave: function ($flyout, flyoutId, config) {
-            const $form = $flyout.find('form').first();
-            const $saveBtn = $flyout.find('.wp-flyout-save');
-            const $body = $flyout.find('.wp-flyout-body');
+            var self = this;
+            var $form = $flyout.find('form').first();
+            var $saveBtn = $flyout.find('.wp-flyout-save');
+            var $body = $flyout.find('.wp-flyout-body');
 
             // Validate
-            const validation = this.validateForm($form);
+            var validation = this.validateForm($form);
             if (!validation.isValid) {
-                $body.animate({scrollTop: 0}, 300);
+                $body.animate({ scrollTop: 0 }, 300);
                 this.showAlert($flyout, 'Please fill in all required fields.', 'error');
                 if (validation.firstInvalid) {
                     validation.firstInvalid.focus();
@@ -223,128 +279,87 @@
                 return;
             }
 
+            // Collect form data as object
+            var formData = this.collectFormData($form);
+
             // Save
             this.setButtonState($saveBtn, true, 'Saving...');
 
-            $.post(ajaxurl, {
-                action: 'wp_flyout_' + config.manager,
+            this.api('/save', {
+                manager: config.manager,
                 flyout: config.flyout,
-                flyout_action: 'save',
-                nonce: config.nonce,
-                form_data: $form.serialize(),
-                ...config.data
+                item_id: config.data.id || formData.id || 0,
+                form_data: formData
             })
-                .done(response => {
-                    this.setButtonState($saveBtn, false);
+                .then(function (response) {
+                    self.setButtonState($saveBtn, false);
 
                     if (response.success) {
-                        $body.animate({scrollTop: 0}, 300);
-                        const message = response.data?.message || 'Saved successfully!';
-                        this.showAlert($flyout, message, 'success');
+                        $body.animate({ scrollTop: 0 }, 300);
+                        var message = response.message || 'Saved successfully!';
+                        self.showAlert($flyout, message, 'success');
 
                         // Always close and reload after delay
-                        setTimeout(() => {
+                        setTimeout(function () {
                             WPFlyout.close(flyoutId);
                             location.reload();
                         }, 1500);
                     } else {
-                        $body.animate({scrollTop: 0}, 300);
-                        this.showAlert($flyout, response.data || 'An error occurred', 'error');
+                        $body.animate({ scrollTop: 0 }, 300);
+                        self.showAlert($flyout, response.message || 'An error occurred', 'error');
                     }
                 })
-                .fail((jqXHR) => {
-                    this.setButtonState($saveBtn, false);
-                    $body.animate({scrollTop: 0}, 300);
-                    this.showAlert($flyout, this.parseErrorMessage(jqXHR, 'An error occurred'), 'error');
+                .catch(function (error) {
+                    self.setButtonState($saveBtn, false);
+                    $body.animate({ scrollTop: 0 }, 300);
+                    self.showAlert($flyout, error.message || 'An error occurred', 'error');
                 });
         },
 
         /**
          * Handle delete action
-         *
-         * Sends delete request and always reloads page on success.
-         *
-         * @since 1.0.0
-         * @param {jQuery} $flyout  Flyout element
-         * @param {string} flyoutId Flyout ID
-         * @param {Object} config   Flyout configuration
-         * @return {void}
          */
         handleDelete: function ($flyout, flyoutId, config) {
-            const $deleteBtn = $flyout.find('.wp-flyout-delete');
-            const deleteId = $flyout.find('input[name="id"]').val() || config.data.id;
-            const $body = $flyout.find('.wp-flyout-body');
+            var self = this;
+            var $deleteBtn = $flyout.find('.wp-flyout-delete');
+            var deleteId = $flyout.find('input[name="id"]').val() || config.data.id;
+            var $body = $flyout.find('.wp-flyout-body');
 
             this.setButtonState($deleteBtn, true, 'Deleting...');
 
-            $.post(ajaxurl, {
-                action: 'wp_flyout_' + config.manager,
+            this.api('/delete', {
+                manager: config.manager,
                 flyout: config.flyout,
-                flyout_action: 'delete',
-                nonce: config.nonce,
-                id: deleteId,
-                ...config.data
+                item_id: deleteId
             })
-                .done(response => {
+                .then(function (response) {
                     if (response.success) {
-                        const message = response.data?.message || 'Deleted successfully!';
-                        this.showAlert($flyout, message, 'success');
-                        $body.animate({scrollTop: 0}, 300);
+                        var message = response.message || 'Deleted successfully!';
+                        self.showAlert($flyout, message, 'success');
+                        $body.animate({ scrollTop: 0 }, 300);
 
-                        // Always close and reload after delay
-                        setTimeout(() => {
+                        setTimeout(function () {
                             WPFlyout.close(flyoutId);
                             location.reload();
                         }, 1000);
                     } else {
-                        this.setButtonState($deleteBtn, false);
-                        this.showAlert($flyout, response.data || 'Failed to delete', 'error');
-                        $body.animate({scrollTop: 0}, 300);
+                        self.setButtonState($deleteBtn, false);
+                        self.showAlert($flyout, response.message || 'Failed to delete', 'error');
+                        $body.animate({ scrollTop: 0 }, 300);
                     }
                 })
-                .fail((jqXHR) => {
-                    this.setButtonState($deleteBtn, false);
-                    $body.animate({scrollTop: 0}, 300);
-                    this.showAlert($flyout, this.parseErrorMessage(jqXHR, 'Failed to delete'), 'error');
+                .catch(function (error) {
+                    self.setButtonState($deleteBtn, false);
+                    $body.animate({ scrollTop: 0 }, 300);
+                    self.showAlert($flyout, error.message || 'Failed to delete', 'error');
                 });
         },
 
         /**
-         * Parse error message from failed AJAX response
-         *
-         * Extracts the error message from non-200 responses where
-         * wp_send_json_error() was called with an HTTP status code,
-         * causing jQuery to route to .fail() instead of .done().
-         *
-         * @since 1.0.1
-         * @param {jqXHR}  jqXHR       jQuery XMLHttpRequest object
-         * @param {string} fallback     Fallback message if parsing fails
-         * @return {string} Extracted error message or fallback
-         */
-        parseErrorMessage: function (jqXHR, fallback) {
-            try {
-                const response = JSON.parse(jqXHR.responseText);
-                if (response && response.data) {
-                    return response.data;
-                }
-            } catch (e) {
-            }
-
-            return fallback;
-        },
-
-        /**
          * Show alert message
-         *
-         * @since 1.0.0
-         * @param {jQuery} $flyout Flyout element
-         * @param {string} message Alert message text
-         * @param {string} type    Alert type (success, error, warning, info)
-         * @return {void}
          */
         showAlert: function ($flyout, message, type) {
             if (window.WPFlyoutAlert) {
-                // Remove any existing alerts to prevent stacking
                 $flyout.find('.wp-flyout-alert').remove();
 
                 WPFlyoutAlert.show(message, type, {
@@ -358,12 +373,6 @@
 
         /**
          * Set button loading state
-         *
-         * @since 1.0.0
-         * @param {jQuery} $btn     Button element
-         * @param {boolean} disabled Whether button should be disabled
-         * @param {string} text     Optional text to show when disabled
-         * @return {void}
          */
         setButtonState: function ($btn, disabled, text) {
             if (!$btn.length) return;
@@ -378,6 +387,8 @@
     };
 
     // Initialize
-    $(document).ready(() => WPFlyoutManager.init());
+    $(document).ready(function () {
+        WPFlyoutManager.init();
+    });
 
 })(jQuery);

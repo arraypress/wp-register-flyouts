@@ -7,7 +7,7 @@
  * @package     ArrayPress\RegisterFlyouts
  * @copyright   Copyright (c) 2025, ArrayPress Limited
  * @license     GPL2+
- * @version     2.0.0
+ * @version     3.0.0
  * @author      David Sherlock
  */
 
@@ -85,7 +85,6 @@ class Components {
 		self::register_form_components();
 		self::register_layout_components();
 		self::register_data_components();
-		self::register_utility_components();
 
 		self::$initialized = true;
 
@@ -187,7 +186,7 @@ class Components {
 			'data_fields' => 'buttons',
 			'asset'       => 'action-buttons',
 			'category'    => 'interactive',
-			'description' => 'Action buttons with AJAX callbacks for operations like refunds'
+			'description' => 'Action buttons with callbacks for operations like refunds'
 		] );
 
 		self::register( 'action_menu', [
@@ -195,7 +194,7 @@ class Components {
 			'data_fields' => 'items',
 			'asset'       => 'action-menu',
 			'category'    => 'interactive',
-			'description' => 'Dropdown menu for multiple actions with AJAX support'
+			'description' => 'Dropdown menu for multiple actions'
 		] );
 
 		// ---- List Management ----
@@ -372,17 +371,6 @@ class Components {
 		] );
 	}
 
-	/**
-	 * Register utility components
-	 *
-	 * Helper components for specific use cases
-	 *
-	 * @return void
-	 * @since 1.0.0
-	 */
-	private static function register_utility_components(): void {
-	}
-
 	// =========================================================================
 	// REGISTRATION & MANAGEMENT
 	// =========================================================================
@@ -473,7 +461,7 @@ class Components {
 	/**
 	 * Get components by category
 	 *
-	 * @param string $category Category name (display, interactive, form, layout, data, utility)
+	 * @param string $category Category name (display, interactive, form, layout, data)
 	 *
 	 * @return array Components in that category
 	 * @since 1.0.0
@@ -583,13 +571,10 @@ class Components {
 	/**
 	 * Resolve a single value from data source
 	 *
-	 * Resolution order (optimized for explicit data methods first):
-	 * 1. Explicit data method (field_data()) - Most specific, returns complete data
-	 * 2. Array key access - Direct array access (fast, no method calls)
-	 * 3. Getter method (get_field()) - Standard getter pattern
-	 * 4. Direct property access - Public property check
-	 * 5. Direct method call (field()) - Method with field name
-	 * 6. CamelCase for underscore properties - Legacy compatibility
+	 * Resolution order:
+	 * 1. Explicit data method (field_data()) — returns complete data for a field
+	 * 2. Array key access — direct array lookup (fast, no method calls)
+	 * 3. Getter method (get_field()) — standard getter pattern
 	 *
 	 * @param string $key  Property/method name to resolve
 	 * @param mixed  $data Data source (object or array)
@@ -609,37 +594,16 @@ class Components {
 			}
 		}
 
-		// 2. Array key access (fast, no method calls needed)
+		// 2. Array key access
 		if ( is_array( $data ) && isset( $data[ $key ] ) ) {
 			return $data[ $key ];
 		}
 
-		// Only try remaining methods if we have an object
-		if ( ! is_object( $data ) ) {
-			return null;
-		}
-
 		// 3. Getter method (get_field)
-		$getter = 'get_' . $key;
-		if ( method_exists( $data, $getter ) ) {
-			return $data->$getter();
-		}
-
-		// 4. Direct property access
-		if ( property_exists( $data, $key ) ) {
-			return $data->$key;
-		}
-
-		// 5. Direct method call (field())
-		if ( method_exists( $data, $key ) ) {
-			return $data->$key();
-		}
-
-		// 6. For underscore properties, try camelCase
-		if ( str_contains( $key, '_' ) ) {
-			$camelCase = lcfirst( str_replace( ' ', '', ucwords( str_replace( '_', ' ', $key ) ) ) );
-			if ( method_exists( $data, $camelCase ) ) {
-				return $data->$camelCase();
+		if ( is_object( $data ) ) {
+			$getter = 'get_' . $key;
+			if ( method_exists( $data, $getter ) ) {
+				return $data->$getter();
 			}
 		}
 
@@ -655,7 +619,6 @@ class Components {
 	 *
 	 * For the header component, the asset is conditionally required
 	 * only when the 'editable' flag is set in the field config.
-	 * This is handled by the Manager's detect_components method.
 	 *
 	 * @param string $type   Component type
 	 * @param array  $config Optional field config for conditional asset detection
@@ -718,7 +681,7 @@ class Components {
 	 * @since 1.0.0
 	 */
 	public static function get_categories(): array {
-		return [ 'display', 'interactive', 'form', 'layout', 'data', 'utility' ];
+		return [ 'display', 'interactive', 'form', 'layout', 'data' ];
 	}
 
 	// =========================================================================

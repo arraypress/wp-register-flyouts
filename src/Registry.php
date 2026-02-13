@@ -1,91 +1,47 @@
 <?php
 /**
- * Flyout Manager Registry
+ * Flyout Registry
  *
- * Centralized registry for managing flyout manager instances.
- * Implements a singleton pattern to ensure consistent access across the application.
+ * Singleton registry for managing multiple flyout managers.
  *
  * @package     ArrayPress\RegisterFlyouts
  * @copyright   Copyright (c) 2025, ArrayPress Limited
  * @license     GPL2+
- * @version     1.0.0
- * @author      David Sherlock
+ * @since       2.0.0
  */
 
 declare( strict_types=1 );
 
 namespace ArrayPress\RegisterFlyouts;
 
-use Exception;
-use InvalidArgumentException;
-
 /**
  * Class Registry
  *
- * Singleton registry for managing flyout instances across the application.
- * Provides centralized access to Manager instances without using global variables.
- *
- * @since 1.0.0
+ * Stores all Manager instances by their prefix, allowing the REST API
+ * to resolve flyout configurations on incoming requests.
  */
 class Registry {
 
 	/**
-	 * Singleton instance
+	 * Singleton instance.
 	 *
-	 * @since 1.0.0
-	 * @var self|null
+	 * @var Registry|null
 	 */
-	private static ?self $instance = null;
+	private static ?Registry $instance = null;
 
 	/**
-	 * Registered manager instances
+	 * Registered manager instances.
 	 *
-	 * @since 1.0.0
-	 * @var array<string, Manager> Associative array of prefix => Manager instance
+	 * @var array<string, Manager>
 	 */
 	private array $managers = [];
 
 	/**
-	 * Private constructor
+	 * Get singleton instance.
 	 *
-	 * Prevents direct instantiation to enforce singleton pattern.
-	 *
-	 * @since 1.0.0
+	 * @return Registry
 	 */
-	private function __construct() {}
-
-	/**
-	 * Prevent cloning
-	 *
-	 * Ensures singleton instance cannot be cloned.
-	 *
-	 * @return void
-	 * @since 1.0.0
-	 */
-	private function __clone() {}
-
-	/**
-	 * Prevent unserialization
-	 *
-	 * Ensures singleton instance cannot be unserialized.
-	 *
-	 * @return void
-	 * @throws Exception When attempting to unserialize
-	 * @since 1.0.0
-	 */
-	public function __wakeup() {
-		throw new Exception( "Cannot unserialize singleton" );
-	}
-
-	/**
-	 * Get registry instance
-	 *
-	 * Returns the singleton instance of the registry, creating it if necessary.
-	 *
-	 * @return self Registry instance
-	 * @since 1.0.0
-	 */
-	public static function get_instance(): self {
+	public static function instance(): Registry {
 		if ( self::$instance === null ) {
 			self::$instance = new self();
 		}
@@ -94,130 +50,62 @@ class Registry {
 	}
 
 	/**
-	 * Parse flyout identifier into components
-	 *
-	 * Splits a flyout ID into its prefix and name components.
-	 * Format: 'prefix_flyout_name' becomes ['prefix', 'flyout_name']
-	 * Single word IDs get 'default' as the flyout name.
-	 *
-	 * @param string $id Full flyout identifier
-	 *
-	 * @return array{prefix: string, flyout_id: string} Parsed components
-	 * @since 1.0.0
+	 * Private constructor for singleton.
 	 */
-	public static function parse_flyout_id( string $id ): array {
-		$parts = explode( '_', $id, 2 );
-
-		if ( count( $parts ) === 1 ) {
-			return [
-				'prefix'    => $id,
-				'flyout_id' => 'default'
-			];
-		}
-
-		return [
-			'prefix'    => $parts[0],
-			'flyout_id' => $parts[1]
-		];
+	private function __construct() {
 	}
 
 	/**
-	 * Get or create a manager instance
+	 * Register a manager instance.
 	 *
-	 * Retrieves an existing manager for the given prefix or creates a new one.
-	 * Managers are created lazily on first access and cached for subsequent use.
+	 * @param string  $prefix  Unique prefix (e.g. 'sugarcart').
+	 * @param Manager $manager Manager instance.
 	 *
-	 * @param string $prefix Unique prefix for the manager namespace
-	 *
-	 * @return Manager Manager instance for the given prefix
-	 * @since 1.0.0
+	 * @return void
 	 */
-	public function get_manager( string $prefix ): Manager {
-		$prefix = sanitize_key( $prefix );
-
-		if ( ! isset( $this->managers[ $prefix ] ) ) {
-			$this->managers[ $prefix ] = new Manager( $prefix );
-		}
-
-		return $this->managers[ $prefix ];
+	public static function register( string $prefix, Manager $manager ): void {
+		self::instance()->managers[ $prefix ] = $manager;
 	}
 
 	/**
-	 * Get a manager by full flyout ID
+	 * Get a registered manager.
 	 *
-	 * Convenience method that parses the flyout ID and returns the appropriate manager.
+	 * @param string $prefix Manager prefix.
 	 *
-	 * @param string $flyout_id Full flyout identifier (prefix_name format)
-	 *
-	 * @return Manager|null Manager instance or null if not found
-	 * @since 1.0.0
+	 * @return Manager|null
 	 */
-	public function get_manager_by_flyout_id( string $flyout_id ): ?Manager {
-		$components = self::parse_flyout_id( $flyout_id );
-
-		if ( ! $this->has_manager( $components['prefix'] ) ) {
-			return null;
-		}
-
-		return $this->get_manager( $components['prefix'] );
+	public function get( string $prefix ): ?Manager {
+		return $this->managers[ $prefix ] ?? null;
 	}
 
 	/**
-	 * Register a manager instance
+	 * Check if a manager is registered.
 	 *
-	 * Allows manual registration of a pre-configured manager instance.
-	 * Useful for dependency injection or custom manager configurations.
+	 * @param string $prefix Manager prefix.
 	 *
-	 * @param string  $prefix  Unique prefix for the manager namespace
-	 * @param Manager $manager Pre-configured manager instance
-	 *
-	 * @return self Returns self for method chaining
-	 * @throws InvalidArgumentException If prefix already registered
-	 * @since 1.0.0
+	 * @return bool
 	 */
-	public function register_manager( string $prefix, Manager $manager ): self {
-		$prefix = sanitize_key( $prefix );
-
-		if ( isset( $this->managers[ $prefix ] ) ) {
-			throw new InvalidArgumentException(
-				sprintf( 'Manager with prefix "%s" is already registered', $prefix )
-			);
-		}
-
-		$this->managers[ $prefix ] = $manager;
-
-		return $this;
-	}
-
-	/**
-	 * Check if manager exists
-	 *
-	 * Determines whether a manager has been registered for the given prefix.
-	 *
-	 * @param string $prefix Manager prefix to check
-	 *
-	 * @return bool True if manager exists, false otherwise
-	 * @since 1.0.0
-	 */
-	public function has_manager( string $prefix ): bool {
-		$prefix = sanitize_key( $prefix );
-
+	public function has( string $prefix ): bool {
 		return isset( $this->managers[ $prefix ] );
 	}
 
 	/**
-	 * Remove a manager
+	 * Get all registered managers.
 	 *
-	 * Unregisters a manager from the registry. Useful for cleanup or testing.
-	 *
-	 * @param string $prefix Manager prefix to remove
-	 *
-	 * @return bool True if manager was removed, false if not found
-	 * @since 1.0.0
+	 * @return array<string, Manager>
 	 */
-	public function remove_manager( string $prefix ): bool {
-		$prefix = sanitize_key( $prefix );
+	public function all(): array {
+		return $this->managers;
+	}
 
+	/**
+	 * Unregister a manager.
+	 *
+	 * @param string $prefix Manager prefix.
+	 *
+	 * @return bool
+	 */
+	public function unregister( string $prefix ): bool {
 		if ( isset( $this->managers[ $prefix ] ) ) {
 			unset( $this->managers[ $prefix ] );
 
@@ -225,72 +113,6 @@ class Registry {
 		}
 
 		return false;
-	}
-
-	/**
-	 * Get all registered managers
-	 *
-	 * Returns all currently registered manager instances.
-	 * Useful for debugging or bulk operations.
-	 *
-	 * @return array<string, Manager> Array of prefix => Manager instance
-	 * @since 1.0.0
-	 */
-	public function get_all_managers(): array {
-		return $this->managers;
-	}
-
-	/**
-	 * Get all registered prefixes
-	 *
-	 * Returns an array of all registered manager prefixes.
-	 *
-	 * @return string[] Array of registered prefixes
-	 * @since 1.0.0
-	 */
-	public function get_prefixes(): array {
-		return array_keys( $this->managers );
-	}
-
-	/**
-	 * Count registered managers
-	 *
-	 * Returns the total number of registered managers.
-	 *
-	 * @return int Number of registered managers
-	 * @since 1.0.0
-	 */
-	public function count(): int {
-		return count( $this->managers );
-	}
-
-	/**
-	 * Clear all managers
-	 *
-	 * Removes all registered managers from the registry.
-	 * Primarily useful for testing or complete reinitialization.
-	 *
-	 * @return self Returns self for method chaining
-	 * @since 1.0.0
-	 */
-	public function clear(): self {
-		$this->managers = [];
-
-		return $this;
-	}
-
-	/**
-	 * Reset the singleton instance
-	 *
-	 * Clears the singleton instance, forcing creation of a new one on next access.
-	 * Should only be used for testing purposes.
-	 *
-	 * @return void
-	 * @internal
-	 * @since 1.0.0
-	 */
-	public static function reset(): void {
-		self::$instance = null;
 	}
 
 }

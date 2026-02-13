@@ -1,8 +1,10 @@
 /**
  * WP Flyout Notes Component
  *
+ * Handles note add/delete via REST API.
+ *
  * @package WPFlyout
- * @version 2.0.0
+ * @version 3.0.0
  */
 (function ($) {
     'use strict';
@@ -13,9 +15,8 @@
          * Initialize the Notes component
          */
         init: function () {
-            const self = this;
+            var self = this;
 
-            // Bind actions using delegation
             $(document)
                 .on('click', '.wp-flyout-notes [data-action="add-note"]', function (e) {
                     self.handleAdd(e);
@@ -24,13 +25,19 @@
                     self.handleDelete(e);
                 })
                 .on('keydown', '.wp-flyout-notes textarea', function (e) {
-                    // Submit on Shift + Enter (standard for multi-line inputs)
                     if (e.key === 'Enter' && e.shiftKey) {
                         e.preventDefault();
-                        // Find the button within the same form container
                         $(this).closest('.note-add-form').find('[data-action="add-note"]').click();
                     }
                 });
+        },
+
+        /**
+         * Get flyout config from parent flyout element
+         */
+        getFlyoutConfig: function ($component) {
+            var $flyout = $component.closest('.wp-flyout');
+            return $flyout.data() || {};
         },
 
         /**
@@ -39,58 +46,66 @@
         handleAdd: function (e) {
             e.preventDefault();
 
-            const $button = $(e.currentTarget);
-            const $component = $button.closest('.wp-flyout-notes');
-            const $flyout = $component.closest('.wp-flyout');
-            const $textarea = $component.find('textarea');
-            const content = $textarea.val().trim();
+            var $button = $(e.currentTarget);
+            var $component = $button.closest('.wp-flyout-notes');
+            var $flyout = $component.closest('.wp-flyout');
+            var $textarea = $component.find('textarea');
+            var content = $textarea.val().trim();
 
             if (!content) {
                 $textarea.focus();
                 return;
             }
 
-            const ajaxAdd = $component.data('ajax-add');
-            const objectType = $component.data('object-type');
-            const objectId = $flyout.find('input[name="id"]').val();
-            const nonce = $component.data('add-nonce');
-
-            if (!ajaxAdd) {
-                console.error('Notes: No AJAX add action configured');
-                return;
-            }
+            var config = this.getFlyoutConfig($component);
+            var objectType = $component.data('object-type');
+            var objectId = $flyout.find('input[name="id"]').val();
+            var addAction = $component.data('add-action') || 'add_note';
 
             $button.prop('disabled', true).text('Adding...');
 
-            $.ajax({
-                url: window.ajaxurl || '/wp-admin/admin-ajax.php',
-                type: 'POST',
-                data: {
-                    action: ajaxAdd,
-                    content: content,
-                    object_type: objectType,
-                    object_id: objectId,
-                    _wpnonce: nonce
+            fetch(wpFlyout.restUrl + '/action', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-WP-Nonce': wpFlyout.restNonce
                 },
-                success: function (response) {
-                    if (response.success && response.data.note) {
-                        const noteHtml = Notes.createNoteHtml(response.data.note);
-                        const $list = $component.find('.notes-list');
+                credentials: 'same-origin',
+                body: JSON.stringify({
+                    manager: config.manager,
+                    flyout: config.flyout,
+                    action_key: addAction,
+                    item_id: objectId,
+                    content: content,
+                    object_type: objectType
+                })
+            })
+                .then(function (response) {
+                    return response.json().then(function (json) {
+                        if (!response.ok) {
+                            throw new Error(json.message || 'Failed to add note');
+                        }
+                        return json;
+                    });
+                })
+                .then(function (response) {
+                    if (response.success && response.note) {
+                        var noteHtml = Notes.createNoteHtml(response.note);
+                        var $list = $component.find('.notes-list');
 
                         $list.find('.no-notes').remove();
                         $list.prepend(noteHtml);
                         $textarea.val('').focus();
                     } else {
-                        alert(response.data?.message || 'Failed to add note');
+                        alert(response.message || 'Failed to add note');
                     }
-                },
-                error: function () {
-                    alert('Error adding note');
-                },
-                complete: function () {
+                })
+                .catch(function (error) {
+                    alert(error.message || 'Error adding note');
+                })
+                .finally(function () {
                     $button.prop('disabled', false).text('Add Note');
-                }
-            });
+                });
         },
 
         /**
@@ -103,68 +118,76 @@
                 return;
             }
 
-            const $button = $(e.currentTarget);
-            const $note = $button.closest('.note-item');
-            const $component = $button.closest('.wp-flyout-notes');
-            const $flyout = $component.closest('.wp-flyout');
+            var $button = $(e.currentTarget);
+            var $note = $button.closest('.note-item');
+            var $component = $button.closest('.wp-flyout-notes');
+            var $flyout = $component.closest('.wp-flyout');
 
-            const noteId = $note.data('note-id');
-            const ajaxDelete = $component.data('ajax-delete');
-            const objectType = $component.data('object-type');
-            const objectId = $flyout.find('input[name="id"]').val();
-            const nonce = $component.data('delete-nonce');
-
-            if (!ajaxDelete) {
-                console.error('Notes: No AJAX delete action configured');
-                return;
-            }
+            var noteId = $note.data('note-id');
+            var config = this.getFlyoutConfig($component);
+            var objectType = $component.data('object-type');
+            var objectId = $flyout.find('input[name="id"]').val();
+            var deleteAction = $component.data('delete-action') || 'delete_note';
 
             $button.prop('disabled', true);
 
-            $.ajax({
-                url: window.ajaxurl || '/wp-admin/admin-ajax.php',
-                type: 'POST',
-                data: {
-                    action: ajaxDelete,
-                    note_id: noteId,
-                    object_type: objectType,
-                    object_id: objectId,
-                    _wpnonce: nonce
+            fetch(wpFlyout.restUrl + '/action', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-WP-Nonce': wpFlyout.restNonce
                 },
-                success: function (response) {
+                credentials: 'same-origin',
+                body: JSON.stringify({
+                    manager: config.manager,
+                    flyout: config.flyout,
+                    action_key: deleteAction,
+                    item_id: objectId,
+                    note_id: noteId,
+                    object_type: objectType
+                })
+            })
+                .then(function (response) {
+                    return response.json().then(function (json) {
+                        if (!response.ok) {
+                            throw new Error(json.message || 'Failed to delete note');
+                        }
+                        return json;
+                    });
+                })
+                .then(function (response) {
                     if (response.success) {
                         $note.slideUp(200, function () {
                             $note.remove();
 
-                            const $list = $component.find('.notes-list');
+                            var $list = $component.find('.notes-list');
                             if ($list.find('.note-item').length === 0) {
                                 $list.html('<p class="no-notes">No notes yet.</p>');
                             }
                         });
                     } else {
-                        alert(response.data?.message || 'Failed to delete note');
+                        alert(response.message || 'Failed to delete note');
                     }
-                },
-                error: function () {
-                    alert('Error deleting note');
-                },
-                complete: function () {
+                })
+                .catch(function (error) {
+                    alert(error.message || 'Error deleting note');
+                })
+                .finally(function () {
                     $button.prop('disabled', false);
-                }
-            });
+                });
         },
 
         /**
          * Create note HTML
          */
         createNoteHtml: function (note) {
-            const escapeHtml = function (text) {
-                const div = document.createElement('div');
+            var escapeHtml = function (text) {
+                var div = document.createElement('div');
                 div.textContent = text || '';
                 return div.innerHTML;
             };
 
-            let html = '<div class="note-item" data-note-id="' + note.id + '">';
+            var html = '<div class="note-item" data-note-id="' + note.id + '">';
             html += '<div class="note-header">';
 
             if (note.author) {
@@ -189,12 +212,10 @@
         }
     };
 
-    // Initialize on document ready
     $(function () {
         Notes.init();
     });
 
-    // Export for external use
     window.WPFlyoutNotes = Notes;
 
 })(jQuery);

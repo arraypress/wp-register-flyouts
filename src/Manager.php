@@ -514,9 +514,21 @@ class Manager {
 	 * @return void
 	 * @since 1.0.0
 	 */
+	/**
+	 * Types that resolve to ajax_select at render time.
+	 *
+	 * @var array<string>
+	 */
+	private static array $ajax_select_types = [ 'post', 'taxonomy', 'user' ];
+
 	private function detect_components( array $config ): void {
 		foreach ( $config['fields'] as $field ) {
 			$type = $field['type'] ?? 'text';
+
+			// Derivative types resolve to ajax_select at render time.
+			if ( in_array( $type, self::$ajax_select_types, true ) ) {
+				$type = 'ajax_select';
+			}
 
 			if ( $asset = Components::get_asset( $type, $field ) ) {
 				$this->components[] = $asset;

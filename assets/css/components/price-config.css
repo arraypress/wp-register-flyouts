@@ -1,7 +1,7 @@
 /**
  * WP Flyout - Price Config Component
  *
- * @version 1.1.0
+ * @version 2.0.0
  */
 
 .wp-flyout-price-config {
@@ -54,13 +54,6 @@
 
 .price-config-type-option:last-child .price-config-type-label {
     border-right: none;
-}
-
-.price-config-type-label .dashicons {
-    font-size: 16px;
-    width: 16px;
-    height: 16px;
-    line-height: 16px;
 }
 
 /* Active state */
@@ -161,9 +154,41 @@
 }
 
 /* ==========================================================================
-   RECURRING INTERVAL
+   BILLING PERIOD
    ========================================================================== */
 
+.price-config-interval {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    overflow: hidden;
+}
+
+/* Preset dropdown */
+.price-config-preset-select {
+    width: 180px;
+    padding: 8px;
+    border: 1px solid #8c8f94;
+    border-radius: 4px;
+    font-size: 14px;
+    background: #fff;
+    cursor: pointer;
+    transition: border-color 0.15s;
+    appearance: none;
+    background-image: url('data:image/svg+xml;charset=UTF-8,%3csvg xmlns="http://www.w3.org/2000/svg" width="14" height="8" viewBox="0 0 14 8"%3e%3cpath fill="%23646970" d="M7 8L0 0h14L7 8z"/%3e%3c/svg%3e');
+    background-repeat: no-repeat;
+    background-position: right 8px center;
+    background-size: 10px 6px;
+    padding-right: 28px;
+}
+
+.price-config-preset-select:focus {
+    border-color: #2271b1;
+    box-shadow: 0 0 0 1px #2271b1;
+    outline: none;
+}
+
+/* Custom interval row */
 .price-config-interval-row {
     display: flex;
     align-items: center;
@@ -214,12 +239,4 @@
     border-color: #2271b1;
     box-shadow: 0 0 0 1px #2271b1;
     outline: none;
-}
-
-/* ==========================================================================
-   ANIMATION
-   ========================================================================== */
-
-.price-config-interval {
-    overflow: hidden;
 }

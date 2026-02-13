@@ -1,9 +1,9 @@
 /**
- * WP Flyout - Notes Panel Component
+ * WP Flyout - Notes Component
  */
 
-.wp-flyout-notes-panel {
-    margin: 20px 0;
+.wp-flyout-notes {
+    margin: 0;
 }
 
 /* Notes list container */
@@ -51,12 +51,12 @@
 
 .note-author {
     font-weight: 600;
-    color: var(--wp-flyout-text-primary);
+    color: var(--wp-flyout-text);
 }
 
 .note-date {
     flex: 1;
-    color: #646970;
+    color: var(--wp-flyout-text-muted);
 }
 
 .note-header button[data-action="delete-note"] {
@@ -87,7 +87,7 @@
 /* Note content */
 .note-content {
     line-height: 1.5;
-    color: var(--wp-flyout-text-primary);
+    color: var(--wp-flyout-text);
     word-wrap: break-word;
 }
 
@@ -115,6 +115,7 @@
     resize: vertical;
     font-family: inherit;
     font-size: 13px;
+    transition: border-color 0.15s;
 }
 
 .note-input:focus {
@@ -128,34 +129,34 @@
 }
 
 /* Activity log variant */
-.wp-flyout-notes-panel.activity-log .note-item {
+.wp-flyout-notes.activity-log .note-item {
     padding: 8px 15px;
 }
 
-.wp-flyout-notes-panel.activity-log .note-header {
+.wp-flyout-notes.activity-log .note-header {
     margin-bottom: 4px;
 }
 
-.wp-flyout-notes-panel.activity-log .note-content {
+.wp-flyout-notes.activity-log .note-content {
     font-size: 13px;
 }
 
 /* Compact variant */
-.wp-flyout-notes-panel.compact .notes-list {
+.wp-flyout-notes.compact .notes-list {
     max-height: 250px;
 }
 
-.wp-flyout-notes-panel.compact .note-item {
+.wp-flyout-notes.compact .note-item {
     padding: 8px 12px;
 }
 
 /* Loading state */
-.wp-flyout-notes-panel.loading .notes-list {
+.wp-flyout-notes.loading .notes-list {
     opacity: 0.6;
     pointer-events: none;
 }
 
-.wp-flyout-notes-panel.loading .note-add-form {
+.wp-flyout-notes.loading .note-add-form {
     opacity: 0.6;
     pointer-events: none;
 }
@@ -184,7 +185,7 @@
 }
 
 .notes-list::-webkit-scrollbar-thumb:hover {
-    background: #8c8f94;
+    background: var(--wp-flyout-text-secondary);
 }
 
 /* Responsive */

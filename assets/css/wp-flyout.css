@@ -1,0 +1,634 @@
+/**
+ * WP Flyout - Core
+ *
+ * Flyout shell, layout, form fields, tabs, footer, and responsive.
+ * This file handles everything structural. Component-specific styles
+ * live in wp-flyout-components.css.
+ *
+ * @package ArrayPress\RegisterFlyouts
+ * @version 1.0.0
+ */
+
+/* ========================================
+   CSS VARIABLES
+   ======================================== */
+
+:root {
+    /* Dimensions */
+    --wp-flyout-width-small: 400px;
+    --wp-flyout-width-medium: 600px;
+    --wp-flyout-width-large: 800px;
+    --wp-flyout-width-full: calc(100vw - 160px);
+
+    /* Colors */
+    --wp-flyout-bg: #fff;
+    --wp-flyout-border: #dcdcde;
+    --wp-flyout-shadow: rgba(0, 0, 0, 0.1);
+    --wp-flyout-text: #1e1e1e;
+    --wp-flyout-text-muted: #646970;
+    --wp-flyout-text-secondary: #8c8f94;
+    --wp-flyout-primary: #2271b1;
+    --wp-flyout-primary-hover: #135e96;
+    --wp-flyout-success: #00a32a;
+    --wp-flyout-warning: #dba617;
+    --wp-flyout-error: #d63638;
+    --wp-flyout-danger: #d63638;
+    --wp-flyout-info: #72aee6;
+}
+
+/* ========================================
+   OVERLAY
+   ======================================== */
+
+.wp-flyout-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.7);
+    z-index: 159999;
+    opacity: 0;
+    transition: opacity 0.3s;
+    pointer-events: none;
+}
+
+.wp-flyout-overlay.active {
+    opacity: 1;
+    pointer-events: auto;
+}
+
+/* ========================================
+   FLYOUT SHELL
+   ======================================== */
+
+.wp-flyout {
+    position: fixed;
+    top: 32px;
+    right: 0;
+    bottom: 0;
+    background: var(--wp-flyout-bg);
+    box-shadow: -2px 0 10px var(--wp-flyout-shadow);
+    z-index: 160000;
+    display: flex;
+    flex-direction: column;
+    transform: translateX(100%);
+    transition: transform 0.3s ease-out;
+    max-height: calc(100vh - 32px);
+}
+
+.wp-flyout.active {
+    transform: translateX(0);
+}
+
+.wp-flyout-small {
+    width: var(--wp-flyout-width-small);
+}
+
+.wp-flyout-medium {
+    width: var(--wp-flyout-width-medium);
+}
+
+.wp-flyout-large {
+    width: var(--wp-flyout-width-large);
+}
+
+.wp-flyout-full {
+    width: var(--wp-flyout-width-full);
+}
+
+/* ========================================
+   HEADER
+   ======================================== */
+
+.wp-flyout-header {
+    padding: 20px 30px;
+    background: var(--wp-flyout-bg);
+    border-bottom: 1px solid var(--wp-flyout-border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-shrink: 0;
+}
+
+.wp-flyout-header-content {
+    flex: 1;
+    min-width: 0;
+}
+
+.wp-flyout-header h2,
+.wp-flyout-title {
+    margin: 0;
+    font-size: 20px;
+    font-weight: 500;
+    color: var(--wp-flyout-text);
+    line-height: 1.3;
+}
+
+.wp-flyout-subtitle {
+    margin: 4px 0 0;
+    font-size: 13px;
+    line-height: 1.4;
+    color: var(--wp-flyout-text-muted);
+}
+
+.wp-flyout-close {
+    background: none;
+    border: none;
+    padding: 0;
+    width: 36px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--wp-flyout-text-muted);
+    cursor: pointer;
+    transition: all 0.2s;
+    border-radius: 4px;
+    flex-shrink: 0;
+    margin-left: 12px;
+}
+
+.wp-flyout-close:hover {
+    color: var(--wp-flyout-text);
+    background: #f0f0f1;
+}
+
+.wp-flyout-close .dashicons {
+    font-size: 20px;
+    width: 20px;
+    height: 20px;
+}
+
+/* ========================================
+   TABS
+   ======================================== */
+
+.wp-flyout-tabs {
+    background: var(--wp-flyout-bg);
+    border-bottom: 1px solid var(--wp-flyout-border);
+    flex-shrink: 0;
+}
+
+.wp-flyout-tab-nav {
+    display: flex;
+    margin: 0;
+    padding: 0 30px;
+    gap: 4px;
+}
+
+.wp-flyout-tab {
+    padding: 14px 20px;
+    background: none;
+    color: var(--wp-flyout-text-muted);
+    cursor: pointer;
+    text-decoration: none;
+    transition: all 0.2s;
+    border-bottom: 3px solid transparent;
+    font-size: 14px;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.wp-flyout-tab:hover {
+    color: var(--wp-flyout-text);
+}
+
+.wp-flyout-tab.active {
+    color: var(--wp-flyout-primary);
+    border-bottom-color: var(--wp-flyout-primary);
+}
+
+.wp-flyout-tab.disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+/* ========================================
+   BODY
+   ======================================== */
+
+.wp-flyout-body {
+    flex: 1 1 auto;
+    overflow-y: auto;
+    padding: 30px;
+    min-height: 0;
+}
+
+.wp-flyout-tab-content {
+    display: none;
+}
+
+.wp-flyout-tab-content.active {
+    display: block;
+    animation: wpFlyoutFadeIn 0.3s;
+}
+
+@keyframes wpFlyoutFadeIn {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
+}
+
+/* ========================================
+   FOOTER
+   ======================================== */
+
+.wp-flyout-footer {
+    background: var(--wp-flyout-bg);
+    border-top: 1px solid var(--wp-flyout-border);
+    flex-shrink: 0;
+    position: sticky;
+    bottom: 0;
+    z-index: 10;
+}
+
+.wp-flyout-actions {
+    display: flex;
+    gap: 12px;
+    padding: 20px 0;
+    align-items: center;
+}
+
+.wp-flyout-footer .wp-flyout-actions {
+    padding: 20px !important;
+}
+
+.wp-flyout-actions .button {
+    flex: 1;
+    margin: 0;
+    font-size: 14px;
+    font-weight: 500;
+    border-radius: 6px;
+    justify-content: center;
+    min-height: 44px;
+    text-align: center;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    transition: all 0.2s;
+}
+
+/* ========================================
+   FORM
+   ======================================== */
+
+.wp-flyout-form {
+    display: flex;
+    flex-direction: column;
+    flex: 1 1 auto;
+    min-height: 0;
+}
+
+/* ========================================
+   TRIGGER BUTTON
+   ======================================== */
+
+.wp-flyout-trigger.button {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+}
+
+/* ========================================
+   FORM FIELDS
+   ======================================== */
+
+.wp-flyout-field {
+    margin-bottom: 20px;
+}
+
+.wp-flyout-field label {
+    display: block;
+    margin-bottom: 5px;
+    font-weight: 600;
+    color: var(--wp-flyout-text);
+    font-size: 13px;
+}
+
+.wp-flyout-field .required {
+    color: var(--wp-flyout-error);
+    margin-left: 2px;
+}
+
+/*
+ * Input styling — excludes Select2 internals.
+ * Select2 creates input/textarea elements inside .select2-container
+ * that must NOT inherit our field sizing/padding.
+ */
+.wp-flyout-field > input[type="text"],
+.wp-flyout-field > input[type="email"],
+.wp-flyout-field > input[type="number"],
+.wp-flyout-field > input[type="url"],
+.wp-flyout-field > input[type="tel"],
+.wp-flyout-field > input[type="date"],
+.wp-flyout-field > input[type="password"],
+.wp-flyout-field > textarea,
+.wp-flyout-field > select:not(.wp-flyout-ajax-select) {
+    width: 100%;
+    padding: 8px;
+    border: 1px solid #8c8f94;
+    border-radius: 4px;
+    font-size: 14px;
+    background: #fff;
+    transition: border-color 0.15s;
+}
+
+.wp-flyout-field > input:focus,
+.wp-flyout-field > textarea:focus,
+.wp-flyout-field > select:not(.wp-flyout-ajax-select):focus {
+    border-color: var(--wp-flyout-primary);
+    box-shadow: 0 0 0 1px var(--wp-flyout-primary);
+    outline: 2px solid transparent;
+}
+
+.wp-flyout-field > textarea {
+    resize: vertical;
+    min-height: 80px;
+}
+
+.wp-flyout-field > select:not(.wp-flyout-ajax-select) {
+    max-width: none;
+    appearance: none;
+    background-image: url('data:image/svg+xml;charset=UTF-8,%3csvg xmlns="http://www.w3.org/2000/svg" width="14" height="8" viewBox="0 0 14 8"%3e%3cpath fill="%23646970" d="M7 8L0 0h14L7 8z"/%3e%3c/svg%3e');
+    background-repeat: no-repeat;
+    background-position: right 8px center;
+    background-size: 14px 8px;
+    padding-right: 32px;
+}
+
+.wp-flyout-field .description {
+    margin-top: 5px;
+    font-size: 13px;
+    font-style: italic;
+    color: var(--wp-flyout-text-muted);
+}
+
+/* ========================================
+   FIELD GROUPS
+   ======================================== */
+
+.wp-flyout-field-group {
+    margin-bottom: 20px;
+}
+
+.wp-flyout-field-group .wp-flyout-field {
+    margin-bottom: 0;
+    width: 100%;
+}
+
+/* ========================================
+   TOGGLE
+   ======================================== */
+
+.wp-flyout-toggle {
+    position: relative;
+    display: inline-flex !important;
+    align-items: center;
+    cursor: pointer;
+    user-select: none;
+}
+
+.wp-flyout-toggle input[type="checkbox"] {
+    position: absolute;
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.wp-flyout-toggle .toggle-slider {
+    position: relative;
+    display: inline-block;
+    width: 44px;
+    height: 24px;
+    background: #ccc;
+    border-radius: 12px;
+    transition: background-color 0.3s;
+    margin-right: 10px;
+}
+
+.wp-flyout-toggle .toggle-slider::before {
+    content: "";
+    position: absolute;
+    width: 18px;
+    height: 18px;
+    left: 3px;
+    top: 3px;
+    background: white;
+    border-radius: 50%;
+    transition: transform 0.3s;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.wp-flyout-toggle input[type="checkbox"]:checked ~ .toggle-slider {
+    background: var(--wp-flyout-primary);
+}
+
+.wp-flyout-toggle input[type="checkbox"]:checked ~ .toggle-slider::before {
+    transform: translateX(20px);
+}
+
+.wp-flyout-toggle .toggle-label {
+    font-size: 14px;
+    color: var(--wp-flyout-text);
+}
+
+/* ========================================
+   RADIO GROUP
+   ======================================== */
+
+.wp-flyout-radio-group {
+    display: flex;
+    flex-direction: column;
+}
+
+.wp-flyout-radio {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    cursor: pointer;
+    user-select: none;
+    padding: 8px 0;
+}
+
+.wp-flyout-radio input[type="radio"] {
+    appearance: none;
+    width: 18px;
+    height: 18px;
+    cursor: pointer;
+    border: 2px solid #8c8f94;
+    border-radius: 50%;
+    background: #fff;
+    transition: all 0.2s ease;
+    position: relative;
+    flex-shrink: 0;
+    margin-right: 4px;
+}
+
+.wp-flyout-radio input[type="radio"]:checked {
+    border-color: var(--wp-flyout-primary);
+}
+
+.wp-flyout-radio input[type="radio"]:checked::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 8px;
+    height: 8px;
+    background: var(--wp-flyout-primary);
+    border-radius: 50%;
+}
+
+.wp-flyout-radio .radio-label {
+    font-size: 14px;
+    color: var(--wp-flyout-text);
+    line-height: 1.4;
+}
+
+/* ========================================
+   COLOR INPUT
+   ======================================== */
+
+.wp-flyout-color-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.wp-flyout-color-input {
+    appearance: none;
+    width: 60px;
+    height: 42px;
+    border: 2px solid var(--wp-flyout-border);
+    border-radius: 6px;
+    padding: 3px;
+    cursor: pointer;
+    background: #fff;
+    transition: border-color 0.15s;
+}
+
+.wp-flyout-color-preview {
+    flex: 1;
+    max-width: 150px;
+    font-family: 'SF Mono', Consolas, Monaco, monospace;
+    font-size: 14px;
+    font-weight: 500;
+    text-align: center;
+    text-transform: uppercase;
+    padding: 10px 12px;
+    border: 1px solid var(--wp-flyout-border);
+    border-radius: 4px;
+    background: #fff;
+    color: var(--wp-flyout-text);
+}
+
+/* ========================================
+   VALIDATION
+   ======================================== */
+
+.wp-flyout-field.has-error input,
+.wp-flyout-field.has-error select,
+.wp-flyout-field.has-error textarea,
+.wp-flyout-field input.error,
+.wp-flyout-field select.error,
+.wp-flyout-field textarea.error {
+    border-color: var(--wp-flyout-error) !important;
+}
+
+/* ========================================
+   CONDITIONAL FIELDS
+   ======================================== */
+
+.wp-flyout-field-wrapper.conditional-field {
+    overflow: hidden;
+    transition: opacity 0.2s ease;
+}
+
+.wp-flyout-field-wrapper.conditional-field[style*="display: none"] {
+    opacity: 0;
+}
+
+/* ========================================
+   SEPARATOR
+   ======================================== */
+
+.wp-flyout-separator {
+    border: 0;
+    border-top: 1px solid var(--wp-flyout-border);
+    margin: 20px 0;
+}
+
+.wp-flyout-separator.has-text {
+    display: flex;
+    align-items: center;
+    border: 0;
+    text-align: center;
+}
+
+.wp-flyout-separator.has-text::before,
+.wp-flyout-separator.has-text::after {
+    content: '';
+    flex: 1;
+    border-top: 1px solid var(--wp-flyout-border);
+}
+
+.wp-flyout-separator.has-text .separator-text {
+    padding: 0 15px;
+    color: var(--wp-flyout-text-muted);
+    font-size: 13px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+/* ========================================
+   RESPONSIVE
+   ======================================== */
+
+@media screen and (max-width: 782px) {
+    .wp-flyout {
+        width: 100%;
+        top: 46px;
+        max-height: calc(100vh - 46px);
+    }
+
+    .wp-flyout-header,
+    .wp-flyout-body,
+    .wp-flyout-footer {
+        padding-left: 20px;
+        padding-right: 20px;
+    }
+
+    .wp-flyout-tab-nav {
+        padding: 0 20px;
+        overflow-x: auto;
+    }
+
+    .wp-flyout-title {
+        font-size: 18px;
+    }
+
+    .wp-flyout-subtitle {
+        font-size: 12px;
+    }
+}
+
+@media screen and (max-width: 600px) {
+    .wp-flyout-field-group {
+        flex-direction: column !important;
+    }
+
+    .wp-flyout-actions {
+        flex-direction: column;
+    }
+
+    .wp-flyout-actions .button {
+        width: 100%;
+    }
+}

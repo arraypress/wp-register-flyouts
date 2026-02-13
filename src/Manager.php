@@ -414,6 +414,12 @@ class Manager {
 		}
 
 		if ( $field['type'] !== 'ajax_select' ) {
+			// Line items need manager/flyout context for their embedded search and details.
+			if ( $field['type'] === 'line_items' ) {
+				$field['manager'] = $this->prefix;
+				$field['flyout']  = $this->get_flyout_id_for_field( $field_key );
+			}
+
 			return $field;
 		}
 

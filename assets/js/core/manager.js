@@ -223,28 +223,43 @@
             var serialized = $form.serializeArray();
 
             serialized.forEach(function (item) {
-                var keys = item.name.replace(/\]/g, '').split('[');
-                var current = data;
+                var name = item.name;
 
-                for (var i = 0; i < keys.length - 1; i++) {
-                    var key = keys[i];
-                    if (!current[key]) {
-                        // Next key is numeric? Make an array. Otherwise object.
-                        current[key] = /^\d+$/.test(keys[i + 1]) ? [] : {};
+                // Handle array fields: name[] or name[key]
+                if (name.indexOf('[') !== -1) {
+                    var keys = name.replace(/\]/g, '').split('[');
+                    var current = data;
+
+                    for (var i = 0; i < keys.length - 1; i++) {
+                        var key = keys[i];
+                        if (!current[key]) {
+                            var nextKey = keys[i + 1];
+                            // Empty next key (name[]) means array, numeric means array, otherwise object
+                            current[key] = (nextKey === '' || /^\d+$/.test(nextKey)) ? [] : {};
+                        }
+                        current = current[key];
                     }
-                    current = current[key];
-                }
 
-                var lastKey = keys[keys.length - 1];
+                    var lastKey = keys[keys.length - 1];
 
-                // Handle checkboxes / multi-selects (duplicate names)
-                if (current[lastKey] !== undefined) {
-                    if (!Array.isArray(current[lastKey])) {
-                        current[lastKey] = [current[lastKey]];
+                    // Empty last key means append to array (name[])
+                    if (lastKey === '') {
+                        if (Array.isArray(current)) {
+                            current.push(item.value);
+                        }
+                    } else {
+                        current[lastKey] = item.value;
                     }
-                    current[lastKey].push(item.value);
                 } else {
-                    current[lastKey] = item.value;
+                    // Simple field — handle duplicate names as arrays
+                    if (data[name] !== undefined) {
+                        if (!Array.isArray(data[name])) {
+                            data[name] = [data[name]];
+                        }
+                        data[name].push(item.value);
+                    } else {
+                        data[name] = item.value;
+                    }
                 }
             });
 

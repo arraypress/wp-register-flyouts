@@ -3,12 +3,11 @@
  * Component Registry
  *
  * Central registry for all flyout components.
- * Updated with header image picker support.
  *
  * @package     ArrayPress\RegisterFlyouts
  * @copyright   Copyright (c) 2025, ArrayPress Limited
  * @license     GPL2+
- * @version     1.1.0
+ * @version     2.0.0
  * @author      David Sherlock
  */
 
@@ -21,7 +20,7 @@ use ArrayPress\RegisterFlyouts\Components\ActionMenu;
 use ArrayPress\RegisterFlyouts\Components\Articles;
 use ArrayPress\RegisterFlyouts\Components\FeatureList;
 use ArrayPress\RegisterFlyouts\Components\Image;
-use ArrayPress\RegisterFlyouts\Components\ImageGallery;
+use ArrayPress\RegisterFlyouts\Components\Gallery;
 use ArrayPress\RegisterFlyouts\Components\KeyValueList;
 use ArrayPress\RegisterFlyouts\Components\PaymentMethod;
 use ArrayPress\RegisterFlyouts\Components\PriceSummary;
@@ -31,7 +30,6 @@ use ArrayPress\RegisterFlyouts\Components\FileManager;
 use ArrayPress\RegisterFlyouts\Components\Notes;
 use ArrayPress\RegisterFlyouts\Components\LineItems;
 use ArrayPress\RegisterFlyouts\Components\Accordion;
-use ArrayPress\RegisterFlyouts\Components\ProgressSteps;
 use ArrayPress\RegisterFlyouts\Components\Stats;
 use ArrayPress\RegisterFlyouts\Components\Timeline;
 use ArrayPress\RegisterFlyouts\Components\Header;
@@ -125,7 +123,7 @@ class Components {
 				'fallback_image',
 				'fallback_attachment_id'
 			],
-			'asset'       => null, // null when not editable; dynamically resolved
+			'asset'       => null,
 			'category'    => 'display',
 			'description' => 'Unified header for any entity with optional image picker'
 		] );
@@ -145,15 +143,6 @@ class Components {
 			'asset'       => null,
 			'category'    => 'display',
 			'description' => 'Empty state messages'
-		] );
-
-		// ---- Progress Indicators ----
-		self::register( 'progress_steps', [
-			'class'       => ProgressSteps::class,
-			'data_fields' => [ 'steps', 'current', 'style', 'clickable' ],
-			'asset'       => 'progress-steps',
-			'category'    => 'display',
-			'description' => 'Step indicators for multi-step processes'
 		] );
 
 		// ---- Content Lists ----
@@ -251,20 +240,12 @@ class Components {
 			'description' => 'Order line items with quantities and pricing'
 		] );
 
-		self::register( 'image_gallery', [
-			'class'       => ImageGallery::class,
+		self::register( 'gallery', [
+			'class'       => Gallery::class,
 			'data_fields' => 'items',
-			'asset'       => 'image-gallery',
+			'asset'       => 'gallery',
 			'category'    => 'interactive',
-			'description' => 'Image upload with gallery preview and reordering'
-		] );
-
-		self::register( 'price_config', [
-			'class'       => PriceConfig::class,
-			'data_fields' => [ 'amount', 'currency', 'recurring_interval', 'recurring_interval_count' ],
-			'asset'       => 'price-config',
-			'category'    => 'form',
-			'description' => 'Stripe-compatible pricing configuration'
+			'description' => 'Multi-image gallery with media library and reordering'
 		] );
 	}
 
@@ -286,15 +267,6 @@ class Components {
 			'description' => 'Card-style radio/checkbox selections'
 		] );
 
-		// ---- Special Input Types (that need assets) ----
-		self::register( 'tags', [
-			'class'       => FormField::class,
-			'data_fields' => 'value',
-			'asset'       => 'tags',
-			'category'    => 'form',
-			'description' => 'Tag input field'
-		] );
-
 		self::register( 'ajax_select', [
 			'class'       => FormField::class,
 			'data_fields' => 'value',
@@ -303,6 +275,7 @@ class Components {
 			'description' => 'AJAX-powered select field'
 		] );
 
+		// ---- Media Components ----
 		self::register( 'image', [
 			'class'       => Image::class,
 			'data_fields' => 'value',
@@ -311,6 +284,14 @@ class Components {
 			'description' => 'Single image picker with media library integration'
 		] );
 
+		// ---- Pricing ----
+		self::register( 'price_config', [
+			'class'       => PriceConfig::class,
+			'data_fields' => [ 'amount', 'currency', 'recurring_interval', 'recurring_interval_count' ],
+			'asset'       => 'price-config',
+			'category'    => 'form',
+			'description' => 'Stripe-compatible pricing configuration'
+		] );
 	}
 
 	/**
@@ -621,7 +602,6 @@ class Components {
 		}
 
 		// 1. Try explicit data method first (field_data())
-		// This is the most explicit "I'm providing data for this field" convention
 		if ( is_object( $data ) ) {
 			$data_method = $key . '_data';
 			if ( method_exists( $data, $data_method ) ) {
@@ -687,7 +667,7 @@ class Components {
 
 		// Header component conditionally needs assets only when editable
 		if ( $type === 'header' ) {
-			return ! empty( $config['editable'] ) ? 'header-picker' : null;
+			return ! empty( $config['editable'] ) ? 'image-picker' : null;
 		}
 
 		return self::$components[ $type ]['asset'] ?? null;

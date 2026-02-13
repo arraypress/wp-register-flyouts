@@ -65,13 +65,13 @@ class Assets {
 			'style'  => 'css/components/file-manager.css',
 			'deps'   => [ 'jquery-ui-sortable' ]
 		],
-		'image-gallery'  => [
-			'script' => 'js/components/image-gallery.js',
-			'style'  => 'css/components/image-gallery.css',
+		'gallery'  => [
+			'script' => 'js/components/gallery.js',
+			'style'  => 'css/components/gallery.css',
 			'deps'   => [ 'jquery-ui-sortable', 'wp-mediaelement' ]
 		],
-		'header-picker'  => [
-			'script' => 'js/components/header-picker.js',
+		'image-picker'   => [
+			'script' => 'js/components/image-picker.js',
 			'style'  => '',
 			'deps'   => [ 'wp-mediaelement' ]
 		],
@@ -99,11 +99,6 @@ class Assets {
 			'script' => 'js/components/ajax-select.js',
 			'style'  => 'css/components/ajax-select.css',
 			'deps'   => [ 'select2' ]
-		],
-		'tags'           => [
-			'script' => 'js/components/tags.js',
-			'style'  => 'css/components/tags.css',
-			'deps'   => []
 		],
 		'accordion'      => [
 			'script' => 'js/components/accordion.js',
@@ -150,21 +145,10 @@ class Assets {
 			'style'  => 'css/components/stats.css',
 			'deps'   => []
 		],
-		'progress-steps' => [
-			'script' => '',
-			'style'  => 'css/components/progress-steps.css',
-			'deps'   => []
-		],
 		'price-config'   => [
 			'script' => 'js/components/price-config.js',
 			'style'  => 'css/components/price-config.css',
 			'deps'   => []
-		],
-
-		'image-picker' => [
-			'script' => 'js/components/header-picker.js',
-			'style'  => '',  // Uses data-display.css styles already loaded
-			'deps'   => [ 'wp-mediaelement' ]
 		],
 	];
 
@@ -254,10 +238,6 @@ class Assets {
 	/**
 	 * Register Select2 assets if not already available
 	 *
-	 * Select2 may already be registered by WooCommerce or other plugins.
-	 * We only register it if it's not already available. Uses local copies
-	 * from the assets/libraries directory via the Composer Assets loader.
-	 *
 	 * @param string $version Version string for cache busting
 	 *
 	 * @return void
@@ -287,8 +267,6 @@ class Assets {
 
 	/**
 	 * Register component assets
-	 *
-	 * Registers individual component CSS and JavaScript files.
 	 *
 	 * @param string $base_file Base file path for asset resolution
 	 * @param string $version   Version string for cache busting
@@ -338,8 +316,6 @@ class Assets {
 	/**
 	 * Enqueue core flyout assets
 	 *
-	 * Loads all core CSS and JavaScript files required for flyout functionality.
-	 *
 	 * @return void
 	 * @since 1.0.0
 	 */
@@ -358,9 +334,6 @@ class Assets {
 
 	/**
 	 * Enqueue specific component assets
-	 *
-	 * Loads CSS and JavaScript for a specific flyout component,
-	 * including any dependencies.
 	 *
 	 * @param string $component Component name to enqueue
 	 *
@@ -407,8 +380,8 @@ class Assets {
 			wp_enqueue_script( $handle );
 		}
 
-		// Handle special requirements
-		if ( in_array( $component, [ 'file-manager', 'header-picker', 'image-picker' ], true ) ) {
+		// Handle special requirements (media library)
+		if ( in_array( $component, [ 'file-manager', 'image-picker', 'gallery' ], true ) ) {
 			wp_enqueue_media();
 		}
 

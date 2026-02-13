@@ -19,14 +19,14 @@ namespace ArrayPress\RegisterFlyouts\Components;
 use ArrayPress\RegisterFlyouts\Interfaces\Renderable;
 
 /**
- * Class ImageGallery
+ * Class Gallery
  *
  * Manages image collections with visual preview grid and drag-drop sorting.
  * Stores only attachment IDs, letting WordPress manage all image metadata.
  *
  * @since 1.0.0
  */
-class ImageGallery implements Renderable {
+class Gallery implements Renderable {
 
     /**
      * Component configuration

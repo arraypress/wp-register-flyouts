@@ -1,13 +1,13 @@
 <?php
 /**
- * Field and Component Sanitizer - Enhanced
+ * Field and Component Sanitizer
  *
  * Centralized sanitization logic with filterable sanitizers for extensibility.
  *
  * @package     ArrayPress\RegisterFlyouts
  * @copyright   Copyright (c) 2025, ArrayPress Limited
  * @license     GPL2+
- * @version     1.0.0
+ * @version     2.0.0
  * @author      David Sherlock
  */
 
@@ -64,36 +64,35 @@ class Sanitizer {
 	private static function register_field_sanitizers(): void {
 		$sanitizers = [
 			// Text inputs
-			'text'        => 'sanitize_text_field',
-			'textarea'    => 'sanitize_textarea_field',
-			'email'       => 'sanitize_email',
-			'url'         => 'esc_url_raw',
-			'tel'         => 'sanitize_text_field',
-			'password'    => [ self::class, 'sanitize_password' ],
+			'text'         => 'sanitize_text_field',
+			'textarea'     => 'sanitize_textarea_field',
+			'email'        => 'sanitize_email',
+			'url'          => 'esc_url_raw',
+			'tel'          => 'sanitize_text_field',
+			'password'     => [ self::class, 'sanitize_password' ],
 
 			// Numeric inputs
-			'number'      => [ self::class, 'sanitize_number' ],
+			'number'       => [ self::class, 'sanitize_number' ],
 
 			// Date/Time inputs
-			'date'        => [ self::class, 'sanitize_date' ],
+			'date'         => [ self::class, 'sanitize_date' ],
 
 			// Selection inputs
-			'select'      => 'sanitize_text_field',
-			'ajax_select' => [ self::class, 'sanitize_ajax_select' ],
-			'radio'       => 'sanitize_text_field',
-			'toggle'      => [ self::class, 'sanitize_toggle' ],
+			'select'       => 'sanitize_text_field',
+			'ajax_select'  => [ self::class, 'sanitize_ajax_select' ],
+			'radio'        => 'sanitize_text_field',
+			'toggle'       => [ self::class, 'sanitize_toggle' ],
 
 			// Special inputs
-			'color'       => 'sanitize_hex_color',
-			'hidden'      => 'sanitize_text_field',
+			'color'        => 'sanitize_hex_color',
+			'hidden'       => 'sanitize_text_field',
 
+			// Component fields
 			'price_config' => [ self::class, 'sanitize_price_config' ],
-
-			'header' => [ self::class, 'sanitize_image' ],
-			'image' => [ self::class, 'sanitize_image' ]
+			'header'       => [ self::class, 'sanitize_image' ],
+			'image'        => [ self::class, 'sanitize_image' ],
 		];
 
-		// Allow early filtering before assignment
 		self::$field_sanitizers = apply_filters( 'wp_flyout_register_field_sanitizers', $sanitizers );
 	}
 
@@ -106,14 +105,12 @@ class Sanitizer {
 		$sanitizers = [
 			'line_items'     => [ self::class, 'sanitize_line_items' ],
 			'files'          => [ self::class, 'sanitize_files' ],
-			'image_gallery'  => [ self::class, 'sanitize_image_gallery' ],
-			'tags'           => [ self::class, 'sanitize_tags' ],
+			'gallery'        => [ self::class, 'sanitize_gallery' ],
 			'card_choice'    => [ self::class, 'sanitize_card_choice' ],
 			'feature_list'   => [ self::class, 'sanitize_feature_list' ],
-			'key_value_list' => [ self::class, 'sanitize_key_value_list' ]
+			'key_value_list' => [ self::class, 'sanitize_key_value_list' ],
 		];
 
-		// Allow early filtering before assignment
 		self::$component_sanitizers = apply_filters( 'wp_flyout_register_component_sanitizers', $sanitizers );
 	}
 
@@ -263,17 +260,6 @@ class Sanitizer {
 	// ========================================
 
 	/**
-	 * Sanitize tags array
-	 */
-	public static function sanitize_tags( $value ): array {
-		if ( ! is_array( $value ) ) {
-			return [];
-		}
-
-		return array_map( 'sanitize_text_field', $value );
-	}
-
-	/**
 	 * Sanitize card choice selection
 	 */
 	public static function sanitize_card_choice( $value ) {
@@ -306,7 +292,6 @@ class Sanitizer {
 				'name'     => sanitize_text_field( $item['name'] ?? '' ),
 				'quantity' => max( 1, absint( $item['quantity'] ?? 1 ) ),
 				'price'    => absint( $item['price'] ?? 0 ),
-
 			];
 		}
 
@@ -343,16 +328,16 @@ class Sanitizer {
 	}
 
 	/**
-	 * Sanitize image gallery data
+	 * Sanitize gallery data
 	 *
-	 * Ensures only valid attachment IDs are stored.
+	 * Ensures only valid image attachment IDs are stored.
 	 * Accepts both simple array of IDs and legacy format with attachment_id/id keys.
 	 *
 	 * @param array|mixed $data Raw gallery data
 	 *
 	 * @return array Sanitized array of attachment IDs
 	 */
-	public static function sanitize_image_gallery( $data ): array {
+	public static function sanitize_gallery( $data ): array {
 		if ( ! is_array( $data ) ) {
 			return [];
 		}
@@ -363,10 +348,8 @@ class Sanitizer {
 			$attachment_id = 0;
 
 			if ( is_numeric( $item ) ) {
-				// Simple ID format (preferred)
 				$attachment_id = absint( $item );
 			} elseif ( is_array( $item ) ) {
-				// Legacy format with attachment_id or id key
 				if ( isset( $item['attachment_id'] ) ) {
 					$attachment_id = absint( $item['attachment_id'] );
 				} elseif ( isset( $item['id'] ) ) {
@@ -374,20 +357,16 @@ class Sanitizer {
 				}
 			}
 
-			// Verify it's a valid attachment
 			if ( $attachment_id > 0 && wp_attachment_is_image( $attachment_id ) ) {
 				$sanitized[] = $attachment_id;
 			}
 		}
 
-		return array_values( $sanitized ); // Reset array keys
+		return array_values( $sanitized );
 	}
 
 	/**
-	 * Sanitize MetaKeyValue component data
-	 *
-	 * Removes entries with empty keys and sanitizes both keys and values.
-	 * Keys are required and will be slugified for consistency.
+	 * Sanitize key-value list component data
 	 *
 	 * @param array|mixed $data Raw metadata array
 	 *
@@ -405,20 +384,17 @@ class Sanitizer {
 				continue;
 			}
 
-			// Get and sanitize key - required field
 			$key = isset( $item['key'] ) ? sanitize_key( $item['key'] ) : '';
 
-			// Skip if key is empty
 			if ( empty( $key ) ) {
 				continue;
 			}
 
-			// Sanitize value - can be empty
 			$value = isset( $item['value'] ) ? sanitize_text_field( $item['value'] ) : '';
 
 			$sanitized[] = [
 				'key'   => $key,
-				'value' => $value
+				'value' => $value,
 			];
 		}
 
@@ -426,9 +402,7 @@ class Sanitizer {
 	}
 
 	/**
-	 * Sanitize FeatureList component data
-	 *
-	 * Removes empty items and sanitizes text values.
+	 * Sanitize feature list component data
 	 *
 	 * @param array|mixed $data Raw features array
 	 *
@@ -442,17 +416,14 @@ class Sanitizer {
 		$sanitized = [];
 
 		foreach ( $data as $item ) {
-			// Handle both string and array formats
 			if ( is_array( $item ) ) {
 				$value = $item['value'] ?? $item['text'] ?? '';
 			} else {
 				$value = $item;
 			}
 
-			// Sanitize and trim
 			$value = sanitize_text_field( trim( $value ) );
 
-			// Skip empty values
 			if ( empty( $value ) ) {
 				continue;
 			}
@@ -498,7 +469,6 @@ class Sanitizer {
 
 		$currency = strtoupper( sanitize_text_field( $value['currency'] ?? 'USD' ) );
 
-		// Convert decimal amounts to cents using currency library if available
 		$raw_amount     = $value['amount'] ?? 0;
 		$raw_compare_at = $value['compare_at_amount'] ?? 0;
 
@@ -510,7 +480,6 @@ class Sanitizer {
 			$compare_at_amount = (int) round( (float) $raw_compare_at * 100 );
 		}
 
-		// Compare-at must be higher than amount to make sense, otherwise discard
 		if ( $compare_at_amount <= $amount ) {
 			$compare_at_amount = 0;
 		}
@@ -519,7 +488,6 @@ class Sanitizer {
 		$interval        = sanitize_text_field( $value['recurring_interval'] ?? '' );
 		$interval_count  = absint( $value['recurring_interval_count'] ?? 1 );
 
-		// Only keep interval data if valid
 		if ( ! in_array( $interval, $valid_intervals, true ) ) {
 			$interval       = null;
 			$interval_count = null;
@@ -537,14 +505,11 @@ class Sanitizer {
 	}
 
 	/**
-	 * Sanitize header image picker data.
+	 * Sanitize image picker data (used by both header and image components)
 	 *
-	 * The header component submits an attachment ID via its hidden input.
-	 * This validates it's a real image attachment.
+	 * @param mixed $value Raw value (attachment ID)
 	 *
-	 * @param mixed $value Raw value (attachment ID).
-	 *
-	 * @return int Sanitized attachment ID (0 if invalid).
+	 * @return int Sanitized attachment ID (0 if invalid)
 	 */
 	public static function sanitize_image( $value ): int {
 		$attachment_id = absint( $value );
@@ -553,7 +518,6 @@ class Sanitizer {
 			return 0;
 		}
 
-		// Verify it's a valid image attachment
 		if ( ! wp_attachment_is_image( $attachment_id ) ) {
 			return 0;
 		}
@@ -572,7 +536,6 @@ class Sanitizer {
 		self::ensure_initialized();
 		self::$field_sanitizers[ $type ] = $sanitizer;
 
-		// Trigger action for tracking
 		do_action( 'wp_flyout_registered_field_sanitizer', $type, $sanitizer );
 	}
 
@@ -583,7 +546,6 @@ class Sanitizer {
 		self::ensure_initialized();
 		self::$component_sanitizers[ $type ] = $sanitizer;
 
-		// Trigger action for tracking
 		do_action( 'wp_flyout_registered_component_sanitizer', $type, $sanitizer );
 	}
 

@@ -103,12 +103,12 @@ class RestApi {
 					'type'              => 'string',
 					'sanitize_callback' => 'sanitize_key',
 				],
-				'term' => [
+				'term'      => [
 					'required' => false,
 					'type'     => 'string',
 					'default'  => '',
 				],
-				'include' => [
+				'include'   => [
 					'required' => false,
 					'type'     => 'string',
 					'default'  => '',
@@ -143,7 +143,7 @@ class RestApi {
 				'type'              => 'string',
 				'sanitize_callback' => 'sanitize_key',
 			],
-			'flyout' => [
+			'flyout'  => [
 				'required'          => true,
 				'type'              => 'string',
 				'sanitize_callback' => 'sanitize_key',
@@ -555,11 +555,12 @@ class RestApi {
 			);
 		}
 
-		// Action callbacks receive an array similar to the old $_POST data.
-		$result = call_user_func( $callback, [
-			'id'         => $item_id,
-			'action_key' => $action_key,
-		] );
+		// Action callbacks receive all request params.
+		$params               = $request->get_json_params();
+		$params['id']         = $item_id;
+		$params['action_key'] = $action_key;
+
+		$result = call_user_func( $callback, $params );
 
 		if ( is_wp_error( $result ) ) {
 			return $result;
@@ -607,7 +608,7 @@ class RestApi {
 	/**
 	 * Find an action callback by action key within the fields array.
 	 *
-	 * Searches action_buttons and action_menu field types for matching action keys.
+	 * Searches action_buttons, action_menu, and notes field types for matching action keys.
 	 *
 	 * @param array  $fields     Flat fields array from flyout config.
 	 * @param string $action_key Action key to find.
@@ -617,6 +618,22 @@ class RestApi {
 	private static function find_action_callback( array $fields, string $action_key ): ?callable {
 		foreach ( $fields as $field ) {
 			$type = $field['type'] ?? '';
+
+			// Notes component: match action key to add/delete callbacks.
+			if ( $type === 'notes' ) {
+				$add_action    = $field['add_action'] ?? 'add_note';
+				$delete_action = $field['delete_action'] ?? 'delete_note';
+
+				if ( $action_key === $add_action && ! empty( $field['add_callback'] ) && is_callable( $field['add_callback'] ) ) {
+					return $field['add_callback'];
+				}
+
+				if ( $action_key === $delete_action && ! empty( $field['delete_callback'] ) && is_callable( $field['delete_callback'] ) ) {
+					return $field['delete_callback'];
+				}
+
+				continue;
+			}
 
 			// Determine which key holds the action items.
 			$items = [];

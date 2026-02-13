@@ -115,4 +115,59 @@ class Registry {
 		return false;
 	}
 
+	/**
+	 * Parse a compound flyout ID into prefix and flyout_id.
+	 *
+	 * Splits 'prefix_flyout_name' into ['prefix' => 'prefix', 'flyout_id' => 'flyout_name'].
+	 *
+	 * @param string $id Full flyout identifier.
+	 *
+	 * @return array{prefix: string, flyout_id: string}|null Parsed components or null if invalid.
+	 */
+	public static function parse_id( string $id ): ?array {
+		$pos = strpos( $id, '_' );
+
+		if ( $pos === false || $pos === 0 ) {
+			return null;
+		}
+
+		return [
+			'prefix'    => substr( $id, 0, $pos ),
+			'flyout_id' => substr( $id, $pos + 1 ),
+		];
+	}
+
+	/**
+	 * Resolve a compound flyout ID to a Manager instance and flyout_id.
+	 *
+	 * Creates the Manager if it doesn't exist yet.
+	 *
+	 * @param string $id     Full flyout identifier (prefix_flyout_name).
+	 * @param bool   $create Whether to create the Manager if not found.
+	 *
+	 * @return array{manager: Manager, flyout_id: string}|null Resolved components or null.
+	 */
+	public static function resolve( string $id, bool $create = false ): ?array {
+		$parts = self::parse_id( $id );
+
+		if ( ! $parts ) {
+			return null;
+		}
+
+		$manager = self::instance()->get( $parts['prefix'] );
+
+		if ( ! $manager && $create ) {
+			$manager = new Manager( $parts['prefix'] );
+		}
+
+		if ( ! $manager ) {
+			return null;
+		}
+
+		return [
+			'manager'   => $manager,
+			'flyout_id' => $parts['flyout_id'],
+		];
+	}
+
 }

@@ -74,9 +74,6 @@ When populating fields from the object returned by `load`, values are resolved i
 1. **`{field}_data()` method** — Most explicit, returns complete data for a field
 2. **Array key access** — `$data['field']`
 3. **`get_{field}()` getter** — `$data->get_field()`
-4. **Direct property** — `$data->field`
-5. **`{field}()` method** — `$data->field()`
-6. **CamelCase method** — For underscore names: `user_name` → `$data->userName()`
 
 **Important:** When a field has a `name` attribute that differs from its array key, the `name` is used for data
 resolution. For example, a field registered as `order_items` with `'name' => 'items'` will look up `$data['items']`,
@@ -98,19 +95,13 @@ class Product {
     public function get_price() {
         return $this->price / 100;
     }
-
-    // Method 3: Direct method
-    public function formatted_price() {
-        return '$' . number_format( $this->price / 100, 2 );
-    }
 }
 
 register_flyout( 'shop_edit_product', [
     'fields' => [
-        'name'            => [ 'type' => 'text', 'label' => 'Name' ],
-        'description'     => [ 'type' => 'textarea', 'label' => 'Description' ],
-        'price'           => [ 'type' => 'number', 'label' => 'Price' ],
-        'formatted_price' => [ 'type' => 'text', 'label' => 'Display Price', 'readonly' => true ],
+        'name'        => [ 'type' => 'text', 'label' => 'Name' ],
+        'description' => [ 'type' => 'textarea', 'label' => 'Description' ],
+        'price'       => [ 'type' => 'number', 'label' => 'Price' ],
     ],
     'load' => fn( $id ) => new Product( $id ),
 ] );
@@ -600,7 +591,6 @@ Allows users to type and create new tags that don't exist in the search results:
     'tags'        => true,
     'callback'    => function ( string $search = '', ?array $ids = null ): array {
         if ( $ids ) {
-            // For free-text tags, the ID is the tag itself
             return array_combine( $ids, $ids );
         }
         $result = [];
@@ -612,10 +602,80 @@ Allows users to type and create new tags that don't exist in the search results:
 ],
 ```
 
-The library automatically registers AJAX endpoints, generates nonces, initializes Select2, and handles hydration
+The library automatically registers REST API endpoints, generates nonces, initializes Select2, and handles hydration
 on reload. You only provide the callback.
 
 **Saved data:** Single select saves a string value. Multi-select and tags save arrays of values.
+
+### Shortcut Field Types (Post, Taxonomy, User)
+
+These derivative types automatically convert to `ajax_select` with built-in search callbacks from `Callbacks\Search`.
+They provide convenient shortcuts for the most common WordPress search patterns:
+
+#### Post Select
+
+```php
+'related_post' => [
+    'type'        => 'post',
+    'label'       => 'Related Post',
+    'placeholder' => 'Search posts...',
+    'post_type'   => 'post',           // Default: 'post'. Accepts string or array.
+    'query_args'  => [],               // Additional WP_Query args to merge.
+],
+
+// Multi-select variant
+'related_pages' => [
+    'type'        => 'post',
+    'label'       => 'Related Pages',
+    'multiple'    => true,
+    'post_type'   => 'page',
+],
+```
+
+#### Taxonomy Select
+
+```php
+'category' => [
+    'type'        => 'taxonomy',
+    'label'       => 'Category',
+    'placeholder' => 'Search categories...',
+    'taxonomy'    => 'category',       // Default: 'category'
+    'query_args'  => [],               // Additional get_terms args to merge.
+],
+```
+
+#### User Select
+
+```php
+'author' => [
+    'type'        => 'user',
+    'label'       => 'Author',
+    'placeholder' => 'Search users...',
+    'role'        => 'editor',         // Default: '' (all roles). Accepts string or array.
+    'query_args'  => [],               // Additional WP_User_Query args to merge.
+],
+```
+
+These types are sanitized the same as `ajax_select` and support all the same options (`multiple`, `tags`, etc.).
+
+### Image (Single Image Picker)
+
+Standalone image picker field for selecting a single image via the WordPress media library. Displays a preview
+thumbnail with hover actions to select or remove the image. Stores the attachment ID.
+
+```php
+'product_image' => [
+    'type'        => 'image',
+    'label'       => 'Product Image',
+    'description' => 'Select a product image',
+    'image_size'  => 'medium',          // WordPress image size for preview
+    'image_shape' => 'rounded',         // 'square', 'circle', 'rounded'
+    'icon'        => 'format-image',    // Placeholder dashicon when no image
+    'empty_text'  => 'No image set',    // Text shown when no image
+],
+```
+
+The value (populated from load data) should be an attachment ID (integer). Sanitized to ensure valid image attachment.
 
 ### Hidden Fields
 
@@ -752,22 +812,43 @@ from the data returned by the `load` callback.
 
 ### Header
 
-Display entity headers with image/icon, title, badges, and metadata:
+Display entity headers with image/icon, title, badges, metadata, and optional interactive image picker:
 
 ```php
 'header' => [
     'type' => 'header',
-    // All values below can be set directly OR resolved from load data
+
+    // Text content (resolved from load data or set directly)
     'title'       => 'Order #12345',
     'subtitle'    => 'John Doe',
-    'image'       => 'https://example.com/avatar.jpg',  // OR use icon
-    'icon'        => 'cart',                            // Dashicon name
     'description' => 'Placed on January 15, 2025',
-    'badges'      => [
+
+    // Image display — provide an image URL or attachment_id
+    'image'           => 'https://example.com/avatar.jpg',
+    'attachment_id'   => 0,              // If set and no 'image', resolves URL from attachment
+    'image_size'      => 'thumbnail',    // WordPress image size for resolution
+    'image_shape'     => 'square',       // square, circle, rounded
+    'thumbnail_width' => 60,             // Display size in pixels (32-200, always square)
+
+    // Fallback when no image is set
+    'fallback_image'         => 'https://example.com/default.jpg',
+    'fallback_attachment_id' => 0,
+
+    // Icon (used when no image at all)
+    'icon' => 'cart',                    // Dashicon name
+
+    // Interactive image picker (enables selecting/replacing image via media library)
+    'editable' => false,                 // Set to true to enable image picker
+    'name'     => 'header_image',        // Form field name for the attachment ID
+
+    // Badges
+    'badges' => [
         [ 'text' => 'Paid', 'type' => 'success' ],
         [ 'text' => 'Processing', 'type' => 'warning' ],
-        'Simple badge',                                  // String format works too
+        'Simple badge',                  // String format works too
     ],
+
+    // Meta items
     'meta' => [
         [ 'label' => 'Date', 'value' => '2025-01-15', 'icon' => 'calendar' ],
         [ 'label' => 'Total', 'value' => '$99.00', 'icon' => 'money' ],
@@ -776,6 +857,10 @@ Display entity headers with image/icon, title, badges, and metadata:
 ```
 
 Badge types: `default`, `success`, `warning`, `error`, `info`
+
+When `editable` is `true`, the header image becomes clickable and opens the WordPress media library for
+selecting/replacing the image. The selected attachment ID is stored in a hidden input using the `name` field
+and submitted with the form. The `image-picker` component asset is automatically loaded when `editable` is enabled.
 
 When used with the data resolution system, your `load` callback can return an object with a `header_data()` method or a
 `header` property that returns the full array.
@@ -887,20 +972,6 @@ Display chronological events:
 ],
 ```
 
-### Progress Steps
-
-Display step-by-step progress:
-
-```php
-'order_status' => [
-    'type'      => 'progress_steps',
-    'steps'     => [ 'Order Placed', 'Processing', 'Shipped', 'Delivered' ],
-    'current'   => 2,                        // 1-based index
-    'style'     => 'numbers',                // 'numbers', 'icons', 'simple'
-    'clickable' => false,
-],
-```
-
 ### Price Summary
 
 Display pricing breakdown (amounts in cents):
@@ -1002,13 +1073,13 @@ Display article cards:
 Interactive components allow user interaction and data manipulation. They submit data with the form and have their own
 sanitizers.
 
-### Image Gallery
+### Gallery (Image Gallery)
 
 Upload and manage multiple images via WordPress Media Library. Stores attachment IDs only:
 
 ```php
 'gallery' => [
-    'type'       => 'image_gallery',
+    'type'       => 'gallery',
     'name'       => 'gallery',
     'max_images' => 20,                      // 0 = unlimited
     'columns'    => 4,                       // 2-6
@@ -1032,7 +1103,7 @@ Upload and manage files via WordPress Media Library:
     'type'        => 'files',
     'name'        => 'attachments',
     'max_files'   => 10,                     // 0 = unlimited
-    'reorderable' => true,
+    'sortable'    => true,
     'add_text'    => 'Add Attachment',
     'empty_text'  => 'No files attached',
 ],
@@ -1242,7 +1313,7 @@ For checkbox mode, `value` should be an array.
 ### Price Config
 
 Stripe-compatible pricing configuration with one-time or recurring billing. Displays a type toggle, amount input,
-currency selector, and conditional recurring interval fields.
+compare-at price, currency selector, and conditional recurring interval fields.
 
 ```php
 'pricing' => [
@@ -1260,7 +1331,7 @@ currency selector, and conditional recurring interval fields.
 ],
 ```
 
-**Type toggle:** Switches between "One-time" and "Recurring". When "One-time" is selected, the interval fields are
+**Type toggle:** Switches between "One off" and "Recurring". When "One off" is selected, the interval fields are
 hidden and saved as `null`.
 
 **Amount:** Entered as a decimal (19.99) and automatically converted to cents (1999) during sanitization using the
@@ -1272,7 +1343,8 @@ the amount to save — if equal or lower, it's automatically zeroed out during s
 **Currency:** Populated from the `arraypress/currencies` library if installed (`get_currency_options()`), otherwise
 falls back to common currencies (USD, EUR, GBP, CAD, AUD, JPY).
 
-**Recurring intervals:** Stripe-supported values: `day`, `week`, `month`, `year`. The interval count allows expressions
+**Recurring intervals:** Stripe-supported values: `day`, `week`, `month`, `year`. Billing period presets are available
+(Daily, Weekly, Monthly, Every 3 months, Every 6 months, Yearly, Custom) with a custom option for arbitrary intervals
 like "every 3 months" or "every 2 weeks".
 
 **Saved data shape:**
@@ -1281,6 +1353,7 @@ like "every 3 months" or "every 2 weeks".
 [
     'pricing' => [
         'amount'                   => 1999,    // In cents
+        'compare_at_amount'        => 2999,    // In cents (0 if not set or <= amount)
         'currency'                 => 'USD',
         'recurring_interval'       => 'month', // null if one-time
         'recurring_interval_count' => 1,       // null if one-time
@@ -1289,6 +1362,41 @@ like "every 3 months" or "every 2 weeks".
 ```
 
 Maps directly to Stripe Price fields: `unit_amount`, `currency`, `recurring.interval`, `recurring.interval_count`.
+
+### Refund Form
+
+Inline expandable refund panel for issuing full or partial refunds. Designed for use within flyouts displaying
+order/payment details. Submits via the REST action endpoint.
+
+```php
+'refund' => [
+    'type'            => 'refund_form',
+    'name'            => 'refund',
+    'action'          => 'issue_refund',     // Action key for the REST callback
+    'label'           => 'Refund',           // Button label
+    'allow_custom'    => true,               // Allow custom reason text
+
+    // Values (populated from load data or set directly)
+    'amount_paid'     => 5000,               // In cents — total amount paid
+    'amount_refunded' => 0,                  // In cents — already refunded
+    'currency'        => 'USD',
+
+    // Optional: custom reason options (defaults to Stripe reasons)
+    'reasons' => [
+        'requested_by_customer' => 'Requested by customer',
+        'duplicate'             => 'Duplicate',
+        'fraudulent'            => 'Fraudulent',
+    ],
+],
+```
+
+The component displays a trigger button that expands to show a refund panel with a summary (paid/refunded/available),
+amount input (pre-filled with maximum refundable amount), reason selector, and submit/cancel buttons.
+
+When `amount_paid - amount_refunded <= 0`, the component renders a "Fully refunded" state instead.
+
+The refund action is dispatched via the REST `/action` endpoint using the `action` key. Your action callback
+receives the refund amount, reason, and custom reason (if applicable) in `$post_data`.
 
 ### Accordion
 
@@ -1317,8 +1425,8 @@ Collapsible sections:
 
 ## Action Components
 
-Action components provide buttons with AJAX callback functionality, typically used for operations like refunds, exports,
-or status changes.
+Action components provide buttons with REST API callback functionality, typically used for operations like refunds,
+exports, or status changes.
 
 ### Action Buttons
 
@@ -1388,8 +1496,8 @@ Dropdown action menu (cleaner alternative to multiple buttons):
 ],
 ```
 
-The library automatically registers AJAX endpoints for each button/menu item that has a `callback`, generates nonces,
-and handles the frontend wiring.
+The library automatically registers REST API endpoints for each button/menu item that has a `callback`, generates
+nonces, and handles the frontend wiring.
 
 ---
 
@@ -1411,19 +1519,15 @@ Override the default sanitizer for any field:
 
 ### Register Global Sanitizer
 
-Register a sanitizer for a custom field type or override an existing one:
+Register a sanitizer for a custom field type or override an existing one. Field types and component types share a
+single unified registry:
 
 ```php
 use ArrayPress\RegisterFlyouts\Sanitizer;
 
-// Register sanitizer for custom field type
-Sanitizer::register_field_sanitizer( 'my_custom_type', function ( $value ) {
+// Register sanitizer for any type (field or component)
+Sanitizer::register( 'my_custom_type', function ( $value ) {
     return my_custom_sanitize( $value );
-} );
-
-// Register sanitizer for custom component type
-Sanitizer::register_component_sanitizer( 'my_component', function ( $value ) {
-    return my_component_sanitize( $value );
 } );
 ```
 
@@ -1431,32 +1535,34 @@ Sanitizer::register_component_sanitizer( 'my_component', function ( $value ) {
 
 Field type sanitizers:
 
-| Type                    | Sanitizer                                                        |
-|-------------------------|------------------------------------------------------------------|
-| `text`, `tel`, `hidden` | `sanitize_text_field`                                            |
-| `textarea`              | `sanitize_textarea_field`                                        |
-| `email`                 | `sanitize_email`                                                 |
-| `url`                   | `esc_url_raw`                                                    |
-| `password`              | `trim()`                                                         |
-| `number`                | `intval()` or `floatval()` (auto-detected)                       |
-| `date`                  | Validates `Y-m-d` format                                         |
-| `select`, `radio`       | `sanitize_text_field`                                            |
-| `ajax_select`           | `sanitize_text_field` or array of sanitized strings (multi/tags) |
-| `toggle`                | Returns `'1'` or `'0'`                                           |
-| `color`                 | `sanitize_hex_color`                                             |
+| Type                       | Sanitizer                                                        |
+|----------------------------|------------------------------------------------------------------|
+| `text`, `tel`, `hidden`    | `sanitize_text_field`                                            |
+| `textarea`                 | `sanitize_textarea_field`                                        |
+| `email`                    | `sanitize_email`                                                 |
+| `url`                      | `esc_url_raw`                                                    |
+| `password`                 | `trim()`                                                         |
+| `number`                   | `intval()` or `floatval()` (auto-detected)                       |
+| `date`                     | Validates `Y-m-d` format                                         |
+| `select`, `radio`          | `sanitize_text_field`                                            |
+| `ajax_select`              | `sanitize_text_field` or array of sanitized strings (multi/tags) |
+| `post`, `taxonomy`, `user` | Same as `ajax_select` (derivative types)                         |
+| `toggle`                   | Returns `'1'` or `'0'`                                           |
+| `color`                    | `sanitize_hex_color`                                             |
+| `image`, `header`          | Validates attachment ID is a valid image (returns `int`)         |
 
 Component sanitizers:
 
-| Type             | Behavior                                                           |
-|------------------|--------------------------------------------------------------------|
-| `tags`           | Array of `sanitize_text_field` values                              |
-| `card_choice`    | `sanitize_text_field` (or array for checkbox mode)                 |
-| `feature_list`   | Removes empty items, sanitizes text                                |
-| `key_value_list` | Removes rows with empty keys, `sanitize_key` on keys               |
-| `line_items`     | Validates IDs, sanitizes names, enforces min quantity of 1         |
-| `files`          | Validates URLs and attachment IDs, removes invalid entries         |
-| `image_gallery`  | Validates attachment IDs, verifies they are images                 |
-| `price_config`   | Converts decimal to cents, validates interval, uppercases currency |
+| Type             | Behavior                                                                                 |
+|------------------|------------------------------------------------------------------------------------------|
+| `tags`           | Array of `sanitize_text_field` values                                                    |
+| `card_choice`    | `sanitize_text_field` (or array for checkbox mode)                                       |
+| `feature_list`   | Removes empty items, sanitizes text                                                      |
+| `key_value_list` | Removes rows with empty keys, `sanitize_key` on keys                                     |
+| `line_items`     | Validates IDs, sanitizes names, enforces min quantity of 1                               |
+| `files`          | Validates URLs and attachment IDs, removes invalid entries                               |
+| `gallery`        | Validates attachment IDs, verifies they are images                                       |
+| `price_config`   | Converts decimal to cents, validates compare-at, validates interval, uppercases currency |
 
 ---
 
@@ -1657,14 +1763,16 @@ Assets::enqueue();
 
 // Enqueue specific component assets (also loads core)
 Assets::enqueue_component( 'line-items' );
-Assets::enqueue_component( 'image-gallery' );
+Assets::enqueue_component( 'gallery' );
 Assets::enqueue_component( 'ajax-select' );
 Assets::enqueue_component( 'price-config' );
+Assets::enqueue_component( 'image-picker' );
+Assets::enqueue_component( 'refund-form' );
 ```
 
-Available component asset names: `file-manager`, `image-gallery`, `notes`, `line-items`, `feature-list`,
-`key-value-list`, `ajax-select`, `tags`, `accordion`, `card-choice`, `timeline`, `price-summary`, `payment-method`,
-`action-buttons`, `action-menu`, `articles`, `stats`, `progress-steps`, `price-config`.
+Available component asset names: `file-manager`, `gallery`, `image-picker`, `notes`, `line-items`, `feature-list`,
+`key-value-list`, `ajax-select`, `accordion`, `card-choice`, `timeline`, `price-summary`, `payment-method`,
+`action-buttons`, `action-menu`, `articles`, `stats`, `price-config`, `refund-form`.
 
 ### Using the Registry
 
@@ -1674,35 +1782,64 @@ For complex applications managing multiple flyout groups:
 use ArrayPress\RegisterFlyouts\Registry;
 
 // Get the registry instance
-$registry = Registry::get_instance();
+$registry = Registry::instance();
 
 // Get a specific manager by prefix
-$manager = $registry->get_manager( 'shop' );
+$manager = $registry->get( 'shop' );
 
 // Check if a manager exists
-if ( $registry->has_manager( 'shop' ) ) {
+if ( $registry->has( 'shop' ) ) {
     // ...
 }
 
-// Get manager by full flyout ID
-$manager = $registry->get_manager_by_flyout_id( 'shop_edit_product' );
+// Resolve a compound flyout ID to manager + flyout_id
+$resolved = Registry::resolve( 'shop_edit_product' );
+// Returns: [ 'manager' => Manager, 'flyout_id' => 'edit_product' ]
 
-// Check if a flyout exists within a manager
-if ( $manager->has_flyout( 'edit_product' ) ) {
-    // ...
-}
+// Parse a compound ID without resolving
+$parts = Registry::parse_id( 'shop_edit_product' );
+// Returns: [ 'prefix' => 'shop', 'flyout_id' => 'edit_product' ]
 
-// Get all registered prefixes
-$prefixes = $registry->get_prefixes();
+// Get all registered managers
+$managers = $registry->all();
 
-// Get all managers
-$managers = $registry->get_all_managers();
+// Unregister a manager
+$registry->unregister( 'shop' );
+```
+
+### Built-in Search Callbacks
+
+The `Callbacks\Search` class provides pre-built callbacks for common WordPress search patterns. These are used
+automatically by the `post`, `taxonomy`, and `user` shortcut field types, but can also be used directly:
+
+```php
+use ArrayPress\RegisterFlyouts\Callbacks\Search;
+
+// Post search callback
+'related' => [
+    'type'     => 'ajax_select',
+    'label'    => 'Related Post',
+    'callback' => Search::posts( 'post', [ 'post_status' => 'publish' ] ),
+],
+
+// Taxonomy term search callback
+'category' => [
+    'type'     => 'ajax_select',
+    'label'    => 'Category',
+    'callback' => Search::taxonomy( 'category', [ 'hide_empty' => true ] ),
+],
+
+// User search callback
+'author' => [
+    'type'     => 'ajax_select',
+    'label'    => 'Author',
+    'callback' => Search::users( 'editor' ),
+],
 ```
 
 ### Creating Custom Components
 
 ```php
-use ArrayPress\RegisterFlyouts\Components\Base_Component;
 use ArrayPress\RegisterFlyouts\Interfaces\Renderable;
 
 class My_Custom_Component implements Renderable {
@@ -1740,7 +1877,7 @@ Components::register( 'my_custom', [
     'class'       => My_Custom_Component::class,
     'data_fields' => 'items',              // or array of field names
     'asset'       => 'my-custom',          // Component asset handle, or null
-    'category'    => 'interactive',        // display, interactive, form, layout, data, utility
+    'category'    => 'interactive',        // display, interactive, form, layout, data
     'description' => 'My custom component',
 ] );
 ```
@@ -1752,7 +1889,7 @@ If your custom component submits form data, register a sanitizer:
 ```php
 use ArrayPress\RegisterFlyouts\Sanitizer;
 
-Sanitizer::register_component_sanitizer( 'my_custom', function ( $value ) {
+Sanitizer::register( 'my_custom', function ( $value ) {
     if ( ! is_array( $value ) ) {
         return [];
     }
@@ -1766,15 +1903,14 @@ Sanitizer::register_component_sanitizer( 'my_custom', function ( $value ) {
 
 ### Display Components (read-only)
 
-| Type             | Description                            | Data Fields                                                           |
-|------------------|----------------------------------------|-----------------------------------------------------------------------|
-| `header`         | Entity header with image, badges, meta | `title`, `subtitle`, `image`, `icon`, `badges`, `meta`, `description` |
-| `alert`          | Alert messages with styles             | `type`, `message`, `title`                                            |
-| `empty_state`    | Empty state with icon and action       | `icon`, `title`, `description`, `action_text`                         |
-| `progress_steps` | Step progress indicator                | `steps`, `current`, `style`, `clickable`                              |
-| `articles`       | Article card list                      | `items`                                                               |
-| `timeline`       | Chronological event list               | `items`                                                               |
-| `stats`          | Metric cards with trends               | `items`                                                               |
+| Type          | Description                            | Data Fields                                                                                                                                                                 |
+|---------------|----------------------------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `header`      | Entity header with image, badges, meta | `title`, `subtitle`, `image`, `icon`, `badges`, `meta`, `description`, `attachment_id`, `editable`, `image_size`, `image_shape`, `fallback_image`, `fallback_attachment_id` |
+| `alert`       | Alert messages with styles             | `type`, `message`, `title`                                                                                                                                                  |
+| `empty_state` | Empty state with icon and action       | `icon`, `title`, `description`, `action_text`                                                                                                                               |
+| `articles`    | Article card list                      | `items`                                                                                                                                                                     |
+| `timeline`    | Chronological event list               | `items`                                                                                                                                                                     |
+| `stats`       | Metric cards with trends               | `items`                                                                                                                                                                     |
 
 ### Data Components (read-only, structured data)
 
@@ -1787,34 +1923,39 @@ Sanitizer::register_component_sanitizer( 'my_custom', function ( $value ) {
 
 ### Interactive Components (user interaction, submit data)
 
-| Type             | Description                     | Data Fields                       |
-|------------------|---------------------------------|-----------------------------------|
-| `image_gallery`  | Image upload with grid preview  | `items` (array of attachment IDs) |
-| `files`          | File manager with media library | `items` (array of file objects)   |
-| `line_items`     | Order line items with search    | `items` (array of item objects)   |
-| `notes`          | Threaded notes with AJAX        | `items` (array of note objects)   |
-| `feature_list`   | Text item list                  | `items` (array of strings)        |
-| `key_value_list` | Key-value pair manager          | `items` (array of `{key, value}`) |
-| `action_buttons` | AJAX action buttons             | `buttons`                         |
-| `action_menu`    | Dropdown action menu            | `items`                           |
+| Type             | Description                      | Data Fields                                  |
+|------------------|----------------------------------|----------------------------------------------|
+| `gallery`        | Image gallery with media library | `items` (array of attachment IDs)            |
+| `files`          | File manager with media library  | `items` (array of file objects)              |
+| `line_items`     | Order line items with search     | `items` (array of item objects)              |
+| `notes`          | Threaded notes with AJAX         | `items` (array of note objects)              |
+| `feature_list`   | Text item list                   | `items` (array of strings)                   |
+| `key_value_list` | Key-value pair manager           | `items` (array of `{key, value}`)            |
+| `refund_form`    | Inline refund panel              | `amount_paid`, `amount_refunded`, `currency` |
+| `action_buttons` | AJAX action buttons              | `buttons`                                    |
+| `action_menu`    | Dropdown action menu             | `items`                                      |
 
 ### Form Components (input fields)
 
-| Type                                              | Description                                          |
-|---------------------------------------------------|------------------------------------------------------|
-| `text`, `email`, `url`, `tel`, `password`, `date` | Standard input fields                                |
-| `number`                                          | Numeric input with min/max/step                      |
-| `textarea`                                        | Multi-line text                                      |
-| `select`                                          | Dropdown (single or multi)                           |
-| `ajax_select`                                     | Select2 searchable dropdown (single, multi, or tags) |
-| `toggle`                                          | Switch/checkbox                                      |
-| `radio`                                           | Radio button group                                   |
-| `color`                                           | Color picker                                         |
-| `tags`                                            | Tag input                                            |
-| `card_choice`                                     | Visual card selection                                |
-| `price_config`                                    | Stripe pricing (one-time or recurring)               |
-| `hidden`                                          | Hidden input                                         |
-| `group`                                           | Nested field group with layout                       |
+| Type                                              | Description                                            |
+|---------------------------------------------------|--------------------------------------------------------|
+| `text`, `email`, `url`, `tel`, `password`, `date` | Standard input fields                                  |
+| `number`                                          | Numeric input with min/max/step                        |
+| `textarea`                                        | Multi-line text                                        |
+| `select`                                          | Dropdown (single or multi)                             |
+| `ajax_select`                                     | Select2 searchable dropdown (single, multi, or tags)   |
+| `post`                                            | Shortcut for ajax_select with post search callback     |
+| `taxonomy`                                        | Shortcut for ajax_select with taxonomy search callback |
+| `user`                                            | Shortcut for ajax_select with user search callback     |
+| `image`                                           | Single image picker with media library                 |
+| `toggle`                                          | Switch/checkbox                                        |
+| `radio`                                           | Radio button group                                     |
+| `color`                                           | Color picker                                           |
+| `tags`                                            | Tag input                                              |
+| `card_choice`                                     | Visual card selection                                  |
+| `price_config`                                    | Stripe pricing (one-time or recurring)                 |
+| `hidden`                                          | Hidden input                                           |
+| `group`                                           | Nested field group with layout                         |
 
 ### Layout Components
 

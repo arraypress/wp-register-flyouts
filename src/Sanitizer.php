@@ -102,6 +102,7 @@ class Sanitizer {
 			'key_value_list'  => [ self::class, 'sanitize_key_value_list' ],
 			'discount_config' => [ self::class, 'sanitize_discount_config' ],
 			'unit_input'      => [ self::class, 'sanitize_unit_input' ],
+			'code_generator'  => 'sanitize_text_field',
 		];
 	}
 

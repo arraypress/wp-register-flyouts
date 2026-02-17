@@ -42,6 +42,7 @@ use ArrayPress\RegisterFlyouts\Components\Alert;
 use ArrayPress\RegisterFlyouts\Components\PriceConfig;
 use ArrayPress\RegisterFlyouts\Components\DiscountConfig;
 use ArrayPress\RegisterFlyouts\Components\UnitInput;
+use ArrayPress\RegisterFlyouts\Components\CodeGenerator;
 use InvalidArgumentException;
 
 /**
@@ -317,6 +318,14 @@ class Components {
 			'asset'       => 'unit-input',
 			'category'    => 'form',
 			'description' => 'Numeric input with unit prefix or suffix'
+		] );
+
+		self::register( 'code_generator', [
+			'class'       => CodeGenerator::class,
+			'data_fields' => 'value',
+			'asset'       => 'code-generator',
+			'category'    => 'form',
+			'description' => 'Text input with code generation button'
 		] );
 	}
 

@@ -3,15 +3,16 @@
  * Discount Config Component
  *
  * Stripe-style discount configuration for coupons and promotion codes.
- * Combines rate type radio selection (percent/fixed), amount input with
- * dynamic unit display, currency selector, and duration controls.
+ * Features radio button type selection (percentage/fixed), amount input
+ * with dynamic unit display, currency selector, and duration controls.
  *
- * Mirrors the Stripe Dashboard coupon creation interface.
+ * Mirrors the Stripe Dashboard coupon creation interface with influence
+ * from Lemon Squeezy's layout.
  *
  * @package     ArrayPress\RegisterFlyouts\Components
  * @copyright   Copyright (c) 2025, ArrayPress Limited
  * @license     GPL2+
- * @version     1.1.0
+ * @version     2.0.0
  */
 
 declare( strict_types=1 );
@@ -95,9 +96,9 @@ class DiscountConfig implements Renderable {
     }
 
     /**
-     * Format cents to decimal for display
+     * Format cents/basis-points to decimal for display
      *
-     * @param int    $amount   Amount in cents
+     * @param int    $amount   Amount in smallest unit
      * @param string $currency Currency code
      *
      * @return string
@@ -125,14 +126,14 @@ class DiscountConfig implements Renderable {
      * @return string
      */
     public function render(): string {
-        $name        = esc_attr( $this->config['name'] );
-        $rate_type   = $this->config['rate_type'];
-        $amount      = (int) $this->config['amount'];
-        $currency    = strtoupper( $this->config['currency'] );
-        $duration    = $this->config['duration'];
-        $months      = $this->config['duration_in_months'];
-        $is_percent  = $rate_type === 'percent';
-        $is_fixed    = $rate_type === 'fixed';
+        $name       = esc_attr( $this->config['name'] );
+        $rate_type  = $this->config['rate_type'];
+        $amount     = (int) $this->config['amount'];
+        $currency   = strtoupper( $this->config['currency'] );
+        $duration   = $this->config['duration'];
+        $months     = $this->config['duration_in_months'];
+        $is_percent = $rate_type === 'percent';
+        $is_fixed   = $rate_type === 'fixed';
 
         $display_amount = $this->format_display_amount( $amount, $currency );
 
@@ -151,101 +152,15 @@ class DiscountConfig implements Renderable {
             <div class="<?php echo esc_attr( $classes ); ?>"
                  data-name="<?php echo $name; ?>">
 
-                <?php // ---- Amount + Currency Row ---- ?>
-                <div class="discount-config-amount-row">
-                    <div class="discount-config-amount">
-                        <label for="<?php echo $name; ?>_amount">Amount</label>
-                        <div class="discount-config-amount-wrap">
-							<span class="discount-config-unit discount-config-unit-prefix"
-                                  style="<?php echo $is_fixed ? '' : 'display:none;'; ?>">
-								<?php echo esc_html( $currency ); ?>
-							</span>
-                            <input type="text"
-                                   id="<?php echo $name; ?>_amount"
-                                   name="<?php echo $name; ?>[amount]"
-                                   value="<?php echo esc_attr( $display_amount ); ?>"
-                                   placeholder="0.00"
-                                   inputmode="decimal"
-                                   autocomplete="off"
-                                   class="discount-config-amount-input">
-                            <span class="discount-config-unit discount-config-unit-suffix"
-                                  style="<?php echo $is_percent ? '' : 'display:none;'; ?>">
-								%
-							</span>
-                        </div>
-                    </div>
+                <?php $this->render_rate_type( $name, $rate_type ); ?>
+                <?php $this->render_amount_row( $name, $display_amount, $currency, $is_percent, $is_fixed ); ?>
 
-                    <div class="discount-config-currency" style="<?php echo $is_fixed ? '' : 'display:none;'; ?>">
-                        <label for="<?php echo $name; ?>_currency">Currency</label>
-                        <select id="<?php echo $name; ?>_currency"
-                                name="<?php echo $name; ?>[currency]">
-                            <?php foreach ( $this->config['currencies'] as $code => $label ) : ?>
-                                <option value="<?php echo esc_attr( $code ); ?>"
-                                        <?php selected( $currency, $code ); ?>>
-                                    <?php echo esc_html( $code ); ?>
-                                </option>
-                            <?php endforeach; ?>
-                        </select>
-                    </div>
-                </div>
-
-                <?php // ---- Rate Type Radios (below amount, like Lemon Squeezy) ---- ?>
-                <div class="discount-config-type">
-                    <?php foreach ( self::RATE_TYPES as $value => $label ) : ?>
-                        <label class="discount-config-type-option">
-                            <input type="radio"
-                                   name="<?php echo $name; ?>[rate_type]"
-                                   value="<?php echo esc_attr( $value ); ?>"
-                                   class="discount-config-type-input"
-                                    <?php checked( $rate_type, $value ); ?>>
-                            <span class="discount-config-type-label"><?php echo esc_html( $label ); ?></span>
-                        </label>
-                    <?php endforeach; ?>
-                </div>
-
-                <?php // ---- Duration (visible when show_duration is true) ---- ?>
                 <?php if ( $this->config['show_duration'] ) : ?>
-                    <div class="discount-config-duration">
-                        <label for="<?php echo $name; ?>_duration">Duration</label>
-                        <select id="<?php echo $name; ?>_duration"
-                                name="<?php echo $name; ?>[duration]"
-                                class="discount-config-duration-select">
-                            <?php foreach ( self::DURATIONS as $value => $label ) : ?>
-                                <option value="<?php echo esc_attr( $value ); ?>"
-                                        <?php selected( $duration, $value ); ?>>
-                                    <?php echo esc_html( $label ); ?>
-                                </option>
-                            <?php endforeach; ?>
-                        </select>
-
-                        <div class="discount-config-months"
-                             style="<?php echo $duration === 'repeating' ? '' : 'display:none;'; ?>">
-                            <label for="<?php echo $name; ?>_months">Number of months</label>
-                            <input type="number"
-                                   id="<?php echo $name; ?>_months"
-                                   name="<?php echo $name; ?>[duration_in_months]"
-                                   value="<?php echo esc_attr( (string) ( $months ?? '' ) ); ?>"
-                                   min="1"
-                                   max="36"
-                                   placeholder="e.g. 3"
-                                   class="discount-config-months-input">
-                        </div>
-                    </div>
+                    <?php $this->render_duration( $name, $duration, $months ); ?>
                 <?php endif; ?>
 
-                <?php // ---- Max Redemptions (optional) ---- ?>
                 <?php if ( $this->config['show_redemptions'] ) : ?>
-                    <div class="discount-config-redemptions">
-                        <label for="<?php echo $name; ?>_max_redemptions">Max redemptions</label>
-                        <input type="number"
-                               id="<?php echo $name; ?>_max_redemptions"
-                               name="<?php echo $name; ?>[max_redemptions]"
-                               value="<?php echo esc_attr( (string) ( $this->config['max_redemptions'] ?? '' ) ); ?>"
-                               min="1"
-                               placeholder="Unlimited"
-                               class="discount-config-redemptions-input">
-                        <p class="description"><?php esc_html_e( 'Leave empty for unlimited.', 'wp-flyout' ); ?></p>
-                    </div>
+                    <?php $this->render_redemptions( $name ); ?>
                 <?php endif; ?>
 
             </div>
@@ -256,6 +171,146 @@ class DiscountConfig implements Renderable {
         </div>
         <?php
         return ob_get_clean();
+    }
+
+    /**
+     * Render rate type radio buttons
+     *
+     * @param string $name      Field name prefix
+     * @param string $rate_type Current rate type
+     *
+     * @return void
+     */
+    private function render_rate_type( string $name, string $rate_type ): void {
+        ?>
+        <div class="discount-config-type">
+            <?php foreach ( self::RATE_TYPES as $value => $label ) : ?>
+                <label class="discount-config-type-option">
+                    <input type="radio"
+                           name="<?php echo $name; ?>[rate_type]"
+                           value="<?php echo esc_attr( $value ); ?>"
+                           class="discount-config-type-input"
+                            <?php checked( $rate_type, $value ); ?>>
+                    <span class="discount-config-type-label"><?php echo esc_html( $label ); ?></span>
+                </label>
+            <?php endforeach; ?>
+        </div>
+        <?php
+    }
+
+    /**
+     * Render amount input row with currency selector
+     *
+     * @param string $name           Field name prefix
+     * @param string $display_amount Formatted amount for display
+     * @param string $currency       Current currency code
+     * @param bool   $is_percent     Whether rate type is percentage
+     * @param bool   $is_fixed       Whether rate type is fixed amount
+     *
+     * @return void
+     */
+    private function render_amount_row( string $name, string $display_amount, string $currency, bool $is_percent, bool $is_fixed ): void {
+        ?>
+        <div class="discount-config-amount-row">
+            <div class="discount-config-amount">
+                <label for="<?php echo $name; ?>_amount">Amount</label>
+                <div class="discount-config-amount-wrap">
+					<span class="discount-config-unit discount-config-unit-prefix"
+                          style="<?php echo $is_fixed ? '' : 'display:none;'; ?>">
+						<?php echo esc_html( $currency ); ?>
+					</span>
+                    <input type="text"
+                           id="<?php echo $name; ?>_amount"
+                           name="<?php echo $name; ?>[amount]"
+                           value="<?php echo esc_attr( $display_amount ); ?>"
+                           placeholder="0.00"
+                           inputmode="decimal"
+                           autocomplete="off"
+                           class="discount-config-amount-input">
+                    <span class="discount-config-unit discount-config-unit-suffix"
+                          style="<?php echo $is_percent ? '' : 'display:none;'; ?>">
+						%
+					</span>
+                </div>
+            </div>
+
+            <div class="discount-config-currency" style="<?php echo $is_fixed ? '' : 'display:none;'; ?>">
+                <label for="<?php echo $name; ?>_currency">Currency</label>
+                <select id="<?php echo $name; ?>_currency"
+                        name="<?php echo $name; ?>[currency]">
+                    <?php foreach ( $this->config['currencies'] as $code => $label ) : ?>
+                        <option value="<?php echo esc_attr( $code ); ?>"
+                                <?php selected( $currency, $code ); ?>>
+                            <?php echo esc_html( $code ); ?>
+                        </option>
+                    <?php endforeach; ?>
+                </select>
+            </div>
+        </div>
+        <?php
+    }
+
+    /**
+     * Render duration controls
+     *
+     * @param string      $name     Field name prefix
+     * @param string      $duration Current duration value
+     * @param int|null    $months   Duration in months for repeating
+     *
+     * @return void
+     */
+    private function render_duration( string $name, string $duration, ?int $months ): void {
+        ?>
+        <div class="discount-config-duration">
+            <label for="<?php echo $name; ?>_duration">Duration</label>
+            <select id="<?php echo $name; ?>_duration"
+                    name="<?php echo $name; ?>[duration]"
+                    class="discount-config-duration-select">
+                <?php foreach ( self::DURATIONS as $value => $label ) : ?>
+                    <option value="<?php echo esc_attr( $value ); ?>"
+                            <?php selected( $duration, $value ); ?>>
+                        <?php echo esc_html( $label ); ?>
+                    </option>
+                <?php endforeach; ?>
+            </select>
+
+            <div class="discount-config-months"
+                 style="<?php echo $duration === 'repeating' ? '' : 'display:none;'; ?>">
+                <label for="<?php echo $name; ?>_months">Number of months</label>
+                <input type="number"
+                       id="<?php echo $name; ?>_months"
+                       name="<?php echo $name; ?>[duration_in_months]"
+                       value="<?php echo esc_attr( (string) ( $months ?? '' ) ); ?>"
+                       min="1"
+                       max="36"
+                       placeholder="e.g. 3"
+                       class="discount-config-months-input">
+            </div>
+        </div>
+        <?php
+    }
+
+    /**
+     * Render max redemptions field
+     *
+     * @param string $name Field name prefix
+     *
+     * @return void
+     */
+    private function render_redemptions( string $name ): void {
+        ?>
+        <div class="discount-config-redemptions">
+            <label for="<?php echo $name; ?>_max_redemptions">Max redemptions</label>
+            <input type="number"
+                   id="<?php echo $name; ?>_max_redemptions"
+                   name="<?php echo $name; ?>[max_redemptions]"
+                   value="<?php echo esc_attr( (string) ( $this->config['max_redemptions'] ?? '' ) ); ?>"
+                   min="1"
+                   placeholder="Unlimited"
+                   class="discount-config-redemptions-input">
+            <p class="description"><?php esc_html_e( 'Leave empty for unlimited.', 'wp-flyout' ); ?></p>
+        </div>
+        <?php
     }
 
 }

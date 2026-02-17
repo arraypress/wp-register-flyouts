@@ -163,6 +163,11 @@ class Assets {
 			'style'  => 'css/components/unit-input.css',
 			'deps'   => []
 		],
+		'code-generator' => [
+			'script' => 'js/components/code-generator.js',
+			'style'  => 'css/components/code-generator.css',
+			'deps'   => []
+		],
 	];
 
 	/**
@@ -212,15 +217,6 @@ class Assets {
 			$version
 		);
 		self::$last_handles['style'] = 'wp-flyout';
-
-		// Register code generator (standalone, not in core chain)
-		wp_register_composer_script(
-			'wp-flyout-code-generator',
-			$base_file,
-			'js/core/code-generator.js',
-			[ 'jquery' ],
-			$version
-		);
 
 		// Register core JavaScript files
 		$js_deps = [ 'jquery' ];

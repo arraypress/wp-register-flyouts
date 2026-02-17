@@ -3,16 +3,17 @@
  * Discount Config Component
  *
  * Stripe-style discount configuration for coupons and promotion codes.
- * Features radio button type selection (percentage/fixed), amount input
- * with dynamic unit display, currency selector, and duration controls.
+ * Features inline radio button type selection (percentage/fixed), amount
+ * input with dynamic symbol prefix/suffix, and duration controls.
  *
- * Mirrors the Stripe Dashboard coupon creation interface with influence
- * from Lemon Squeezy's layout.
+ * Currency is inherited from the store configuration rather than
+ * selected per-coupon, matching Stripe's API behavior where currency
+ * is a required param on amount_off but not user-facing per coupon.
  *
  * @package     ArrayPress\RegisterFlyouts\Components
  * @copyright   Copyright (c) 2025, ArrayPress Limited
  * @license     GPL2+
- * @version     2.0.0
+ * @version     2.1.0
  */
 
 declare( strict_types=1 );
@@ -36,8 +37,8 @@ class DiscountConfig implements Renderable {
      * @var array<string, string>
      */
     private const RATE_TYPES = [
-            'percent' => 'Percentage discount',
-            'fixed'   => 'Fixed amount discount',
+            'percent' => 'Percentage',
+            'fixed'   => 'Fixed amount',
     ];
 
     /**
@@ -62,37 +63,16 @@ class DiscountConfig implements Renderable {
                 'rate_type'          => 'percent',
                 'amount'             => 0,
                 'currency'           => 'USD',
+                'currency_symbol'    => '$',
                 'duration'           => 'once',
                 'duration_in_months' => null,
                 'max_redemptions'    => null,
-                'currencies'         => [],
                 'show_duration'      => true,
                 'show_redemptions'   => false,
                 'label'              => 'Discount',
                 'description'        => '',
                 'class'              => '',
         ] );
-
-        // Load currencies from library if available and none provided
-        if ( empty( $this->config['currencies'] ) && function_exists( 'get_currency_options' ) ) {
-            $all = get_currency_options();
-            foreach ( $all as $code => $info ) {
-                $label                                             = is_array( $info ) ? ( $info['name'] ?? $code ) : $info;
-                $this->config['currencies'][ strtoupper( $code ) ] = strtoupper( $code ) . ' — ' . $label;
-            }
-        }
-
-        // Fallback to common currencies
-        if ( empty( $this->config['currencies'] ) ) {
-            $this->config['currencies'] = [
-                    'USD' => 'USD — US Dollar',
-                    'EUR' => 'EUR — Euro',
-                    'GBP' => 'GBP — British Pound',
-                    'CAD' => 'CAD — Canadian Dollar',
-                    'AUD' => 'AUD — Australian Dollar',
-                    'JPY' => 'JPY — Japanese Yen',
-            ];
-        }
     }
 
     /**
@@ -130,10 +110,10 @@ class DiscountConfig implements Renderable {
         $rate_type  = $this->config['rate_type'];
         $amount     = (int) $this->config['amount'];
         $currency   = strtoupper( $this->config['currency'] );
+        $symbol     = $this->config['currency_symbol'];
         $duration   = $this->config['duration'];
         $months     = $this->config['duration_in_months'];
         $is_percent = $rate_type === 'percent';
-        $is_fixed   = $rate_type === 'fixed';
 
         $display_amount = $this->format_display_amount( $amount, $currency );
 
@@ -150,10 +130,11 @@ class DiscountConfig implements Renderable {
             <?php endif; ?>
 
             <div class="<?php echo esc_attr( $classes ); ?>"
-                 data-name="<?php echo $name; ?>">
+                 data-name="<?php echo $name; ?>"
+                 data-currency-symbol="<?php echo esc_attr( $symbol ); ?>">
 
                 <?php $this->render_rate_type( $name, $rate_type ); ?>
-                <?php $this->render_amount_row( $name, $display_amount, $currency, $is_percent, $is_fixed ); ?>
+                <?php $this->render_amount_row( $name, $display_amount, $symbol, $currency, $is_percent ); ?>
 
                 <?php if ( $this->config['show_duration'] ) : ?>
                     <?php $this->render_duration( $name, $duration, $months ); ?>
@@ -174,7 +155,7 @@ class DiscountConfig implements Renderable {
     }
 
     /**
-     * Render rate type radio buttons
+     * Render rate type radio buttons (inline/horizontal)
      *
      * @param string $name      Field name prefix
      * @param string $rate_type Current rate type
@@ -199,53 +180,44 @@ class DiscountConfig implements Renderable {
     }
 
     /**
-     * Render amount input row with currency selector
+     * Render amount input row with dynamic symbol
+     *
+     * Shows currency symbol prefix for fixed amounts, % suffix for percentages.
+     * Currency is stored as a hidden field from store config — no user selector.
      *
      * @param string $name           Field name prefix
      * @param string $display_amount Formatted amount for display
-     * @param string $currency       Current currency code
+     * @param string $symbol         Currency symbol (e.g. $, €, £)
+     * @param string $currency       Currency code (e.g. USD) for hidden field
      * @param bool   $is_percent     Whether rate type is percentage
-     * @param bool   $is_fixed       Whether rate type is fixed amount
      *
      * @return void
      */
-    private function render_amount_row( string $name, string $display_amount, string $currency, bool $is_percent, bool $is_fixed ): void {
+    private function render_amount_row( string $name, string $display_amount, string $symbol, string $currency, bool $is_percent ): void {
         ?>
-        <div class="discount-config-amount-row">
-            <div class="discount-config-amount">
-                <label for="<?php echo $name; ?>_amount">Amount</label>
-                <div class="discount-config-amount-wrap">
-					<span class="discount-config-unit discount-config-unit-prefix"
-                          style="<?php echo $is_fixed ? '' : 'display:none;'; ?>">
-						<?php echo esc_html( $currency ); ?>
-					</span>
-                    <input type="text"
-                           id="<?php echo $name; ?>_amount"
-                           name="<?php echo $name; ?>[amount]"
-                           value="<?php echo esc_attr( $display_amount ); ?>"
-                           placeholder="0.00"
-                           inputmode="decimal"
-                           autocomplete="off"
-                           class="discount-config-amount-input">
-                    <span class="discount-config-unit discount-config-unit-suffix"
-                          style="<?php echo $is_percent ? '' : 'display:none;'; ?>">
-						%
-					</span>
-                </div>
+        <div class="discount-config-amount">
+            <label for="<?php echo $name; ?>_amount">Amount</label>
+            <div class="discount-config-amount-wrap">
+				<span class="discount-config-unit discount-config-unit-prefix"
+                      style="<?php echo ! $is_percent ? '' : 'display:none;'; ?>">
+					<?php echo esc_html( $symbol ); ?>
+				</span>
+                <input type="text"
+                       id="<?php echo $name; ?>_amount"
+                       name="<?php echo $name; ?>[amount]"
+                       value="<?php echo esc_attr( $display_amount ); ?>"
+                       placeholder="0.00"
+                       inputmode="decimal"
+                       autocomplete="off"
+                       class="discount-config-amount-input">
+                <span class="discount-config-unit discount-config-unit-suffix"
+                      style="<?php echo $is_percent ? '' : 'display:none;'; ?>">
+					%
+				</span>
             </div>
-
-            <div class="discount-config-currency" style="<?php echo $is_fixed ? '' : 'display:none;'; ?>">
-                <label for="<?php echo $name; ?>_currency">Currency</label>
-                <select id="<?php echo $name; ?>_currency"
-                        name="<?php echo $name; ?>[currency]">
-                    <?php foreach ( $this->config['currencies'] as $code => $label ) : ?>
-                        <option value="<?php echo esc_attr( $code ); ?>"
-                                <?php selected( $currency, $code ); ?>>
-                            <?php echo esc_html( $code ); ?>
-                        </option>
-                    <?php endforeach; ?>
-                </select>
-            </div>
+            <input type="hidden"
+                   name="<?php echo $name; ?>[currency]"
+                   value="<?php echo esc_attr( $currency ); ?>">
         </div>
         <?php
     }
@@ -253,9 +225,9 @@ class DiscountConfig implements Renderable {
     /**
      * Render duration controls
      *
-     * @param string      $name     Field name prefix
-     * @param string      $duration Current duration value
-     * @param int|null    $months   Duration in months for repeating
+     * @param string   $name     Field name prefix
+     * @param string   $duration Current duration value
+     * @param int|null $months   Duration in months for repeating
      *
      * @return void
      */

@@ -1,10 +1,11 @@
 /**
  * WP Flyout - Discount Config Component
  *
- * Stripe-style discount/coupon configuration with radio buttons
- * for rate type selection, dynamic amount input, and duration controls.
+ * Stripe-style discount/coupon configuration with inline radio buttons
+ * for rate type selection, dynamic amount input with symbol prefix/suffix,
+ * and duration controls.
  *
- * @version 2.0.0
+ * @version 2.1.0
  */
 
 .wp-flyout-discount-config {
@@ -14,13 +15,13 @@
 }
 
 /* ==========================================================================
-   RATE TYPE — RADIO BUTTONS (Stripe / Lemon Squeezy style)
+   RATE TYPE — INLINE RADIO BUTTONS
    ========================================================================== */
 
 .discount-config-type {
     display: flex;
-    flex-direction: column;
-    gap: 8px;
+    flex-direction: row;
+    gap: 16px;
 }
 
 .discount-config-type-option {
@@ -55,23 +56,16 @@
 }
 
 /* ==========================================================================
-   AMOUNT ROW
+   AMOUNT INPUT
    ========================================================================== */
 
-.discount-config-amount-row {
-    display: flex;
-    gap: 8px;
-    align-items: flex-end;
-}
-
 .discount-config-amount {
-    flex: 1;
-    min-width: 0;
+    display: flex;
+    flex-direction: column;
 }
 
 /* Sub-labels */
 .discount-config-amount label,
-.discount-config-currency label,
 .discount-config-duration > label,
 .discount-config-months > label,
 .discount-config-redemptions > label {
@@ -135,35 +129,6 @@
 
 .discount-config-unit-suffix {
     border-left: 1px solid #8c8f94;
-}
-
-/* Currency selector */
-.discount-config-currency {
-    width: 100px;
-    flex-shrink: 0;
-}
-
-.discount-config-currency select {
-    width: 100%;
-    padding: 8px;
-    border: 1px solid #8c8f94;
-    border-radius: 4px;
-    font-size: 14px;
-    background: #fff;
-    cursor: pointer;
-    transition: border-color 0.15s;
-    appearance: none;
-    background-image: url('data:image/svg+xml;charset=UTF-8,%3csvg xmlns="http://www.w3.org/2000/svg" width="14" height="8" viewBox="0 0 14 8"%3e%3cpath fill="%23646970" d="M7 8L0 0h14L7 8z"/%3e%3c/svg%3e');
-    background-repeat: no-repeat;
-    background-position: right 8px center;
-    background-size: 10px 6px;
-    padding-right: 28px;
-}
-
-.discount-config-currency select:focus {
-    border-color: #2271b1;
-    box-shadow: 0 0 0 1px #2271b1;
-    outline: none;
 }
 
 /* ==========================================================================

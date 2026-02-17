@@ -1,0 +1,114 @@
+/**
+ * WP Flyout - Unit Input Component
+ *
+ * Numeric input with fixed or selectable unit prefix/suffix.
+ *
+ * @version 1.0.0
+ */
+
+/* ==========================================================================
+   INPUT GROUP
+   ========================================================================== */
+
+.unit-input-group {
+    display: flex;
+    align-items: stretch;
+    border: 1px solid #8c8f94;
+    border-radius: 4px;
+    overflow: hidden;
+    transition: border-color 0.15s;
+}
+
+.unit-input-group:focus-within {
+    border-color: #2271b1;
+    box-shadow: 0 0 0 1px #2271b1;
+}
+
+/* ==========================================================================
+   INPUT FIELD
+   ========================================================================== */
+
+.unit-input-field {
+    flex: 1;
+    min-width: 0;
+    padding: 8px;
+    border: none !important;
+    box-shadow: none !important;
+    font-size: 14px;
+    background: #fff;
+    outline: none;
+}
+
+.unit-input-field:focus {
+    border: none !important;
+    box-shadow: none !important;
+    outline: none;
+}
+
+.unit-input-field::placeholder {
+    color: #c3c4c7;
+}
+
+/* ==========================================================================
+   FIXED UNIT LABEL
+   ========================================================================== */
+
+.unit-input-label {
+    display: flex;
+    align-items: center;
+    padding: 0 10px;
+    font-size: 13px;
+    font-weight: 600;
+    color: #50575e;
+    background: #f6f7f7;
+    white-space: nowrap;
+    user-select: none;
+}
+
+/* Prefix position — border on right side */
+.unit-prefix > .unit-input-label,
+.unit-prefix > .unit-input-select {
+    border-right: 1px solid #8c8f94;
+}
+
+/* Suffix position — border on left side */
+.unit-suffix > .unit-input-label,
+.unit-suffix > .unit-input-select {
+    border-left: 1px solid #8c8f94;
+}
+
+/* ==========================================================================
+   SELECTABLE UNIT (dropdown)
+   ========================================================================== */
+
+.unit-input-select {
+    padding: 0 8px;
+    border: none;
+    font-size: 13px;
+    font-weight: 600;
+    color: #50575e;
+    background: #f6f7f7;
+    cursor: pointer;
+    outline: none;
+    appearance: none;
+    background-image: url('data:image/svg+xml;charset=UTF-8,%3csvg xmlns="http://www.w3.org/2000/svg" width="14" height="8" viewBox="0 0 14 8"%3e%3cpath fill="%23646970" d="M7 8L0 0h14L7 8z"/%3e%3c/svg%3e');
+    background-repeat: no-repeat;
+    background-position: right 6px center;
+    background-size: 8px 5px;
+    padding-right: 20px;
+}
+
+.unit-input-select:focus {
+    outline: none;
+    color: #1e1e1e;
+}
+
+.unit-input-select:hover {
+    color: #1e1e1e;
+    background-color: #f0f0f1;
+}
+
+/* Give selectable units a bit more room */
+.unit-selectable .unit-input-select {
+    min-width: 60px;
+}

@@ -342,6 +342,36 @@ class FormField implements Renderable {
 
         $html .= '>';
 
+        // Wrap with code generator if configured
+        if ( ! empty( $this->config['generate'] ) ) {
+            $gen = wp_parse_args( $this->config['generate'], [
+                    'length'         => 8,
+                    'format'         => 'alphanumeric_upper',
+                    'prefix'         => '',
+                    'separator'      => '',
+                    'segment_length' => 0,
+                    'button_text'    => __( 'Generate', 'wp-flyout' ),
+            ] );
+
+            $data_attrs  = sprintf( 'data-length="%d"', absint( $gen['length'] ) );
+            $data_attrs .= sprintf( ' data-format="%s"', esc_attr( $gen['format'] ) );
+
+            if ( $gen['prefix'] ) {
+                $data_attrs .= sprintf( ' data-prefix="%s"', esc_attr( $gen['prefix'] ) );
+            }
+            if ( $gen['separator'] ) {
+                $data_attrs .= sprintf( ' data-separator="%s"', esc_attr( $gen['separator'] ) );
+                $data_attrs .= sprintf( ' data-segment-length="%d"', absint( $gen['segment_length'] ) );
+            }
+
+            $html = sprintf(
+                    '<div class="code-generator-wrapper">%s<button type="button" class="button button-small code-generate-btn" %s>%s</button></div>',
+                    $html,
+                    $data_attrs,
+                    esc_html( $gen['button_text'] )
+            );
+        }
+
         return $html;
     }
 

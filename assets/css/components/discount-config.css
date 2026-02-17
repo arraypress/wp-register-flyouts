@@ -1,0 +1,253 @@
+/**
+ * WP Flyout - Discount Config Component
+ *
+ * Stripe-style discount/coupon configuration.
+ * Styling mirrors price-config for visual consistency.
+ *
+ * @version 1.0.0
+ */
+
+.wp-flyout-discount-config {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+/* ==========================================================================
+   RATE TYPE TOGGLE (mirrors .price-config-type)
+   ========================================================================== */
+
+.discount-config-type {
+    display: flex;
+    gap: 0;
+    border: 1px solid #8c8f94;
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+.discount-config-type-option {
+    flex: 1;
+    position: relative;
+    cursor: pointer;
+    margin: 0 !important;
+    font-weight: normal !important;
+}
+
+.discount-config-type-option input[type="radio"] {
+    position: absolute;
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.discount-config-type-label {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    padding: 8px 12px;
+    font-size: 13px;
+    font-weight: 500;
+    color: #50575e;
+    background: #f6f7f7;
+    border-right: 1px solid #8c8f94;
+    transition: all 0.15s;
+    text-align: center;
+}
+
+.discount-config-type-option:last-child .discount-config-type-label {
+    border-right: none;
+}
+
+/* Active state */
+.discount-config-type-option.is-active .discount-config-type-label,
+.discount-config-type-option input:checked + .discount-config-type-label {
+    background: #fff;
+    color: #1e1e1e;
+    font-weight: 600;
+    box-shadow: inset 0 -2px 0 #2271b1;
+}
+
+/* Hover */
+.discount-config-type-option:not(.is-active):hover .discount-config-type-label {
+    background: #f0f0f1;
+    color: #1e1e1e;
+}
+
+/* ==========================================================================
+   AMOUNT ROW
+   ========================================================================== */
+
+.discount-config-amount-row {
+    display: flex;
+    gap: 8px;
+    align-items: flex-end;
+}
+
+.discount-config-amount {
+    flex: 1;
+    min-width: 0;
+}
+
+/* Sub-labels — match price-config pattern */
+.discount-config-amount label,
+.discount-config-currency label,
+.discount-config-duration > label,
+.discount-config-months > label,
+.discount-config-redemptions > label {
+    display: block;
+    font-size: 11px;
+    font-weight: 500;
+    color: #8c8f94;
+    margin-bottom: 4px;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+}
+
+/* Amount input with unit wrapper */
+.discount-config-amount-wrap {
+    display: flex;
+    align-items: stretch;
+    border: 1px solid #8c8f94;
+    border-radius: 4px;
+    overflow: hidden;
+    transition: border-color 0.15s;
+}
+
+.discount-config-amount-wrap:focus-within {
+    border-color: #2271b1;
+    box-shadow: 0 0 0 1px #2271b1;
+}
+
+.discount-config-amount-input {
+    flex: 1;
+    min-width: 0;
+    padding: 8px;
+    border: none !important;
+    box-shadow: none !important;
+    font-size: 14px;
+    background: #fff;
+    outline: none;
+}
+
+.discount-config-amount-input:focus {
+    border: none !important;
+    box-shadow: none !important;
+    outline: none;
+}
+
+/* Unit prefix/suffix inside the input border */
+.discount-config-unit {
+    display: flex;
+    align-items: center;
+    padding: 0 10px;
+    font-size: 13px;
+    font-weight: 600;
+    color: #50575e;
+    background: #f6f7f7;
+    white-space: nowrap;
+    user-select: none;
+}
+
+.discount-config-unit-prefix {
+    border-right: 1px solid #8c8f94;
+}
+
+.discount-config-unit-suffix {
+    border-left: 1px solid #8c8f94;
+}
+
+/* Currency selector */
+.discount-config-currency {
+    width: 100px;
+    flex-shrink: 0;
+}
+
+.discount-config-currency select {
+    width: 100%;
+    padding: 8px;
+    border: 1px solid #8c8f94;
+    border-radius: 4px;
+    font-size: 14px;
+    background: #fff;
+    cursor: pointer;
+    transition: border-color 0.15s;
+    appearance: none;
+    background-image: url('data:image/svg+xml;charset=UTF-8,%3csvg xmlns="http://www.w3.org/2000/svg" width="14" height="8" viewBox="0 0 14 8"%3e%3cpath fill="%23646970" d="M7 8L0 0h14L7 8z"/%3e%3c/svg%3e');
+    background-repeat: no-repeat;
+    background-position: right 8px center;
+    background-size: 10px 6px;
+    padding-right: 28px;
+}
+
+.discount-config-currency select:focus {
+    border-color: #2271b1;
+    box-shadow: 0 0 0 1px #2271b1;
+    outline: none;
+}
+
+/* ==========================================================================
+   DURATION
+   ========================================================================== */
+
+.discount-config-duration {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.discount-config-duration-select {
+    padding: 8px !important;
+    max-width: none !important;
+}
+
+/* Months sub-field */
+.discount-config-months {
+    overflow: hidden;
+}
+
+.discount-config-months-input {
+    width: 100%;
+    padding: 8px;
+    border: 1px solid #8c8f94;
+    border-radius: 4px;
+    font-size: 14px;
+    background: #fff;
+    transition: border-color 0.15s;
+}
+
+.discount-config-months-input:focus {
+    border-color: #2271b1;
+    box-shadow: 0 0 0 1px #2271b1;
+    outline: none;
+}
+
+/* ==========================================================================
+   MAX REDEMPTIONS
+   ========================================================================== */
+
+.discount-config-redemptions {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.discount-config-redemptions-input {
+    width: 100%;
+    padding: 8px;
+    border: 1px solid #8c8f94;
+    border-radius: 4px;
+    font-size: 14px;
+    background: #fff;
+    transition: border-color 0.15s;
+}
+
+.discount-config-redemptions-input:focus {
+    border-color: #2271b1;
+    box-shadow: 0 0 0 1px #2271b1;
+    outline: none;
+}
+
+.discount-config-redemptions .description {
+    margin-top: 2px;
+}

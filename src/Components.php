@@ -40,6 +40,8 @@ use ArrayPress\RegisterFlyouts\Components\DataTable;
 use ArrayPress\RegisterFlyouts\Components\InfoGrid;
 use ArrayPress\RegisterFlyouts\Components\Alert;
 use ArrayPress\RegisterFlyouts\Components\PriceConfig;
+use ArrayPress\RegisterFlyouts\Components\DiscountConfig;
+use ArrayPress\RegisterFlyouts\Components\UnitInput;
 use InvalidArgumentException;
 
 /**
@@ -299,6 +301,22 @@ class Components {
 			'asset'       => 'price-config',
 			'category'    => 'form',
 			'description' => 'Stripe-compatible pricing configuration'
+		] );
+
+		self::register( 'discount_config', [
+			'class'       => DiscountConfig::class,
+			'data_fields' => [ 'rate_type', 'amount', 'currency', 'duration', 'duration_in_months' ],
+			'asset'       => 'discount-config',
+			'category'    => 'form',
+			'description' => 'Stripe-compatible discount/coupon configuration'
+		] );
+
+		self::register( 'unit_input', [
+			'class'       => UnitInput::class,
+			'data_fields' => [ 'value', 'unit_value' ],
+			'asset'       => 'unit-input',
+			'category'    => 'form',
+			'description' => 'Numeric input with unit prefix or suffix'
 		] );
 	}
 

@@ -369,6 +369,28 @@
     color: var(--wp-flyout-text-muted);
 }
 
+/* Code generator wrapper */
+.code-generator-wrapper {
+    display: flex;
+    gap: 6px;
+    align-items: flex-start;
+}
+
+.code-generator-wrapper input {
+    flex: 1;
+    min-width: 0;
+}
+
+.code-generate-btn {
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+
+.code-generate-btn.is-generated {
+    color: #00a32a;
+    border-color: #00a32a;
+}
+
 /* ========================================
    FIELD GROUPS
    ======================================== */

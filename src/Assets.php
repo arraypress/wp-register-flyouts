@@ -48,7 +48,8 @@ class Assets {
 		'js/core/forms.js',
 		'js/core/manager.js',
 		'js/core/alert.js',
-		'js/core/conditional-fields.js'
+		'js/core/conditional-fields.js',
+		'js/core/code-generator.js'
 	];
 
 	/**
@@ -151,6 +152,16 @@ class Assets {
 		'refund-form' => [
 			'script' => 'js/components/refund-form.js',
 			'style'  => 'css/components/refund-form.css',
+			'deps'   => []
+		],
+		'discount-config' => [
+			'script' => 'js/components/discount-config.js',
+			'style'  => 'css/components/discount-config.css',
+			'deps'   => []
+		],
+		'unit-input' => [
+			'script' => '',
+			'style'  => 'css/components/unit-input.css',
 			'deps'   => []
 		],
 	];

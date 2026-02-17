@@ -60,46 +60,48 @@ class Sanitizer {
 	private static function register_defaults(): void {
 		self::$sanitizers = [
 			// Text inputs
-			'text'           => 'sanitize_text_field',
-			'textarea'       => 'sanitize_textarea_field',
-			'email'          => 'sanitize_email',
-			'url'            => 'esc_url_raw',
-			'tel'            => 'sanitize_text_field',
-			'password'       => [ self::class, 'sanitize_password' ],
+			'text'            => 'sanitize_text_field',
+			'textarea'        => 'sanitize_textarea_field',
+			'email'           => 'sanitize_email',
+			'url'             => 'esc_url_raw',
+			'tel'             => 'sanitize_text_field',
+			'password'        => [ self::class, 'sanitize_password' ],
 
 			// Numeric inputs
-			'number'         => [ self::class, 'sanitize_number' ],
+			'number'          => [ self::class, 'sanitize_number' ],
 
 			// Date/Time inputs
-			'date'           => [ self::class, 'sanitize_date' ],
+			'date'            => [ self::class, 'sanitize_date' ],
 
 			// Selection inputs
-			'select'         => 'sanitize_text_field',
-			'ajax_select'    => [ self::class, 'sanitize_ajax_select' ],
-			'radio'          => 'sanitize_text_field',
-			'toggle'         => [ self::class, 'sanitize_toggle' ],
+			'select'          => 'sanitize_text_field',
+			'ajax_select'     => [ self::class, 'sanitize_ajax_select' ],
+			'radio'           => 'sanitize_text_field',
+			'toggle'          => [ self::class, 'sanitize_toggle' ],
 
 			// Derivative types (resolve to ajax_select at render time)
-			'post'           => [ self::class, 'sanitize_ajax_select' ],
-			'taxonomy'       => [ self::class, 'sanitize_ajax_select' ],
-			'user'           => [ self::class, 'sanitize_ajax_select' ],
+			'post'            => [ self::class, 'sanitize_ajax_select' ],
+			'taxonomy'        => [ self::class, 'sanitize_ajax_select' ],
+			'user'            => [ self::class, 'sanitize_ajax_select' ],
 
 			// Special inputs
-			'color'          => 'sanitize_hex_color',
-			'hidden'         => 'sanitize_text_field',
+			'color'           => 'sanitize_hex_color',
+			'hidden'          => 'sanitize_text_field',
 
 			// Media
-			'header'         => [ self::class, 'sanitize_image' ],
-			'image'          => [ self::class, 'sanitize_image' ],
+			'header'          => [ self::class, 'sanitize_image' ],
+			'image'           => [ self::class, 'sanitize_image' ],
 
 			// Components that submit data
-			'price_config'   => [ self::class, 'sanitize_price_config' ],
-			'line_items'     => [ self::class, 'sanitize_line_items' ],
-			'files'          => [ self::class, 'sanitize_files' ],
-			'gallery'        => [ self::class, 'sanitize_gallery' ],
-			'card_choice'    => [ self::class, 'sanitize_card_choice' ],
-			'feature_list'   => [ self::class, 'sanitize_feature_list' ],
-			'key_value_list' => [ self::class, 'sanitize_key_value_list' ],
+			'price_config'    => [ self::class, 'sanitize_price_config' ],
+			'line_items'      => [ self::class, 'sanitize_line_items' ],
+			'files'           => [ self::class, 'sanitize_files' ],
+			'gallery'         => [ self::class, 'sanitize_gallery' ],
+			'card_choice'     => [ self::class, 'sanitize_card_choice' ],
+			'feature_list'    => [ self::class, 'sanitize_feature_list' ],
+			'key_value_list'  => [ self::class, 'sanitize_key_value_list' ],
+			'discount_config' => [ self::class, 'sanitize_discount_config' ],
+			'unit_input'      => [ self::class, 'sanitize_unit_input' ],
 		];
 	}
 
@@ -503,6 +505,99 @@ class Sanitizer {
 		}
 
 		return $attachment_id;
+	}
+
+	/**
+	 * Sanitize discount config data.
+	 *
+	 * Converts decimal amounts to cents/basis points and validates duration.
+	 */
+	public static function sanitize_discount_config( $value ): array {
+		if ( ! is_array( $value ) ) {
+			return [
+				'rate_type'          => 'percent',
+				'amount'             => 0,
+				'currency'           => 'USD',
+				'duration'           => 'once',
+				'duration_in_months' => null,
+				'max_redemptions'    => null,
+			];
+		}
+
+		$rate_type = sanitize_text_field( $value['rate_type'] ?? 'percent' );
+		if ( ! in_array( $rate_type, [ 'percent', 'fixed' ], true ) ) {
+			$rate_type = 'percent';
+		}
+
+		$currency   = strtoupper( sanitize_text_field( $value['currency'] ?? 'USD' ) );
+		$raw_amount = (float) ( $value['amount'] ?? 0 );
+
+		// Convert to smallest unit
+		if ( $rate_type === 'percent' ) {
+			// Store as basis points (25.00% → 2500)
+			$amount = (int) round( $raw_amount * 100 );
+			// Cap at 100% (10000 basis points)
+			$amount = min( 10000, max( 0, $amount ) );
+		} else {
+			// Store as currency cents
+			if ( function_exists( 'to_currency_cents' ) ) {
+				$amount = to_currency_cents( $raw_amount, $currency );
+			} else {
+				$amount = (int) round( $raw_amount * 100 );
+			}
+			$amount = max( 0, $amount );
+		}
+
+		// Duration
+		$valid_durations = [ 'once', 'forever', 'repeating' ];
+		$duration        = sanitize_text_field( $value['duration'] ?? 'once' );
+		if ( ! in_array( $duration, $valid_durations, true ) ) {
+			$duration = 'once';
+		}
+
+		$duration_in_months = null;
+		if ( $duration === 'repeating' ) {
+			$duration_in_months = absint( $value['duration_in_months'] ?? 0 );
+			if ( $duration_in_months < 1 ) {
+				$duration_in_months = 1;
+			}
+		}
+
+		// Max redemptions (optional)
+		$max_redemptions = null;
+		if ( isset( $value['max_redemptions'] ) && $value['max_redemptions'] !== '' ) {
+			$max_redemptions = absint( $value['max_redemptions'] );
+			if ( $max_redemptions < 1 ) {
+				$max_redemptions = null;
+			}
+		}
+
+		return [
+			'rate_type'          => $rate_type,
+			'amount'             => $amount,
+			'currency'           => $currency,
+			'duration'           => $duration,
+			'duration_in_months' => $duration_in_months,
+			'max_redemptions'    => $max_redemptions,
+		];
+	}
+
+	/**
+	 * Sanitize unit input data.
+	 *
+	 * Returns the numeric value. The unit value is submitted as a
+	 * separate field (name_unit) and sanitized as a standard text field.
+	 *
+	 * @param mixed $value Raw value.
+	 *
+	 * @return string Sanitized numeric string.
+	 */
+	public static function sanitize_unit_input( $value ): string {
+		if ( is_array( $value ) ) {
+			return sanitize_text_field( $value['value'] ?? '' );
+		}
+
+		return sanitize_text_field( (string) $value );
 	}
 
 	// =========================================================================

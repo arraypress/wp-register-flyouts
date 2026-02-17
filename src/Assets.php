@@ -48,8 +48,7 @@ class Assets {
 		'js/core/forms.js',
 		'js/core/manager.js',
 		'js/core/alert.js',
-		'js/core/conditional-fields.js',
-		'js/core/code-generator.js'
+		'js/core/conditional-fields.js'
 	];
 
 	/**
@@ -213,6 +212,15 @@ class Assets {
 			$version
 		);
 		self::$last_handles['style'] = 'wp-flyout';
+
+		// Register code generator (standalone, not in core chain)
+		wp_register_composer_script(
+			'wp-flyout-code-generator',
+			$base_file,
+			'js/core/code-generator.js',
+			[ 'jquery' ],
+			$version
+		);
 
 		// Register core JavaScript files
 		$js_deps = [ 'jquery' ];

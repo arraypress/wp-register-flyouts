@@ -1,0 +1,73 @@
+/**
+ * WP Flyout - Code Generator Enhancement
+ *
+ * Styles for the generate button that attaches to text inputs.
+ *
+ * @version 1.0.0
+ */
+
+.code-generator-wrapper {
+    display: flex;
+    align-items: stretch;
+    gap: 0;
+    border: 1px solid #8c8f94;
+    border-radius: 4px;
+    overflow: hidden;
+    transition: border-color 0.15s;
+}
+
+.code-generator-wrapper:focus-within {
+    border-color: #2271b1;
+    box-shadow: 0 0 0 1px #2271b1;
+}
+
+/* Override the input's own border when inside the wrapper */
+.code-generator-wrapper input[type="text"] {
+    flex: 1;
+    min-width: 0;
+    border: none !important;
+    box-shadow: none !important;
+    outline: none !important;
+    border-radius: 0 !important;
+    padding: 8px !important;
+    font-size: 14px;
+    margin: 0 !important;
+}
+
+.code-generator-wrapper input[type="text"]:focus {
+    border: none !important;
+    box-shadow: none !important;
+    outline: none !important;
+}
+
+/* Generate button */
+.code-generate-btn {
+    display: flex;
+    align-items: center;
+    padding: 0 12px;
+    font-size: 12px;
+    font-weight: 500;
+    color: #2271b1;
+    background: #f6f7f7;
+    border: none;
+    border-left: 1px solid #8c8f94;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: all 0.15s;
+    line-height: 1;
+}
+
+.code-generate-btn:hover {
+    background: #f0f0f1;
+    color: #135e96;
+}
+
+.code-generate-btn:active {
+    background: #e0e0e0;
+}
+
+/* Brief visual feedback on generate */
+.code-generate-btn.is-generated {
+    color: #00a32a;
+    background: #edfaef;
+}

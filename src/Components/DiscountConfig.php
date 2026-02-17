@@ -163,12 +163,6 @@ class DiscountConfig implements Renderable {
         <div class="discount-config-amount">
             <label for="<?php echo $name; ?>_amount">Amount</label>
             <div class="discount-config-amount-wrap">
-                <select name="<?php echo $name; ?>[rate_type]"
-                        class="discount-config-type-select"
-                        aria-label="<?php esc_attr_e( 'Discount type', 'wp-flyout' ); ?>">
-                    <option value="percent" <?php selected( $rate_type, 'percent' ); ?>>%</option>
-                    <option value="fixed" <?php selected( $rate_type, 'fixed' ); ?>><?php echo esc_html( $symbol ); ?></option>
-                </select>
                 <input type="text"
                        id="<?php echo $name; ?>_amount"
                        name="<?php echo $name; ?>[amount]"
@@ -177,6 +171,12 @@ class DiscountConfig implements Renderable {
                        inputmode="decimal"
                        autocomplete="off"
                        class="discount-config-amount-input">
+                <select name="<?php echo $name; ?>[rate_type]"
+                        class="discount-config-type-select"
+                        aria-label="<?php esc_attr_e( 'Discount type', 'wp-flyout' ); ?>">
+                    <option value="percent" <?php selected( $rate_type, 'percent' ); ?>>%</option>
+                    <option value="fixed" <?php selected( $rate_type, 'fixed' ); ?>><?php echo esc_html( $symbol ); ?></option>
+                </select>
             </div>
             <input type="hidden"
                    name="<?php echo $name; ?>[currency]"

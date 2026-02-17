@@ -3,17 +3,20 @@
  * Discount Config Component
  *
  * Stripe-style discount configuration for coupons and promotion codes.
- * Features inline radio button type selection (percentage/fixed), amount
- * input with dynamic symbol prefix/suffix, and duration controls.
+ * Features an integrated rate type selector embedded within the amount
+ * input field (EDD-style), duration controls, and redemption limits.
+ *
+ * The rate type (percentage/fixed) is selected via a compact dropdown
+ * built into the left side of the amount input, eliminating the need
+ * for separate radio buttons and reducing vertical space.
  *
  * Currency is inherited from the store configuration rather than
- * selected per-coupon, matching Stripe's API behavior where currency
- * is a required param on amount_off but not user-facing per coupon.
+ * selected per-coupon.
  *
  * @package     ArrayPress\RegisterFlyouts\Components
  * @copyright   Copyright (c) 2025, ArrayPress Limited
  * @license     GPL2+
- * @version     2.1.0
+ * @version     2.2.0
  */
 
 declare( strict_types=1 );
@@ -30,16 +33,6 @@ class DiscountConfig implements Renderable {
      * @var array
      */
     private array $config;
-
-    /**
-     * Valid rate types
-     *
-     * @var array<string, string>
-     */
-    private const RATE_TYPES = [
-            'percent' => 'Percentage',
-            'fixed'   => 'Fixed amount',
-    ];
 
     /**
      * Duration options matching Stripe's coupon model
@@ -106,14 +99,12 @@ class DiscountConfig implements Renderable {
      * @return string
      */
     public function render(): string {
-        $name       = esc_attr( $this->config['name'] );
-        $rate_type  = $this->config['rate_type'];
-        $amount     = (int) $this->config['amount'];
-        $currency   = strtoupper( $this->config['currency'] );
-        $symbol     = $this->config['currency_symbol'];
-        $duration   = $this->config['duration'];
-        $months     = $this->config['duration_in_months'];
-        $is_percent = $rate_type === 'percent';
+        $name     = esc_attr( $this->config['name'] );
+        $amount   = (int) $this->config['amount'];
+        $currency = strtoupper( $this->config['currency'] );
+        $symbol   = $this->config['currency_symbol'];
+        $duration = $this->config['duration'];
+        $months   = $this->config['duration_in_months'];
 
         $display_amount = $this->format_display_amount( $amount, $currency );
 
@@ -130,11 +121,9 @@ class DiscountConfig implements Renderable {
             <?php endif; ?>
 
             <div class="<?php echo esc_attr( $classes ); ?>"
-                 data-name="<?php echo $name; ?>"
-                 data-currency-symbol="<?php echo esc_attr( $symbol ); ?>">
+                 data-name="<?php echo $name; ?>">
 
-                <?php $this->render_rate_type( $name, $rate_type ); ?>
-                <?php $this->render_amount_row( $name, $display_amount, $symbol, $currency, $is_percent ); ?>
+                <?php $this->render_amount( $name, $display_amount, $symbol, $currency ); ?>
 
                 <?php if ( $this->config['show_duration'] ) : ?>
                     <?php $this->render_duration( $name, $duration, $months ); ?>
@@ -155,53 +144,31 @@ class DiscountConfig implements Renderable {
     }
 
     /**
-     * Render rate type radio buttons (inline/horizontal)
+     * Render amount input with integrated rate type selector
      *
-     * @param string $name      Field name prefix
-     * @param string $rate_type Current rate type
-     *
-     * @return void
-     */
-    private function render_rate_type( string $name, string $rate_type ): void {
-        ?>
-        <div class="discount-config-type">
-            <?php foreach ( self::RATE_TYPES as $value => $label ) : ?>
-                <label class="discount-config-type-option">
-                    <input type="radio"
-                           name="<?php echo $name; ?>[rate_type]"
-                           value="<?php echo esc_attr( $value ); ?>"
-                           class="discount-config-type-input"
-                            <?php checked( $rate_type, $value ); ?>>
-                    <span class="discount-config-type-label"><?php echo esc_html( $label ); ?></span>
-                </label>
-            <?php endforeach; ?>
-        </div>
-        <?php
-    }
-
-    /**
-     * Render amount input row with dynamic symbol
-     *
-     * Shows currency symbol prefix for fixed amounts, % suffix for percentages.
-     * Currency is stored as a hidden field from store config — no user selector.
+     * The rate type dropdown is embedded on the left side of the input,
+     * showing the currency symbol for fixed amounts or % for percentages.
+     * This eliminates the need for separate radio buttons.
      *
      * @param string $name           Field name prefix
      * @param string $display_amount Formatted amount for display
      * @param string $symbol         Currency symbol (e.g. $, €, £)
      * @param string $currency       Currency code (e.g. USD) for hidden field
-     * @param bool   $is_percent     Whether rate type is percentage
      *
      * @return void
      */
-    private function render_amount_row( string $name, string $display_amount, string $symbol, string $currency, bool $is_percent ): void {
+    private function render_amount( string $name, string $display_amount, string $symbol, string $currency ): void {
+        $rate_type = $this->config['rate_type'];
         ?>
         <div class="discount-config-amount">
             <label for="<?php echo $name; ?>_amount">Amount</label>
             <div class="discount-config-amount-wrap">
-				<span class="discount-config-unit discount-config-unit-prefix"
-                      style="<?php echo ! $is_percent ? '' : 'display:none;'; ?>">
-					<?php echo esc_html( $symbol ); ?>
-				</span>
+                <select name="<?php echo $name; ?>[rate_type]"
+                        class="discount-config-type-select"
+                        aria-label="<?php esc_attr_e( 'Discount type', 'wp-flyout' ); ?>">
+                    <option value="percent" <?php selected( $rate_type, 'percent' ); ?>>%</option>
+                    <option value="fixed" <?php selected( $rate_type, 'fixed' ); ?>><?php echo esc_html( $symbol ); ?></option>
+                </select>
                 <input type="text"
                        id="<?php echo $name; ?>_amount"
                        name="<?php echo $name; ?>[amount]"
@@ -210,10 +177,6 @@ class DiscountConfig implements Renderable {
                        inputmode="decimal"
                        autocomplete="off"
                        class="discount-config-amount-input">
-                <span class="discount-config-unit discount-config-unit-suffix"
-                      style="<?php echo $is_percent ? '' : 'display:none;'; ?>">
-					%
-				</span>
             </div>
             <input type="hidden"
                    name="<?php echo $name; ?>[currency]"

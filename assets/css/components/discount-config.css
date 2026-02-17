@@ -1,11 +1,11 @@
 /**
  * WP Flyout - Discount Config Component
  *
- * Stripe-style discount/coupon configuration with inline radio buttons
- * for rate type selection, dynamic amount input with symbol prefix/suffix,
- * and duration controls.
+ * Discount configuration with integrated rate type selector inside
+ * the amount input field. The select dropdown on the left side of
+ * the input lets users switch between % and currency symbol.
  *
- * @version 2.1.0
+ * @version 2.2.0
  */
 
 .wp-flyout-discount-config {
@@ -15,48 +15,7 @@
 }
 
 /* ==========================================================================
-   RATE TYPE — INLINE RADIO BUTTONS
-   ========================================================================== */
-
-.discount-config-type {
-    display: flex;
-    flex-direction: row;
-    gap: 16px;
-}
-
-.discount-config-type-option {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    cursor: pointer;
-    margin: 0 !important;
-    padding: 0;
-    font-weight: normal !important;
-}
-
-.discount-config-type-option input[type="radio"] {
-    margin: 0 !important;
-    width: 16px;
-    height: 16px;
-    cursor: pointer;
-    accent-color: #2271b1;
-    flex-shrink: 0;
-}
-
-.discount-config-type-label {
-    font-size: 13px;
-    color: #50575e;
-    line-height: 1.4;
-    user-select: none;
-}
-
-.discount-config-type-option input:checked + .discount-config-type-label {
-    color: #1e1e1e;
-    font-weight: 500;
-}
-
-/* ==========================================================================
-   AMOUNT INPUT
+   AMOUNT INPUT WITH INTEGRATED TYPE SELECTOR
    ========================================================================== */
 
 .discount-config-amount {
@@ -78,7 +37,7 @@
     letter-spacing: 0.3px;
 }
 
-/* Amount input with unit wrapper */
+/* Amount wrapper — unified border around select + input */
 .discount-config-amount-wrap {
     display: flex;
     align-items: stretch;
@@ -93,10 +52,41 @@
     box-shadow: 0 0 0 1px #2271b1;
 }
 
+/* Rate type select — embedded on the left */
+.discount-config-type-select {
+    padding: 8px 24px 8px 10px !important;
+    border: none !important;
+    border-right: 1px solid #8c8f94 !important;
+    border-radius: 0 !important;
+    background-color: #f6f7f7 !important;
+    font-size: 14px;
+    font-weight: 600;
+    color: #50575e;
+    cursor: pointer;
+    min-width: 0;
+    width: auto;
+    box-shadow: none !important;
+    outline: none !important;
+    appearance: none;
+    -webkit-appearance: none;
+    background-image: url('data:image/svg+xml;charset=UTF-8,%3csvg xmlns="http://www.w3.org/2000/svg" width="10" height="6" viewBox="0 0 10 6"%3e%3cpath fill="%23646970" d="M5 6L0 0h10L5 6z"/%3e%3c/svg%3e') !important;
+    background-repeat: no-repeat !important;
+    background-position: right 8px center !important;
+    background-size: 8px 5px !important;
+    line-height: normal;
+}
+
+.discount-config-type-select:focus {
+    border-right-color: #8c8f94 !important;
+    box-shadow: none !important;
+    outline: none !important;
+}
+
+/* Amount input */
 .discount-config-amount-input {
     flex: 1;
     min-width: 0;
-    padding: 8px;
+    padding: 8px 10px;
     border: none !important;
     box-shadow: none !important;
     font-size: 14px;
@@ -108,27 +98,6 @@
     border: none !important;
     box-shadow: none !important;
     outline: none;
-}
-
-/* Unit prefix/suffix inside the input border */
-.discount-config-unit {
-    display: flex;
-    align-items: center;
-    padding: 0 10px;
-    font-size: 13px;
-    font-weight: 600;
-    color: #50575e;
-    background: #f6f7f7;
-    white-space: nowrap;
-    user-select: none;
-}
-
-.discount-config-unit-prefix {
-    border-right: 1px solid #8c8f94;
-}
-
-.discount-config-unit-suffix {
-    border-left: 1px solid #8c8f94;
 }
 
 /* ==========================================================================

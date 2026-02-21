@@ -1363,6 +1363,151 @@ like "every 3 months" or "every 2 weeks".
 
 Maps directly to Stripe Price fields: `unit_amount`, `currency`, `recurring.interval`, `recurring.interval_count`.
 
+### Discount Config
+
+Stripe-compatible discount/coupon configuration with percentage or fixed amount, duration controls, and optional
+redemption limits. The rate type selector is embedded within the amount input field for a compact layout.
+
+```php
+'discount' => [
+    'type'            => 'discount_config',
+    'name'            => 'discount',
+    'label'           => 'Discount',
+    'description'     => 'Configure the discount amount and duration.',
+
+    // Values (populated from load data or set directly)
+    'rate_type'          => 'percent',       // 'percent' or 'fixed'
+    'amount'             => 2500,            // Basis points for percent (2500 = 25.00%), cents for fixed
+    'currency'           => 'USD',
+    'currency_symbol'    => '$',
+    'duration'           => 'once',          // 'once', 'forever', 'repeating'
+    'duration_in_months' => null,            // Required when duration is 'repeating'
+
+    // Optional
+    'show_duration'      => true,
+    'show_redemptions'   => false,
+    'max_redemptions'    => null,            // null = unlimited
+],
+```
+
+**Rate type:** Integrated dropdown within the amount input — shows `%` for percentage or the currency symbol for fixed
+amounts.
+
+**Amount:** Entered as a decimal (25.00) and automatically converted during sanitization. Percentages are stored as
+basis points (25.00% → 2500). Fixed amounts are stored as currency cents (25.00 → 2500). Percentages are capped at
+100% (10000 basis points).
+
+**Duration:** Matches Stripe's coupon model — `once` (single use), `forever` (applies indefinitely), or `repeating`
+(applies for a set number of months).
+
+**Saved data shape:**
+
+```php
+[
+    'discount' => [
+        'rate_type'          => 'percent',   // 'percent' or 'fixed'
+        'amount'             => 2500,        // Basis points or cents
+        'currency'           => 'USD',
+        'duration'           => 'once',      // 'once', 'forever', 'repeating'
+        'duration_in_months' => null,        // int when duration is 'repeating'
+        'max_redemptions'    => null,        // int or null
+    ],
+]
+```
+
+### Unit Input
+
+Numeric input with a unit indicator displayed as a prefix or suffix. Supports fixed units (static text) or selectable
+units (dropdown). Useful for currency amounts, percentages, weights, dimensions, durations, and more.
+
+```php
+'weight' => [
+    'type'          => 'unit_input',
+    'name'          => 'weight',
+    'label'         => 'Weight',
+    'description'   => 'Enter the product weight.',
+    'value'         => '2.5',
+    'placeholder'   => '0.00',
+    'inputmode'     => 'decimal',
+
+    // Fixed unit (static text)
+    'unit'          => 'kg',
+    'unit_position' => 'suffix',             // 'prefix' or 'suffix'
+],
+
+// Selectable units (dropdown)
+'dimension' => [
+    'type'          => 'unit_input',
+    'name'          => 'dimension',
+    'label'         => 'Length',
+    'value'         => '10',
+    'units'         => [                     // Multiple units = dropdown
+        'cm' => 'cm',
+        'in' => 'in',
+        'mm' => 'mm',
+    ],
+    'unit_value'    => 'cm',                 // Currently selected unit
+    'unit_position' => 'suffix',
+],
+
+// Currency prefix example
+'fee' => [
+    'type'          => 'unit_input',
+    'name'          => 'fee',
+    'label'         => 'Fee',
+    'value'         => '9.99',
+    'unit'          => '$',
+    'unit_position' => 'prefix',
+],
+```
+
+**Fixed vs selectable:** When `unit` is a string or `units` has exactly one entry, a static label is rendered. When
+`units` has multiple entries, a `<select>` dropdown is rendered.
+
+**Unit form name:** The selected unit value is submitted as a separate field. By default the name is `{name}_unit`
+(e.g. `dimension_unit`), configurable via `unit_name`.
+
+**Saved data:** The numeric value is saved under the field name. The unit selection is saved as a separate field
+(`{name}_unit`).
+
+### Code Generator
+
+Text input with an attached "Generate" button that produces random codes client-side. Useful for discount codes, API
+keys, license keys, referral codes, and similar identifiers.
+
+```php
+'coupon_code' => [
+    'type'           => 'code_generator',
+    'name'           => 'code',
+    'label'          => 'Coupon Code',
+    'description'    => 'Enter a code or generate one automatically.',
+    'placeholder'    => 'e.g. SUMMER25',
+
+    // Generator settings
+    'length'         => 8,                   // Number of characters to generate
+    'format'         => 'alphanumeric_upper', // Character set (see below)
+    'prefix'         => '',                  // e.g. 'PROMO-' prepended to generated code
+    'separator'      => '-',                 // Separator between segments
+    'segment_length' => 4,                   // Characters per segment (e.g. 4 → XXXX-XXXX)
+    'button_text'    => 'Generate',
+],
+```
+
+**Format options:**
+
+| Format               | Characters    |
+|----------------------|---------------|
+| `alphanumeric_upper` | A-Z, 0-9      |
+| `alphanumeric`       | A-Z, a-z, 0-9 |
+| `alpha_upper`        | A-Z           |
+| `hex`                | 0-9, A-F      |
+| `numeric`            | 0-9           |
+
+**Segments:** When `separator` and `segment_length` are set, the generated code is split into segments. For example,
+`length: 8`, `segment_length: 4`, `separator: '-'` produces codes like `ABCD-EF12`.
+
+**Saved data:** A single string value, sanitized with `sanitize_text_field`.
+
 ### Refund Form
 
 Inline expandable refund panel for issuing full or partial refunds. Designed for use within flyouts displaying
@@ -1553,16 +1698,19 @@ Field type sanitizers:
 
 Component sanitizers:
 
-| Type             | Behavior                                                                                 |
-|------------------|------------------------------------------------------------------------------------------|
-| `tags`           | Array of `sanitize_text_field` values                                                    |
-| `card_choice`    | `sanitize_text_field` (or array for checkbox mode)                                       |
-| `feature_list`   | Removes empty items, sanitizes text                                                      |
-| `key_value_list` | Removes rows with empty keys, `sanitize_key` on keys                                     |
-| `line_items`     | Validates IDs, sanitizes names, enforces min quantity of 1                               |
-| `files`          | Validates URLs and attachment IDs, removes invalid entries                               |
-| `gallery`        | Validates attachment IDs, verifies they are images                                       |
-| `price_config`   | Converts decimal to cents, validates compare-at, validates interval, uppercases currency |
+| Type              | Behavior                                                                                 |
+|-------------------|------------------------------------------------------------------------------------------|
+| `tags`            | Array of `sanitize_text_field` values                                                    |
+| `card_choice`     | `sanitize_text_field` (or array for checkbox mode)                                       |
+| `feature_list`    | Removes empty items, sanitizes text                                                      |
+| `key_value_list`  | Removes rows with empty keys, `sanitize_key` on keys                                     |
+| `line_items`      | Validates IDs, sanitizes names, enforces min quantity of 1                               |
+| `files`           | Validates URLs and attachment IDs, removes invalid entries                               |
+| `gallery`         | Validates attachment IDs, verifies they are images                                       |
+| `price_config`    | Converts decimal to cents, validates compare-at, validates interval, uppercases currency |
+| `discount_config` | Converts decimal to basis points/cents, validates rate type, validates duration          |
+| `unit_input`      | `sanitize_text_field` on the numeric value                                               |
+| `code_generator`  | `sanitize_text_field`                                                                    |
 
 ---
 
@@ -1766,13 +1914,17 @@ Assets::enqueue_component( 'line-items' );
 Assets::enqueue_component( 'gallery' );
 Assets::enqueue_component( 'ajax-select' );
 Assets::enqueue_component( 'price-config' );
+Assets::enqueue_component( 'discount-config' );
 Assets::enqueue_component( 'image-picker' );
 Assets::enqueue_component( 'refund-form' );
+Assets::enqueue_component( 'unit-input' );
+Assets::enqueue_component( 'code-generator' );
 ```
 
 Available component asset names: `file-manager`, `gallery`, `image-picker`, `notes`, `line-items`, `feature-list`,
 `key-value-list`, `ajax-select`, `accordion`, `card-choice`, `timeline`, `price-summary`, `payment-method`,
-`action-buttons`, `action-menu`, `articles`, `stats`, `price-config`, `refund-form`.
+`action-buttons`, `action-menu`, `articles`, `stats`, `price-config`, `discount-config`, `refund-form`, `unit-input`,
+`code-generator`.
 
 ### Using the Registry
 
@@ -1954,6 +2106,9 @@ Sanitizer::register( 'my_custom', function ( $value ) {
 | `tags`                                            | Tag input                                              |
 | `card_choice`                                     | Visual card selection                                  |
 | `price_config`                                    | Stripe pricing (one-time or recurring)                 |
+| `discount_config`                                 | Stripe discount/coupon configuration                   |
+| `unit_input`                                      | Numeric input with unit prefix or suffix               |
+| `code_generator`                                  | Text input with code generation button                 |
 | `hidden`                                          | Hidden input                                           |
 | `group`                                           | Nested field group with layout                         |
 

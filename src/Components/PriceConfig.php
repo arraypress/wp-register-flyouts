@@ -16,6 +16,7 @@ declare( strict_types=1 );
 
 namespace ArrayPress\RegisterFlyouts\Components;
 
+use ArrayPress\Currencies\Currency;
 use ArrayPress\RegisterFlyouts\Interfaces\Renderable;
 
 class PriceConfig implements Renderable {
@@ -79,6 +80,7 @@ class PriceConfig implements Renderable {
                 'amount'                   => 0,
                 'compare_at_amount'        => 0,
                 'currency'                 => 'USD',
+                'show_currency'            => false,
                 'recurring_interval'       => null,
                 'recurring_interval_count' => 1,
                 'currencies'               => [],
@@ -88,24 +90,12 @@ class PriceConfig implements Renderable {
         ] );
 
         // Load currencies from library if available and none provided
-        if ( empty( $this->config['currencies'] ) && function_exists( 'get_currency_options' ) ) {
+        if ( empty( $this->config['currencies'] ) ) {
             $all = get_currency_options();
             foreach ( $all as $code => $info ) {
                 $label                                             = is_array( $info ) ? ( $info['name'] ?? $code ) : $info;
                 $this->config['currencies'][ strtoupper( $code ) ] = strtoupper( $code ) . ' — ' . $label;
             }
-        }
-
-        // Fallback to common currencies
-        if ( empty( $this->config['currencies'] ) ) {
-            $this->config['currencies'] = [
-                    'USD' => 'USD — US Dollar',
-                    'EUR' => 'EUR — Euro',
-                    'GBP' => 'GBP — British Pound',
-                    'CAD' => 'CAD — Canadian Dollar',
-                    'AUD' => 'AUD — Australian Dollar',
-                    'JPY' => 'JPY — Japanese Yen',
-            ];
         }
     }
 
@@ -122,11 +112,7 @@ class PriceConfig implements Renderable {
             return '';
         }
 
-        if ( function_exists( 'from_currency_cents' ) ) {
-            return number_format( from_currency_cents( $amount, $currency ), 2, '.', '' );
-        }
-
-        return number_format( $amount / 100, 2, '.', '' );
+        return (string) Currency::from_smallest_unit( $amount, $currency );
     }
 
     /**
@@ -228,18 +214,23 @@ class PriceConfig implements Renderable {
                                inputmode="decimal"
                                autocomplete="off">
                     </div>
-                    <div class="price-config-currency">
-                        <label for="<?php echo $name; ?>_currency">Currency</label>
-                        <select id="<?php echo $name; ?>_currency"
-                                name="<?php echo $name; ?>[currency]">
-                            <?php foreach ( $this->config['currencies'] as $code => $label ) : ?>
-                                <option value="<?php echo esc_attr( $code ); ?>"
-                                        <?php selected( $currency, $code ); ?>>
-                                    <?php echo esc_html( $code ); ?>
-                                </option>
-                            <?php endforeach; ?>
-                        </select>
-                    </div>
+                    <?php if ( $this->config['show_currency'] ) : ?>
+                        <div class="price-config-currency">
+                            <label for="<?php echo $name; ?>_currency">Currency</label>
+                            <select id="<?php echo $name; ?>_currency"
+                                    name="<?php echo $name; ?>[currency]">
+                                <?php foreach ( $this->config['currencies'] as $code => $label ) : ?>
+                                    <option value="<?php echo esc_attr( $code ); ?>"
+                                            <?php selected( $currency, $code ); ?>>
+                                        <?php echo esc_html( $code ); ?>
+                                    </option>
+                                <?php endforeach; ?>
+                            </select>
+                        </div>
+                    <?php else : ?>
+                        <input type="hidden" name="<?php echo $name; ?>[currency]"
+                               value="<?php echo esc_attr( $currency ); ?>">
+                    <?php endif; ?>
                 </div>
 
                 <?php // ---- Billing Period (visible when recurring) ---- ?>

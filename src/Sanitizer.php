@@ -15,6 +15,7 @@ declare( strict_types=1 );
 
 namespace ArrayPress\RegisterFlyouts;
 
+use ArrayPress\Currencies\Currency;
 use DateTime;
 
 class Sanitizer {
@@ -438,6 +439,11 @@ class Sanitizer {
 	 * Sanitize price config data.
 	 *
 	 * Converts decimal amounts to cents and validates interval.
+	 * Falls back to USD if the currency code is not supported.
+	 *
+	 * @param mixed $value Raw price config data.
+	 *
+	 * @return array Sanitized price config with amount in smallest unit.
 	 */
 	public static function sanitize_price_config( $value ): array {
 		if ( ! is_array( $value ) ) {
@@ -452,16 +458,15 @@ class Sanitizer {
 
 		$currency = strtoupper( sanitize_text_field( $value['currency'] ?? 'USD' ) );
 
+		if ( ! Currency::is_supported( $currency ) ) {
+			$currency = 'USD';
+		}
+
 		$raw_amount     = $value['amount'] ?? 0;
 		$raw_compare_at = $value['compare_at_amount'] ?? 0;
 
-		if ( function_exists( 'to_currency_cents' ) ) {
-			$amount            = to_currency_cents( (float) $raw_amount, $currency );
-			$compare_at_amount = to_currency_cents( (float) $raw_compare_at, $currency );
-		} else {
-			$amount            = (int) round( (float) $raw_amount * 100 );
-			$compare_at_amount = (int) round( (float) $raw_compare_at * 100 );
-		}
+		$amount            = to_currency_cents( (float) $raw_amount, $currency );
+		$compare_at_amount = to_currency_cents( (float) $raw_compare_at, $currency );
 
 		if ( $compare_at_amount <= $amount ) {
 			$compare_at_amount = 0;
@@ -533,19 +538,14 @@ class Sanitizer {
 		$currency   = strtoupper( sanitize_text_field( $value['currency'] ?? 'USD' ) );
 		$raw_amount = (float) ( $value['amount'] ?? 0 );
 
-		// Convert to smallest unit
+		// Convert to the smallest unit
 		if ( $rate_type === 'percent' ) {
 			// Store as basis points (25.00% → 2500)
 			$amount = (int) round( $raw_amount * 100 );
 			// Cap at 100% (10000 basis points)
 			$amount = min( 10000, max( 0, $amount ) );
 		} else {
-			// Store as currency cents
-			if ( function_exists( 'to_currency_cents' ) ) {
-				$amount = to_currency_cents( $raw_amount, $currency );
-			} else {
-				$amount = (int) round( $raw_amount * 100 );
-			}
+			$amount = to_currency_cents( $raw_amount, $currency );
 			$amount = max( 0, $amount );
 		}
 

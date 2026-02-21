@@ -49,11 +49,12 @@ class PriceSummary implements Renderable {
                 'id'       => '',
                 'items'    => [],
                 'subtotal' => null,
-                'tax'      => null,
                 'discount' => null,
+                'tax'      => null,
                 'total'    => 0,
+                'refunded' => null,
                 'currency' => 'USD',
-                'class'    => ''
+                'class'    => '',
         ];
     }
 
@@ -96,6 +97,20 @@ class PriceSummary implements Renderable {
                             <?php esc_currency_e( $this->config['total'], $this->config['currency'] ); ?>
                         </td>
                     </tr>
+                    <?php if ( $this->has_refund() ) : ?>
+                        <tr class="price-summary-refunded">
+                            <td class="label"><?php esc_html_e( 'Refunded', 'wp-flyout' ); ?></td>
+                            <td class="amount negative">
+                                <?php esc_currency_e( - $this->config['refunded'], $this->config['currency'] ); ?>
+                            </td>
+                        </tr>
+                        <tr class="price-summary-net">
+                            <td class="label"><?php esc_html_e( 'Net', 'wp-flyout' ); ?></td>
+                            <td class="amount">
+                                <?php esc_currency_e( $this->config['total'] - $this->config['refunded'], $this->config['currency'] ); ?>
+                            </td>
+                        </tr>
+                    <?php endif; ?>
                     </tfoot>
                 <?php endif; ?>
             </table>
@@ -111,8 +126,17 @@ class PriceSummary implements Renderable {
      */
     private function has_summary_lines(): bool {
         return $this->config['subtotal'] !== null ||
-               $this->config['tax'] !== null ||
-               $this->config['discount'] !== null;
+               $this->config['discount'] !== null ||
+               $this->config['tax'] !== null;
+    }
+
+    /**
+     * Check if we have a refund to display
+     *
+     * @return bool
+     */
+    private function has_refund(): bool {
+        return $this->config['refunded'] !== null && $this->config['refunded'] > 0;
     }
 
     /**
@@ -121,9 +145,10 @@ class PriceSummary implements Renderable {
      * @param array $item Item configuration
      */
     private function render_line_item( array $item ): void {
-        $label    = $item['label'] ?? '';
-        $amount   = $item['amount'] ?? 0;
-        $quantity = $item['quantity'] ?? null;
+        $label       = $item['label'] ?? '';
+        $amount      = $item['amount'] ?? 0;
+        $quantity    = $item['quantity'] ?? null;
+        $description = $item['description'] ?? '';
 
         if ( empty( $label ) ) {
             return;
@@ -136,6 +161,9 @@ class PriceSummary implements Renderable {
                 <?php if ( $quantity !== null && $quantity > 1 ) : ?>
                     <span class="item-quantity">× <?php echo esc_html( $quantity ); ?></span>
                 <?php endif; ?>
+                <?php if ( ! empty( $description ) ) : ?>
+                    <span class="item-description"><?php echo esc_html( $description ); ?></span>
+                <?php endif; ?>
             </td>
             <td class="item-amount">
                 <?php esc_currency_e( $amount, $this->config['currency'] ); ?>
@@ -145,7 +173,7 @@ class PriceSummary implements Renderable {
     }
 
     /**
-     * Render summary lines
+     * Render summary lines (subtotal, discount, tax)
      */
     private function render_summary_lines(): void {
         $lines = [

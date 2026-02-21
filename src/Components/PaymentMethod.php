@@ -61,12 +61,12 @@ class PaymentMethod implements Renderable {
     private static function get_defaults(): array {
         return [
                 'id'                => '',
-                'payment_method'    => '',
+                'payment_method'    => 'card',
                 'payment_brand'     => '',
                 'payment_last4'     => '',
                 'stripe_risk_score' => null,
                 'stripe_risk_level' => '',
-                'class'             => ''
+                'class'             => '',
         ];
     }
 

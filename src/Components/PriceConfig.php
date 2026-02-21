@@ -89,13 +89,9 @@ class PriceConfig implements Renderable {
                 'class'                    => '',
         ] );
 
-        // Load currencies from library if available and none provided
+        // Load currencies
         if ( empty( $this->config['currencies'] ) ) {
-            $all = get_currency_options();
-            foreach ( $all as $code => $info ) {
-                $label                                             = is_array( $info ) ? ( $info['name'] ?? $code ) : $info;
-                $this->config['currencies'][ strtoupper( $code ) ] = strtoupper( $code ) . ' — ' . $label;
-            }
+            $this->config['currencies'] = Currency::get_codes();
         }
     }
 

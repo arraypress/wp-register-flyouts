@@ -32,14 +32,13 @@ Optional strikethrough price shown to customers (e.g. "was $29.99, now $19.99").
 
 ## Currency
 
-Populated from the `arraypress/currencies` library if installed (`get_currency_options()`), otherwise falls back to common currencies (USD, EUR, GBP, CAD, AUD, JPY).
+Populated from the `arraypress/currencies` library via `Currency::get_options()` if installed, returning options in "Name (symbol) — CODE" format (e.g. "US Dollar ($) — USD"). Falls back to common currencies (USD, EUR, GBP, CAD, AUD, JPY) if the library is not available.
 
 ## Recurring Intervals
 
 Stripe-supported values: `day`, `week`, `month`, `year`. Billing period presets are available (Daily, Weekly, Monthly, Every 3 months, Every 6 months, Yearly, Custom) with a custom option for arbitrary intervals like "every 3 months" or "every 2 weeks".
 
 ## Saved Data Shape
-
 ```php
 [
     'pricing' => [

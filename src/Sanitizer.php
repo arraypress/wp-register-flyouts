@@ -272,11 +272,8 @@ class Sanitizer {
 			}
 
 			$sanitized[] = [
-				'id'        => $item_id,
-				'name'      => sanitize_text_field( $item['name'] ?? '' ),
-				'quantity'  => max( 1, absint( $item['quantity'] ?? 1 ) ),
-				'price'     => absint( $item['price'] ?? 0 ),
-				'thumbnail' => esc_url_raw( $item['thumbnail'] ?? '' ),
+				'id'       => $item_id,
+				'quantity' => max( 1, absint( $item['quantity'] ?? 1 ) ),
 			];
 		}
 

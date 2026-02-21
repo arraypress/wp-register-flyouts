@@ -1,7 +1,6 @@
 # Line Items
 
 Add/remove line items with AJAX product search. Uses Select2 for the search dropdown with two separate callbacks: one for searching products and one for fetching full product details when selected.
-
 ```php
 'order_items' => [
     'type'            => 'line_items',
@@ -43,7 +42,6 @@ Add/remove line items with AJAX product search. Uses Select2 for the search drop
 ## Data Format
 
 The `items` array (populated from load data) should contain:
-
 ```php
 [
     [
@@ -56,4 +54,19 @@ The `items` array (populated from load data) should contain:
 ]
 ```
 
+## Saved Data Shape
+
+Only `id` and `quantity` are persisted. The save callback should look up the
+authoritative price from the database rather than trusting client-submitted values.
+```php
+[
+    'items' => [
+        [ 'id' => 1, 'quantity' => 2 ],
+        [ 'id' => 5, 'quantity' => 1 ],
+    ],
+]
+```
+
 > **Note:** The `name` attribute (`'items'` in this example) is used as the data key for both saving and loading. The field's array key (`order_items`) can be different — data resolution uses `name` for lookup.
+
+> **Note:** This component is intended for order creation only (e.g. manual admin orders). For displaying existing order items, use the Price Summary component instead.

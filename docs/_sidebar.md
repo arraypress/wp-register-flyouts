@@ -44,7 +44,6 @@
   - [Code Generator](components/code-generator.md)
   - [Refund Form](components/refund-form.md)
   - [Card Choice](components/card-choice.md)
-  - [Tags](components/tags.md)
   - [Accordion](components/accordion.md)
   - [Separator](components/separator.md)
 

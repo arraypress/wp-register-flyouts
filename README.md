@@ -1,4 +1,4 @@
-# WP Flyout Library
+# WordPress Flyout Library
 
 A WordPress library for creating slide-out panels with forms, data displays, and interactive components. Perfect for
 admin interfaces, edit screens, and anywhere you need contextual editing without page reloads.

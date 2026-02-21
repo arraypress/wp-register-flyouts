@@ -29,3 +29,4 @@ composer require arraypress/wp-register-flyouts
 ## License
 
 GPL-2.0-or-later
+

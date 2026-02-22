@@ -2,26 +2,20 @@
  * Conditional Fields Core JavaScript
  *
  * Core functionality for dynamic field visibility based on dependencies.
- * Automatically handles toggle checks, value matching, and contains operations.
+ * Supports the full operator set matching the settings library:
+ * =, ==, ===, !=, !==, >, >=, <, <=, in, not_in, contains, not_contains, empty, not_empty
+ *
+ * Also supports legacy data-depends format for backwards compatibility.
  *
  * @package     ArrayPress\WPFlyout
  * @subpackage  Core
- * @version     1.0.0
+ * @version     2.0.0
  * @author      David Sherlock
  */
 
 (function ($) {
     'use strict';
 
-    /**
-     * Conditional Fields Handler
-     *
-     * Core flyout functionality for managing field dependencies and visibility.
-     *
-     * @namespace WPFlyout.ConditionalFields
-     * @memberof  WPFlyout
-     * @since     1.0.0
-     */
     window.WPFlyout = window.WPFlyout || {};
 
     WPFlyout.ConditionalFields = {
@@ -37,8 +31,8 @@
         /**
          * Initialize conditional fields
          *
-         * Automatically called when DOM is ready.
-         * Scans for fields with dependencies and sets up listeners.
+         * Scans for fields with data-conditions (preferred) or data-depends (legacy)
+         * attributes and sets up change listeners.
          *
          * @since 1.0.0
          * @return {void}
@@ -46,9 +40,18 @@
         init: function () {
             const self = this;
 
-            // Find all fields with data-depends attribute
+            // Register fields with data-conditions (matches settings library)
+            $('[data-conditions]').each(function () {
+                self.registerConditionsField($(this));
+            });
+
+            // Register legacy data-depends fields for backwards compatibility
             $('[data-depends]').each(function () {
-                self.registerField($(this));
+                // Skip if already registered via data-conditions
+                if ($(this).data('conditions')) {
+                    return;
+                }
+                self.registerDependsField($(this));
             });
 
             // Bind change listeners using delegation
@@ -78,95 +81,157 @@
         initializeFlyout: function ($flyout) {
             const self = this;
 
+            $flyout.find('[data-conditions]').each(function () {
+                self.registerConditionsField($(this));
+            });
+
             $flyout.find('[data-depends]').each(function () {
-                self.registerField($(this));
+                if ($(this).data('conditions')) {
+                    return;
+                }
+                self.registerDependsField($(this));
             });
 
             // Trigger evaluation for this flyout's fields
             setTimeout(() => {
                 self.evaluateAll($flyout);
-            }, 50); // Small delay to ensure form values are set
+            }, 50);
+        },
+
+        // =====================================================================
+        // FIELD REGISTRATION
+        // =====================================================================
+
+        /**
+         * Register a field using data-conditions format (settings library format).
+         *
+         * Expects an array of condition objects:
+         * [{ field: "name", value: "x", operator: "=" }, ...]
+         *
+         * @since 2.0.0
+         * @param {jQuery} $field Field wrapper element
+         * @return {void}
+         */
+        registerConditionsField: function ($field) {
+            const fieldId = this.getFieldId($field);
+            if (!fieldId) {
+                return;
+            }
+
+            const conditions = $field.data('conditions');
+            if (!conditions || !Array.isArray(conditions) || !conditions.length) {
+                return;
+            }
+
+            this.dependencies[fieldId] = {
+                element: $field,
+                conditions: conditions
+            };
+
+            if (window.WPFlyout.debug) {
+                console.log('Registered conditional field (conditions):', fieldId, conditions);
+            }
         },
 
         /**
-         * Register a dependent field
+         * Register a field using legacy data-depends format.
          *
-         * Parses the dependency configuration and stores it for evaluation.
+         * Converts to the normalized conditions format internally.
+         * Supports:
+         * - String: "field_name" (truthy check)
+         * - Object with value: {field: "name", value: "x"}
+         * - Object with contains: {field: "name", contains: "x"}
          *
          * @since 1.0.0
          * @param {jQuery} $field Field wrapper element
          * @return {void}
          */
-        registerField: function ($field) {
-            const dependsData = $field.data('depends');
-            const fieldId = $field.attr('id') ||
-                $field.find('input, select, textarea').first().attr('name');
-
-            if (!fieldId || !dependsData) {
+        registerDependsField: function ($field) {
+            const fieldId = this.getFieldId($field);
+            if (!fieldId) {
                 return;
             }
 
-            // Parse dependency configuration
-            const dependency = this.parseDependency(dependsData);
-            if (dependency) {
-                this.dependencies[fieldId] = {
-                    element: $field,
-                    config: dependency
-                };
+            const dependsData = $field.data('depends');
+            if (!dependsData) {
+                return;
+            }
 
-                // Log for debugging
-                if (window.WPFlyout.debug) {
-                    console.log('Registered conditional field:', fieldId, dependency);
-                }
+            // Convert legacy format to conditions array
+            const conditions = this.convertDependsToConditions(dependsData);
+            if (!conditions || !conditions.length) {
+                return;
+            }
+
+            this.dependencies[fieldId] = {
+                element: $field,
+                conditions: conditions
+            };
+
+            if (window.WPFlyout.debug) {
+                console.log('Registered conditional field (legacy depends):', fieldId, conditions);
             }
         },
 
         /**
-         * Parse dependency configuration from data attribute
+         * Get a unique identifier for a field element.
          *
-         * Handles three formats:
-         * - String: "field_name" (truthy check)
-         * - Object with value: {field: "name", value: "x"} (equals check)
-         * - Object with contains: {field: "name", contains: "x"} (array contains)
-         *
-         * @since 1.0.0
-         * @param {string|Object} data Dependency data
-         * @return {Object|null} Parsed dependency configuration
+         * @since 2.0.0
+         * @param {jQuery} $field Field wrapper element
+         * @return {string|null} Field identifier or null
          */
-        parseDependency: function (data) {
-            // Handle string format: "field_name"
+        getFieldId: function ($field) {
+            return $field.attr('id') ||
+                $field.find('input, select, textarea').first().attr('name') ||
+                null;
+        },
+
+        /**
+         * Convert legacy data-depends format to normalized conditions array.
+         *
+         * @since 2.0.0
+         * @param {string|Object} data Legacy dependency data
+         * @return {Array} Normalized conditions array
+         */
+        convertDependsToConditions: function (data) {
+            // String format: "field_name" → truthy check
             if (typeof data === 'string') {
-                return {
-                    type: 'truthy',
-                    field: data
-                };
+                return [{
+                    field: data,
+                    value: '',
+                    operator: 'not_empty'
+                }];
             }
 
-            // Handle object format
             if (typeof data === 'object' && data !== null) {
-                // Determine dependency type
+                // Contains format
                 if (data.contains !== undefined) {
-                    return {
-                        type: 'contains',
+                    return [{
                         field: data.field,
-                        value: data.contains
-                    };
-                } else if (data.value !== undefined) {
-                    return {
-                        type: 'equals',
+                        value: data.contains,
+                        operator: 'contains'
+                    }];
+                }
+
+                // Value format
+                if (data.value !== undefined) {
+                    return [{
                         field: data.field,
-                        value: data.value
-                    };
+                        value: data.value,
+                        operator: '='
+                    }];
                 }
             }
 
-            return null;
+            return [];
         },
+
+        // =====================================================================
+        // CHANGE HANDLING
+        // =====================================================================
 
         /**
          * Handle field change event
-         *
-         * Triggered when any form field changes to re-evaluate dependencies.
          *
          * @since 1.0.0
          * @param {Event} e Change event
@@ -183,7 +248,6 @@
             // Clean array notation from name
             const cleanName = name.replace(/\[\]$/, '');
 
-            // Check all dependencies
             this.evaluateDependents(cleanName);
         },
 
@@ -199,11 +263,19 @@
 
             Object.keys(this.dependencies).forEach(function (key) {
                 const dep = self.dependencies[key];
-                if (dep.config.field === fieldName) {
+                const referencesField = dep.conditions.some(function (c) {
+                    return c.field === fieldName;
+                });
+
+                if (referencesField) {
                     self.evaluateField(key);
                 }
             });
         },
+
+        // =====================================================================
+        // EVALUATION
+        // =====================================================================
 
         /**
          * Evaluate all registered fields
@@ -218,7 +290,6 @@
             Object.keys(this.dependencies).forEach(function (key) {
                 const dep = self.dependencies[key];
 
-                // Skip if context provided and field not within context
                 if ($context && !$context.find(dep.element).length && !$context.is(dep.element)) {
                     return;
                 }
@@ -230,6 +301,8 @@
         /**
          * Evaluate a single field's visibility
          *
+         * All conditions must be met (AND logic).
+         *
          * @since 1.0.0
          * @param {string} fieldId Field identifier
          * @return {void}
@@ -240,39 +313,109 @@
                 return;
             }
 
-            const shouldShow = this.checkCondition(dep.config);
-            this.toggleField(dep.element, shouldShow);
+            const self = this;
+            let allMet = true;
 
-            // Log for debugging
+            dep.conditions.forEach(function (condition) {
+                const currentValue = self.getFieldValue(condition.field);
+
+                if (!self.checkCondition(currentValue, condition.value, condition.operator)) {
+                    allMet = false;
+                }
+            });
+
+            this.toggleField(dep.element, allMet);
+
             if (window.WPFlyout.debug) {
-                console.log('Evaluated field:', fieldId, 'Show:', shouldShow);
+                console.log('Evaluated field:', fieldId, 'Show:', allMet);
             }
         },
+
+        // =====================================================================
+        // CONDITION CHECKING
+        // =====================================================================
 
         /**
-         * Check if condition is met
+         * Check if a condition is met between current and expected values.
          *
-         * @since 1.0.0
-         * @param {Object} config Dependency configuration
-         * @return {boolean} True if condition is met
+         * Supports operators: =, ==, ===, !=, !==, >, >=, <, <=,
+         * in, not_in, contains, not_contains, empty, not_empty.
+         *
+         * @since 2.0.0
+         * @param {*}      current  The current field value.
+         * @param {*}      expected The expected value from the condition.
+         * @param {string} operator The comparison operator.
+         * @return {boolean} Whether the condition is met.
          */
-        checkCondition: function (config) {
-            const value = this.getFieldValue(config.field);
+        checkCondition: function (current, expected, operator) {
+            switch (operator) {
+                case '=':
+                case '==':
+                    return current == expected;
 
-            switch (config.type) {
-                case 'truthy':
-                    return this.isTruthy(value);
+                case '===':
+                    return current === expected;
 
-                case 'equals':
-                    return this.checkEquals(value, config.value);
+                case '!=':
+                case '!==':
+                    return current != expected;
+
+                case '>':
+                    return parseFloat(current) > parseFloat(expected);
+
+                case '>=':
+                    return parseFloat(current) >= parseFloat(expected);
+
+                case '<':
+                    return parseFloat(current) < parseFloat(expected);
+
+                case '<=':
+                    return parseFloat(current) <= parseFloat(expected);
+
+                case 'in':
+                    expected = Array.isArray(expected) ? expected : [expected];
+                    return expected.indexOf(current) !== -1 ||
+                        expected.indexOf(String(current)) !== -1;
+
+                case 'not_in':
+                    expected = Array.isArray(expected) ? expected : [expected];
+                    return expected.indexOf(current) === -1 &&
+                        expected.indexOf(String(current)) === -1;
 
                 case 'contains':
-                    return this.checkContains(value, config.value);
+                    if (Array.isArray(current)) {
+                        return current.indexOf(expected) !== -1 ||
+                            current.indexOf(String(expected)) !== -1;
+                    }
+                    return String(current).indexOf(String(expected)) !== -1;
+
+                case 'not_contains':
+                    if (Array.isArray(current)) {
+                        return current.indexOf(expected) === -1 &&
+                            current.indexOf(String(expected)) === -1;
+                    }
+                    return String(current).indexOf(String(expected)) === -1;
+
+                case 'empty':
+                    return !current ||
+                        current === '' ||
+                        current === '0' ||
+                        (Array.isArray(current) && current.length === 0);
+
+                case 'not_empty':
+                    return current &&
+                        current !== '' &&
+                        current !== '0' &&
+                        (!Array.isArray(current) || current.length > 0);
 
                 default:
-                    return false;
+                    return current == expected;
             }
         },
+
+        // =====================================================================
+        // FIELD VALUE RESOLUTION
+        // =====================================================================
 
         /**
          * Get field value
@@ -284,34 +427,30 @@
          * @return {*} Field value
          */
         getFieldValue: function (fieldName) {
-            // Try different selectors
-            let $field = $(`[name="${fieldName}"]`);
+            let $field = $('[name="' + fieldName + '"]');
 
             if (!$field.length) {
-                $field = $(`[name="${fieldName}[]"]`);
+                $field = $('[name="' + fieldName + '[]"]');
             }
 
             if (!$field.length) {
-                $field = $(`#${fieldName}`);
+                $field = $('#' + fieldName);
             }
 
             if (!$field.length) {
                 return null;
             }
 
-            // Handle different input types
             const type = $field.attr('type') || $field.prop('tagName').toLowerCase();
 
             if (type === 'checkbox') {
                 if ($field.length > 1) {
-                    // Multiple checkboxes - return array of checked values
                     const values = [];
                     $field.filter(':checked').each(function () {
                         values.push($(this).val());
                     });
                     return values;
                 } else {
-                    // Single checkbox (toggle)
                     return $field.is(':checked');
                 }
             } else if (type === 'radio') {
@@ -321,72 +460,9 @@
             }
         },
 
-        /**
-         * Check if value is truthy
-         *
-         * @since 1.0.0
-         * @param {*} value Value to check
-         * @return {boolean} True if truthy
-         */
-        isTruthy: function (value) {
-            if (value === null || value === undefined) {
-                return false;
-            }
-
-            if (typeof value === 'boolean') {
-                return value;
-            }
-
-            if (typeof value === 'string') {
-                return value !== '' && value !== '0' && value !== 'false';
-            }
-
-            if (Array.isArray(value)) {
-                return value.length > 0;
-            }
-
-            return !!value;
-        },
-
-        /**
-         * Check if values are equal
-         *
-         * Handles single value and array of values (IN operation).
-         *
-         * @since 1.0.0
-         * @param {*} value Field value
-         * @param {*} expected Expected value(s)
-         * @return {boolean} True if equal
-         */
-        checkEquals: function (value, expected) {
-            // Handle array of expected values (IN operation)
-            if (Array.isArray(expected)) {
-                return expected.includes(value) ||
-                    expected.includes(String(value));
-            }
-
-            // Direct comparison (with type coercion for string/number)
-            return value === expected ||
-                value == expected ||
-                String(value) === String(expected);
-        },
-
-        /**
-         * Check if array contains value
-         *
-         * @since 1.0.0
-         * @param {*} value Field value (should be array)
-         * @param {*} search Value to search for
-         * @return {boolean} True if contains
-         */
-        checkContains: function (value, search) {
-            if (!Array.isArray(value)) {
-                return false;
-            }
-
-            return value.includes(search) ||
-                value.includes(String(search));
-        },
+        // =====================================================================
+        // VISIBILITY TOGGLING
+        // =====================================================================
 
         /**
          * Toggle field visibility
@@ -403,39 +479,36 @@
 
             if (show && !isVisible) {
                 $field.slideDown(200, function () {
-                    // Enable inputs when shown
                     $field.find('input, select, textarea')
                         .prop('disabled', false)
                         .removeClass('conditional-disabled');
 
-                    // Trigger event
                     $field.trigger('conditional:shown');
                     $(document).trigger('wpflyout:conditional:shown', [$field]);
                 });
             } else if (!show && isVisible) {
                 $field.slideUp(200, function () {
-                    // Disable inputs when hidden to prevent submission
                     $field.find('input, select, textarea')
                         .prop('disabled', true)
                         .addClass('conditional-disabled');
 
-                    // Clear values for certain field types
                     $field.find('input[type="text"], input[type="email"], input[type="url"], textarea')
                         .val('');
                     $field.find('input[type="checkbox"], input[type="radio"]')
                         .prop('checked', false);
 
-                    // Trigger event
                     $field.trigger('conditional:hidden');
                     $(document).trigger('wpflyout:conditional:hidden', [$field]);
                 });
             }
         },
 
+        // =====================================================================
+        // PUBLIC API
+        // =====================================================================
+
         /**
          * Manually trigger evaluation of a specific field
-         *
-         * Public API method for external use.
          *
          * @since 1.0.0
          * @param {string} fieldId Field identifier to evaluate
@@ -447,8 +520,6 @@
 
         /**
          * Refresh all conditional fields
-         *
-         * Public API method to re-evaluate all fields.
          *
          * @since 1.0.0
          * @return {void}

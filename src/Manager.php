@@ -74,6 +74,13 @@ class Manager {
 	 */
 	private bool $assets_enqueued = false;
 
+	/**
+	 * Types that resolve to ajax_select at render time.
+	 *
+	 * @var array<string>
+	 */
+	private static array $ajax_select_types = [ 'post', 'taxonomy', 'user' ];
+
 	// =========================================================================
 	// CONSTRUCTOR & INITIALIZATION
 	// =========================================================================
@@ -450,10 +457,19 @@ class Manager {
 	/**
 	 * Process field dependencies for conditional display.
 	 *
+	 * Normalizes the 'depends' configuration to the same data-conditions
+	 * format used by the settings library, ensuring interchangeable syntax.
+	 *
+	 * Supported formats:
+	 * - String: 'depends' => 'field_name' (truthy/not_empty check)
+	 * - Simple key => value: 'depends' => ['enable_feature' => 1]
+	 * - Single condition: 'depends' => ['field' => 'x', 'value' => 'y', 'operator' => '=']
+	 * - Multiple conditions (AND): 'depends' => [['field' => 'a', ...], ['field' => 'b', ...]]
+	 *
 	 * @param array  $field     Field configuration.
 	 * @param string $field_key Field identifier.
 	 *
-	 * @return array Modified field configuration with dependency data.
+	 * @return array Modified field configuration with data-conditions attribute.
 	 * @since 1.0.0
 	 */
 	private function process_field_dependencies( array $field, string $field_key ): array {
@@ -461,51 +477,117 @@ class Manager {
 			return $field;
 		}
 
-		$depends = $field['depends'];
+		$depends    = $field['depends'];
+		$conditions = $this->normalize_depends( $depends );
 
-		$dependency_data = null;
-
-		if ( is_string( $depends ) ) {
-			$dependency_data = $depends;
-		} elseif ( is_array( $depends ) ) {
-			if ( isset( $depends['field'] ) ) {
-				$dependency_data = [
-					'field' => $depends['field'],
-				];
-
-				if ( isset( $depends['value'] ) ) {
-					$dependency_data['value'] = $depends['value'];
-				} elseif ( isset( $depends['contains'] ) ) {
-					$dependency_data['contains'] = $depends['contains'];
-				}
-			}
+		if ( empty( $conditions ) ) {
+			return $field;
 		}
 
-		if ( $dependency_data ) {
-			if ( ! isset( $field['wrapper_attrs'] ) ) {
-				$field['wrapper_attrs'] = [];
-			}
+		if ( ! isset( $field['wrapper_attrs'] ) ) {
+			$field['wrapper_attrs'] = [];
+		}
 
-			if ( is_array( $dependency_data ) ) {
-				$field['wrapper_attrs']['data-depends'] = htmlspecialchars( wp_json_encode( $dependency_data ), ENT_QUOTES, 'UTF-8' );
-			} else {
-				$field['wrapper_attrs']['data-depends'] = $dependency_data;
-			}
+		$field['wrapper_attrs']['data-conditions'] = esc_attr( wp_json_encode( $conditions ) );
 
-			if ( empty( $field['wrapper_attrs']['id'] ) ) {
-				$field['wrapper_attrs']['id'] = 'field-' . sanitize_key( $field_key );
-			}
+		if ( empty( $field['wrapper_attrs']['id'] ) ) {
+			$field['wrapper_attrs']['id'] = 'field-' . sanitize_key( $field_key );
+		}
 
-			$field['wrapper_attrs']['style'] = 'display: none;';
+		$field['wrapper_attrs']['style'] = 'display: none;';
 
-			if ( ! empty( $field['wrapper_attrs']['class'] ) ) {
-				$field['wrapper_attrs']['class'] .= ' has-dependency';
-			} else {
-				$field['wrapper_attrs']['class'] = 'has-dependency';
-			}
+		if ( ! empty( $field['wrapper_attrs']['class'] ) ) {
+			$field['wrapper_attrs']['class'] .= ' has-dependency';
+		} else {
+			$field['wrapper_attrs']['class'] = 'has-dependency';
 		}
 
 		return $field;
+	}
+
+	/**
+	 * Normalize a depends configuration to a conditions array.
+	 *
+	 * Produces the same format as the settings library's ConditionalLogic trait:
+	 * [['field' => '...', 'value' => '...', 'operator' => '...'], ...]
+	 *
+	 * @param string|array $depends Raw depends configuration.
+	 *
+	 * @return array Normalized conditions array.
+	 * @since 4.0.0
+	 */
+	private function normalize_depends( $depends ): array {
+		// String format: 'field_name' → not_empty check
+		if ( is_string( $depends ) ) {
+			return [
+				[
+					'field'    => $depends,
+					'value'    => '',
+					'operator' => 'not_empty',
+				],
+			];
+		}
+
+		if ( ! is_array( $depends ) || empty( $depends ) ) {
+			return [];
+		}
+
+		$first_key = array_key_first( $depends );
+
+		// Simple key => value format: ['enable_feature' => 1, 'mode' => 'advanced']
+		if ( is_string( $first_key ) && ! in_array( $first_key, [ 'field', 'value', 'operator' ], true ) ) {
+			$conditions = [];
+			foreach ( $depends as $field => $value ) {
+				$conditions[] = [
+					'field'    => $field,
+					'value'    => $value,
+					'operator' => is_array( $value ) ? 'in' : '=',
+				];
+			}
+
+			return $conditions;
+		}
+
+		// Single condition: ['field' => 'x', 'value' => 'y']
+		if ( isset( $depends['field'] ) ) {
+			return [ $this->normalize_single_condition( $depends ) ];
+		}
+
+		// Array of conditions: [['field' => 'a', ...], ['field' => 'b', ...]]
+		if ( is_int( $first_key ) ) {
+			return array_map( [ $this, 'normalize_single_condition' ], $depends );
+		}
+
+		return [];
+	}
+
+	/**
+	 * Normalize a single condition array.
+	 *
+	 * Handles legacy 'contains' key and ensures operator is always set.
+	 *
+	 * @param array $condition Single condition array.
+	 *
+	 * @return array Normalized condition.
+	 * @since 4.0.0
+	 */
+	private function normalize_single_condition( array $condition ): array {
+		// Handle legacy 'contains' key
+		if ( isset( $condition['contains'] ) && ! isset( $condition['operator'] ) ) {
+			return [
+				'field'    => $condition['field'] ?? '',
+				'value'    => $condition['contains'],
+				'operator' => 'contains',
+			];
+		}
+
+		$default_operator = is_array( $condition['value'] ?? '' ) ? 'in' : '=';
+
+		return [
+			'field'    => $condition['field'] ?? '',
+			'value'    => $condition['value'] ?? '',
+			'operator' => $condition['operator'] ?? $default_operator,
+		];
 	}
 
 	// =========================================================================
@@ -520,13 +602,6 @@ class Manager {
 	 * @return void
 	 * @since 1.0.0
 	 */
-	/**
-	 * Types that resolve to ajax_select at render time.
-	 *
-	 * @var array<string>
-	 */
-	private static array $ajax_select_types = [ 'post', 'taxonomy', 'user' ];
-
 	private function detect_components( array $config ): void {
 		foreach ( $config['fields'] as $field ) {
 			$type = $field['type'] ?? 'text';

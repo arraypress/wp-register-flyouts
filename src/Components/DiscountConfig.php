@@ -40,9 +40,9 @@ class DiscountConfig implements Renderable {
      * @var array<string, string>
      */
     private const DURATIONS = [
-            'once'      => 'Once',
-            'forever'   => 'Forever',
-            'repeating' => 'Multiple months',
+		'once'      => 'Once',
+		'forever'   => 'Forever',
+		'repeating' => 'Multiple months',
     ];
 
     /**
@@ -52,19 +52,19 @@ class DiscountConfig implements Renderable {
      */
     public function __construct( array $config = [] ) {
         $this->config = wp_parse_args( $config, [
-                'name'               => 'discount',
-                'rate_type'          => 'percent',
-                'amount'             => 0,
-                'currency'           => 'USD',
-                'currency_symbol'    => '$',
-                'duration'           => 'once',
-                'duration_in_months' => null,
-                'max_redemptions'    => null,
-                'show_duration'      => true,
-                'show_redemptions'   => false,
-                'label'              => 'Discount',
-                'description'        => '',
-                'class'              => '',
+			'name'               => 'discount',
+			'rate_type'          => 'percent',
+			'amount'             => 0,
+			'currency'           => 'USD',
+			'currency_symbol'    => '$',
+			'duration'           => 'once',
+			'duration_in_months' => null,
+			'max_redemptions'    => null,
+			'show_duration'      => true,
+			'show_redemptions'   => false,
+			'label'              => 'Discount',
+			'description'        => '',
+			'class'              => '',
         ] );
     }
 
@@ -121,7 +121,7 @@ class DiscountConfig implements Renderable {
             <?php endif; ?>
 
             <div class="<?php echo esc_attr( $classes ); ?>"
-                 data-name="<?php echo $name; ?>">
+                data-name="<?php echo esc_attr( $name ); ?>">
 
                 <?php $this->render_amount( $name, $display_amount, $symbol, $currency ); ?>
 
@@ -161,17 +161,17 @@ class DiscountConfig implements Renderable {
         $rate_type = $this->config['rate_type'];
         ?>
         <div class="discount-config-amount">
-            <label for="<?php echo $name; ?>_amount">Amount</label>
+            <label for="<?php echo esc_attr( $name ); ?>_amount">Amount</label>
             <div class="discount-config-amount-wrap">
                 <input type="text"
-                       id="<?php echo $name; ?>_amount"
-                       name="<?php echo $name; ?>[amount]"
-                       value="<?php echo esc_attr( $display_amount ); ?>"
-                       placeholder="0.00"
-                       inputmode="decimal"
-                       autocomplete="off"
-                       class="discount-config-amount-input">
-                <select name="<?php echo $name; ?>[rate_type]"
+                        id="<?php echo esc_attr( $name ); ?>_amount"
+                        name="<?php echo esc_attr( $name ); ?>[amount]"
+                        value="<?php echo esc_attr( $display_amount ); ?>"
+                        placeholder="0.00"
+                        inputmode="decimal"
+                        autocomplete="off"
+                        class="discount-config-amount-input">
+                <select name="<?php echo esc_attr( $name ); ?>[rate_type]"
                         class="discount-config-type-select"
                         aria-label="<?php esc_attr_e( 'Discount type', 'wp-flyout' ); ?>">
                     <option value="percent" <?php selected( $rate_type, 'percent' ); ?>>%</option>
@@ -179,8 +179,8 @@ class DiscountConfig implements Renderable {
                 </select>
             </div>
             <input type="hidden"
-                   name="<?php echo $name; ?>[currency]"
-                   value="<?php echo esc_attr( $currency ); ?>">
+                    name="<?php echo esc_attr( $name ); ?>[currency]"
+                    value="<?php echo esc_attr( $currency ); ?>">
         </div>
         <?php
     }
@@ -197,9 +197,9 @@ class DiscountConfig implements Renderable {
     private function render_duration( string $name, string $duration, ?int $months ): void {
         ?>
         <div class="discount-config-duration">
-            <label for="<?php echo $name; ?>_duration">Duration</label>
-            <select id="<?php echo $name; ?>_duration"
-                    name="<?php echo $name; ?>[duration]"
+            <label for="<?php echo esc_attr( $name ); ?>_duration">Duration</label>
+            <select id="<?php echo esc_attr( $name ); ?>_duration"
+                    name="<?php echo esc_attr( $name ); ?>[duration]"
                     class="discount-config-duration-select">
                 <?php foreach ( self::DURATIONS as $value => $label ) : ?>
                     <option value="<?php echo esc_attr( $value ); ?>"
@@ -210,16 +210,16 @@ class DiscountConfig implements Renderable {
             </select>
 
             <div class="discount-config-months"
-                 style="<?php echo $duration === 'repeating' ? '' : 'display:none;'; ?>">
-                <label for="<?php echo $name; ?>_months">Number of months</label>
+                style="<?php echo $duration === 'repeating' ? '' : 'display:none;'; ?>">
+                <label for="<?php echo esc_attr( $name ); ?>_months">Number of months</label>
                 <input type="number"
-                       id="<?php echo $name; ?>_months"
-                       name="<?php echo $name; ?>[duration_in_months]"
-                       value="<?php echo esc_attr( (string) ( $months ?? '' ) ); ?>"
-                       min="1"
-                       max="36"
-                       placeholder="e.g. 3"
-                       class="discount-config-months-input">
+                        id="<?php echo esc_attr( $name ); ?>_months"
+                        name="<?php echo esc_attr( $name ); ?>[duration_in_months]"
+                        value="<?php echo esc_attr( (string) ( $months ?? '' ) ); ?>"
+                        min="1"
+                        max="36"
+                        placeholder="e.g. 3"
+                        class="discount-config-months-input">
             </div>
         </div>
         <?php
@@ -235,17 +235,16 @@ class DiscountConfig implements Renderable {
     private function render_redemptions( string $name ): void {
         ?>
         <div class="discount-config-redemptions">
-            <label for="<?php echo $name; ?>_max_redemptions">Max redemptions</label>
+            <label for="<?php echo esc_attr( $name ); ?>_max_redemptions">Max redemptions</label>
             <input type="number"
-                   id="<?php echo $name; ?>_max_redemptions"
-                   name="<?php echo $name; ?>[max_redemptions]"
-                   value="<?php echo esc_attr( (string) ( $this->config['max_redemptions'] ?? '' ) ); ?>"
-                   min="1"
-                   placeholder="Unlimited"
-                   class="discount-config-redemptions-input">
+                    id="<?php echo esc_attr( $name ); ?>_max_redemptions"
+                    name="<?php echo esc_attr( $name ); ?>[max_redemptions]"
+                    value="<?php echo esc_attr( (string) ( $this->config['max_redemptions'] ?? '' ) ); ?>"
+                    min="1"
+                    placeholder="Unlimited"
+                    class="discount-config-redemptions-input">
             <p class="description"><?php esc_html_e( 'Leave empty for unlimited.', 'wp-flyout' ); ?></p>
         </div>
         <?php
     }
-
 }

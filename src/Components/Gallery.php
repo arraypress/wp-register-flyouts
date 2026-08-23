@@ -70,18 +70,18 @@ class Gallery implements Renderable {
      */
     private static function get_defaults(): array {
         return [
-                'id'         => '',
-                'name'       => 'gallery',
-                'items'      => [],  // Array of attachment IDs
-                'max_images' => 0,   // 0 = unlimited
-                'sortable'   => true,
-                'columns'    => 4,   // Grid columns (2-6)
-                'size'       => 'thumbnail', // WordPress image size for preview
-                'add_text'   => __( 'Add Images', 'wp-flyout' ),
-                'empty_text' => __( 'No images added yet', 'wp-flyout' ),
-                'empty_icon' => 'format-gallery',
-                'multiple'   => true, // Allow multiple selection in media library
-                'class'      => ''
+			'id'         => '',
+			'name'       => 'gallery',
+			'items'      => [],  // Array of attachment IDs
+			'max_images' => 0,   // 0 = unlimited
+			'sortable'   => true,
+			'columns'    => 4,   // Grid columns (2-6)
+			'size'       => 'thumbnail', // WordPress image size for preview
+			'add_text'   => __( 'Add Images', 'wp-flyout' ),
+			'empty_text' => __( 'No images added yet', 'wp-flyout' ),
+			'empty_icon' => 'format-gallery',
+			'multiple'   => true, // Allow multiple selection in media library
+			'class'      => '',
         ];
     }
 
@@ -121,11 +121,11 @@ class Gallery implements Renderable {
         ob_start();
         ?>
         <div id="<?php echo esc_attr( $this->config['id'] ); ?>"
-             class="<?php echo esc_attr( implode( ' ', $classes ) ); ?>"
-             data-name="<?php echo esc_attr( $this->config['name'] ); ?>"
-             data-max-images="<?php echo esc_attr( (string) $this->config['max_images'] ); ?>"
-             data-size="<?php echo esc_attr( $this->config['size'] ); ?>"
-             data-multiple="<?php echo esc_attr( $this->config['multiple'] ? 'true' : 'false' ); ?>">
+            class="<?php echo esc_attr( implode( ' ', $classes ) ); ?>"
+            data-name="<?php echo esc_attr( $this->config['name'] ); ?>"
+            data-max-images="<?php echo esc_attr( (string) $this->config['max_images'] ); ?>"
+            data-size="<?php echo esc_attr( $this->config['size'] ); ?>"
+            data-multiple="<?php echo esc_attr( $this->config['multiple'] ? 'true' : 'false' ); ?>">
 
             <div class="gallery-header">
                 <div class="gallery-title">
@@ -133,7 +133,7 @@ class Gallery implements Renderable {
                     <?php esc_html_e( 'Image Gallery', 'wp-flyout' ); ?>
                     <?php if ( $this->config['max_images'] > 0 ) : ?>
                         <span class="image-count">
-							(<span class="current-count"><?php echo count( $this->config['items'] ); ?></span>/<?php echo $this->config['max_images']; ?>)
+							(<span class="current-count"><?php echo absint( count( $this->config['items'] ) ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?></span>/<?php echo $this->config['max_images']; ?>)
 						</span>
                     <?php endif; ?>
                 </div>
@@ -190,7 +190,7 @@ class Gallery implements Renderable {
         }
         ?>
         <div class="gallery-item" data-index="<?php echo esc_attr( (string) $index ); ?>"
-             data-attachment-id="<?php echo esc_attr( (string) $attachment_id ); ?>">
+            data-attachment-id="<?php echo esc_attr( (string) $attachment_id ); ?>">
             <?php if ( $this->config['sortable'] ) : ?>
                 <div class="gallery-item-handle">
                     <span class="dashicons dashicons-move"></span>
@@ -199,8 +199,8 @@ class Gallery implements Renderable {
 
             <div class="gallery-item-preview">
                 <img src="<?php echo esc_url( $thumbnail ); ?>"
-                     alt="<?php echo esc_attr( $alt ); ?>"
-                     class="gallery-thumbnail">
+                    alt="<?php echo esc_attr( $alt ); ?>"
+                    class="gallery-thumbnail">
 
                 <div class="gallery-item-overlay">
                     <button type="button"
@@ -221,10 +221,9 @@ class Gallery implements Renderable {
 
             <!-- Only store the attachment ID -->
             <input type="hidden"
-                   name="<?php echo esc_attr( $this->config['name'] ); ?>[<?php echo $index; ?>]"
-                   value="<?php echo esc_attr( (string) $attachment_id ); ?>">
+                    name="<?php echo esc_attr( $this->config['name'] ); ?>[<?php echo esc_attr( $index ); ?>]"
+                    value="<?php echo esc_attr( (string) $attachment_id ); ?>">
         </div>
         <?php
     }
-
 }

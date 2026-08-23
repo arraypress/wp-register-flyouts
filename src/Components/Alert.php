@@ -31,10 +31,10 @@ class Alert implements Renderable {
      * @var array
      */
     private const ICONS = [
-            'success' => 'yes-alt',
-            'error'   => 'dismiss',
-            'warning' => 'warning',
-            'info'    => 'info-outline'
+		'success' => 'yes-alt',
+		'error'   => 'dismiss',
+		'warning' => 'warning',
+		'info'    => 'info-outline',
     ];
 
     /**
@@ -57,12 +57,12 @@ class Alert implements Renderable {
      */
     private static function get_defaults(): array {
         return [
-                'id'          => '',
-                'style'       => 'info',
-                'message'     => '',
-                'title'       => '',
-                'dismissible' => true,
-                'class'       => ''
+			'id'          => '',
+			'style'       => 'info',
+			'message'     => '',
+			'title'       => '',
+			'dismissible' => true,
+			'class'       => '',
         ];
     }
 
@@ -77,8 +77,8 @@ class Alert implements Renderable {
         }
 
         $classes = [
-                'wp-flyout-alert',
-                'alert-' . $this->config['style']
+			'wp-flyout-alert',
+			'alert-' . $this->config['style'],
         ];
 
         if ( $this->config['dismissible'] ) {
@@ -94,8 +94,8 @@ class Alert implements Renderable {
         ob_start();
         ?>
         <div id="<?php echo esc_attr( $this->config['id'] ); ?>"
-             class="<?php echo esc_attr( implode( ' ', $classes ) ); ?>"
-             role="alert">
+            class="<?php echo esc_attr( implode( ' ', $classes ) ); ?>"
+            role="alert">
 
             <div class="alert-content-wrapper">
                 <div class="alert-icon">
@@ -122,5 +122,4 @@ class Alert implements Renderable {
         <?php
         return ob_get_clean();
     }
-
 }

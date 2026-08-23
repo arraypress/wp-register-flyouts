@@ -15,6 +15,8 @@ declare( strict_types=1 );
 
 namespace ArrayPress\RegisterFlyouts;
 
+use ArrayPress\RegisterFlyouts\Utils\Runtime;
+
 use ArrayPress\Currencies\Currency;
 use DateTime;
 
@@ -44,7 +46,7 @@ class Sanitizer {
 
 		self::register_defaults();
 
-		self::$sanitizers = apply_filters( 'wp_flyout_sanitizers', self::$sanitizers );
+		self::$sanitizers = apply_filters( Runtime::hook( 'sanitizers' ), self::$sanitizers );
 
 		self::$initialized = true;
 	}
@@ -140,7 +142,7 @@ class Sanitizer {
 			? [ self::class, 'sanitize_array' ]
 			: 'sanitize_text_field';
 
-		$default_sanitizer = apply_filters( 'wp_flyout_default_sanitizer', $default_sanitizer, $value, $field_config );
+		$default_sanitizer = apply_filters( Runtime::hook( 'default_sanitizer' ), $default_sanitizer, $value, $field_config );
 
 		return call_user_func( $default_sanitizer, $value );
 	}
@@ -171,7 +173,7 @@ class Sanitizer {
 	public static function sanitize_form_data( array $raw_data, array $fields ): array {
 		self::ensure_initialized();
 
-		$raw_data = apply_filters( 'wp_flyout_before_sanitize', $raw_data, $fields );
+		$raw_data = apply_filters( Runtime::hook( 'before_sanitize' ), $raw_data, $fields );
 
 		$sanitized = [];
 
@@ -198,7 +200,7 @@ class Sanitizer {
 			}
 		}
 
-		return apply_filters( 'wp_flyout_after_sanitize', $sanitized, $raw_data, $fields );
+		return apply_filters( Runtime::hook( 'after_sanitize' ), $sanitized, $raw_data, $fields );
 	}
 
 	// =========================================================================
@@ -638,5 +640,4 @@ class Sanitizer {
 			self::init();
 		}
 	}
-
 }

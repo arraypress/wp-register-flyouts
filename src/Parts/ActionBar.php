@@ -33,10 +33,10 @@ class ActionBar implements Renderable {
      * @var array
      */
     private const DEFAULTS = [
-            'id'      => '',
-            'actions' => [],
-            'class'   => 'wp-flyout-actions',
-            'align'   => 'stretch' // stretch, left, right, center, space-between
+		'id'      => '',
+		'actions' => [],
+		'class'   => 'wp-flyout-actions',
+		'align'   => 'stretch', // stretch, left, right, center, space-between
     ];
 
     /**
@@ -65,13 +65,13 @@ class ActionBar implements Renderable {
      */
     private function process_action( array $action ): array {
         return wp_parse_args( $action, [
-                'type'    => 'button',
-                'text'    => '',
-                'style'   => 'secondary',
-                'icon'    => '',
-                'class'   => '',
-                'onclick' => '',
-                'attrs'   => []
+			'type'    => 'button',
+			'text'    => '',
+			'style'   => 'secondary',
+			'icon'    => '',
+			'class'   => '',
+			'onclick' => '',
+			'attrs'   => [],
         ] );
     }
 
@@ -93,7 +93,7 @@ class ActionBar implements Renderable {
         ob_start();
         ?>
         <div id="<?php echo esc_attr( $this->config['id'] ); ?>"
-             class="<?php echo esc_attr( implode( ' ', $classes ) ); ?>">
+            class="<?php echo esc_attr( implode( ' ', $classes ) ); ?>">
             <?php foreach ( $this->config['actions'] as $action ) : ?>
                 <?php $this->render_button( $action ); ?>
             <?php endforeach; ?>
@@ -116,8 +116,8 @@ class ActionBar implements Renderable {
         }
 
         $attrs = [
-                'type'  => $type === 'submit' ? 'submit' : 'button',
-                'class' => implode( ' ', $classes )
+			'type'  => $type === 'submit' ? 'submit' : 'button',
+			'class' => implode( ' ', $classes ),
         ];
 
         // Add custom attributes
@@ -130,7 +130,7 @@ class ActionBar implements Renderable {
             $attrs['onclick'] = $action['onclick'];
         }
         ?>
-        <button <?php echo $this->build_attributes( $attrs ); ?>>
+        <button <?php echo $this->build_attributes( $attrs ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>>
             <?php if ( ! empty( $action['icon'] ) ) : ?>
                 <span class="dashicons dashicons-<?php echo esc_attr( $action['icon'] ); ?>"></span>
             <?php endif; ?>
@@ -138,5 +138,4 @@ class ActionBar implements Renderable {
         </button>
         <?php
     }
-
 }

@@ -17,6 +17,8 @@ declare( strict_types=1 );
 
 namespace ArrayPress\RegisterFlyouts\Core;
 
+use ArrayPress\RegisterFlyouts\Utils\Runtime;
+
 /**
  * Class Flyout
  *
@@ -63,11 +65,11 @@ class Flyout {
      * }
      */
     private array $config = [
-            'title'    => '',
-            'subtitle' => '',      // Add subtitle support
-            'size'     => 'medium', // small, medium, large, full
-            'position' => 'right',  // right or left
-            'classes'  => [],
+		'title'    => '',
+		'subtitle' => '',      // Add subtitle support
+		'size'     => 'medium', // small, medium, large, full
+		'position' => 'right',  // right or left
+		'classes'  => [],
     ];
 
     /**
@@ -234,8 +236,8 @@ class Flyout {
      */
     public function add_tab( string $id, string $label, bool $active = false ): self {
         $this->tabs[ $id ] = [
-                'id'    => $id,
-                'label' => $label,
+			'id'    => $id,
+			'label' => $label,
         ];
 
         // Set as active if requested or if it's the first tab
@@ -352,15 +354,15 @@ class Flyout {
     /**
      * Add CSS class to flyout
      *
-     * @param string $class CSS class name to add
+     * @param string $class_name CSS class name to add
      *
      * @return self Returns instance for method chaining
      * @since 1.0.0
      *
      */
-    public function add_class( string $class ): self {
-        if ( ! in_array( $class, $this->config['classes'], true ) ) {
-            $this->config['classes'][] = $class;
+    public function add_class( string $class_name ): self {
+        if ( ! in_array( $class_name, $this->config['classes'], true ) ) {
+            $this->config['classes'][] = $class_name;
         }
 
         return $this;
@@ -399,26 +401,26 @@ class Flyout {
      */
     public function render(): string {
         $classes = [
-                'wp-flyout',
-                'wp-flyout-' . $this->config['size'],  // Changed from 'width' to 'size'
-                'wp-flyout-' . $this->config['position'],
-                ...$this->config['classes']
+			'wp-flyout',
+			'wp-flyout-' . $this->config['size'],  // Changed from 'width' to 'size'
+			'wp-flyout-' . $this->config['position'],
+			...$this->config['classes'],
         ];
 
         // Allow filtering classes
-        $classes = apply_filters( 'wp_flyout_classes', $classes, $this->id, $this->config );
+        $classes = apply_filters( Runtime::hook( 'classes' ), $classes, $this->id, $this->config );
 
         ob_start();
         ?>
         <div id="<?php echo esc_attr( $this->id ); ?>"
-             class="<?php echo esc_attr( implode( ' ', array_filter( $classes ) ) ); ?>"
-             data-flyout-id="<?php echo esc_attr( $this->id ); ?>">
+            class="<?php echo esc_attr( implode( ' ', array_filter( $classes ) ) ); ?>"
+            data-flyout-id="<?php echo esc_attr( $this->id ); ?>">
 
-            <?php do_action( 'wp_flyout_before_header', $this->id, $this->config ); ?>
+            <?php do_action( Runtime::hook( 'before_header' ), $this->id, $this->config ); ?>
 
             <?php $this->render_header(); ?>
 
-            <?php do_action( 'wp_flyout_after_header', $this->id, $this->config ); ?>
+            <?php do_action( Runtime::hook( 'after_header' ), $this->id, $this->config ); ?>
 
             <?php if ( $this->has_tabs() ) : ?>
                 <?php $this->render_tabs(); ?>
@@ -475,10 +477,10 @@ class Flyout {
                     }
                     ?>
                     <a href="#tab-<?php echo esc_attr( $tab['id'] ); ?>"
-                       class="<?php echo esc_attr( implode( ' ', $classes ) ); ?>"
-                       role="tab"
-                       data-tab="<?php echo esc_attr( $tab['id'] ); ?>"
-                       aria-selected="<?php echo $is_active ? 'true' : 'false'; ?>">
+                        class="<?php echo esc_attr( implode( ' ', $classes ) ); ?>"
+                        role="tab"
+                        data-tab="<?php echo esc_attr( $tab['id'] ); ?>"
+                        aria-selected="<?php echo $is_active ? 'true' : 'false'; ?>">
                         <?php echo esc_html( $tab['label'] ); ?>
                     </a>
                 <?php endforeach; ?>
@@ -530,8 +532,8 @@ class Flyout {
             }
             ?>
             <div id="tab-<?php echo esc_attr( $tab['id'] ); ?>"
-                 class="<?php echo esc_attr( implode( ' ', $classes ) ); ?>"
-                 role="tabpanel">
+                class="<?php echo esc_attr( implode( ' ', $classes ) ); ?>"
+                role="tabpanel">
                 <?php echo $this->content[ $tab['id'] ] ?? ''; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
             </div>
             <?php
@@ -549,5 +551,4 @@ class Flyout {
     private function render_single_content(): void {
         echo $this->content['main'] ?? ''; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
     }
-
 }

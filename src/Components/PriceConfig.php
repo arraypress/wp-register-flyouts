@@ -34,10 +34,10 @@ class PriceConfig implements Renderable {
      * @var array<string, string>
      */
     private const INTERVALS = [
-            'day'   => 'Day(s)',
-            'week'  => 'Week(s)',
-            'month' => 'Month(s)',
-            'year'  => 'Year(s)',
+		'day'   => 'Day(s)',
+		'week'  => 'Week(s)',
+		'month' => 'Month(s)',
+		'year'  => 'Year(s)',
     ];
 
     /**
@@ -46,12 +46,30 @@ class PriceConfig implements Renderable {
      * @var array<string, array{count: int, interval: string}>
      */
     private const BILLING_PRESETS = [
-            'daily'      => [ 'count' => 1, 'interval' => 'day' ],
-            'weekly'     => [ 'count' => 1, 'interval' => 'week' ],
-            'monthly'    => [ 'count' => 1, 'interval' => 'month' ],
-            'quarterly'  => [ 'count' => 3, 'interval' => 'month' ],
-            'semiannual' => [ 'count' => 6, 'interval' => 'month' ],
-            'yearly'     => [ 'count' => 1, 'interval' => 'year' ],
+		'daily'      => [
+			'count' => 1,
+			'interval' => 'day',
+		],
+		'weekly'     => [
+			'count' => 1,
+			'interval' => 'week',
+		],
+		'monthly'    => [
+			'count' => 1,
+			'interval' => 'month',
+		],
+		'quarterly'  => [
+			'count' => 3,
+			'interval' => 'month',
+		],
+		'semiannual' => [
+			'count' => 6,
+			'interval' => 'month',
+		],
+		'yearly'     => [
+			'count' => 1,
+			'interval' => 'year',
+		],
     ];
 
     /**
@@ -60,13 +78,13 @@ class PriceConfig implements Renderable {
      * @var array<string, string>
      */
     private const BILLING_PRESET_LABELS = [
-            'daily'      => 'Daily',
-            'weekly'     => 'Weekly',
-            'monthly'    => 'Monthly',
-            'quarterly'  => 'Every 3 months',
-            'semiannual' => 'Every 6 months',
-            'yearly'     => 'Yearly',
-            'custom'     => 'Custom',
+		'daily'      => 'Daily',
+		'weekly'     => 'Weekly',
+		'monthly'    => 'Monthly',
+		'quarterly'  => 'Every 3 months',
+		'semiannual' => 'Every 6 months',
+		'yearly'     => 'Yearly',
+		'custom'     => 'Custom',
     ];
 
     /**
@@ -76,17 +94,17 @@ class PriceConfig implements Renderable {
      */
     public function __construct( array $config = [] ) {
         $this->config = wp_parse_args( $config, [
-                'name'                     => 'price',
-                'amount'                   => 0,
-                'compare_at_amount'        => 0,
-                'currency'                 => 'USD',
-                'show_currency'            => false,
-                'recurring_interval'       => null,
-                'recurring_interval_count' => 1,
-                'currencies'               => [],
-                'label'                    => 'Pricing',
-                'description'              => '',
-                'class'                    => '',
+			'name'                     => 'price',
+			'amount'                   => 0,
+			'compare_at_amount'        => 0,
+			'currency'                 => 'USD',
+			'show_currency'            => false,
+			'recurring_interval'       => null,
+			'recurring_interval_count' => 1,
+			'currencies'               => [],
+			'label'                    => 'Pricing',
+			'description'              => '',
+			'class'                    => '',
         ] );
 
         // Load currencies
@@ -166,23 +184,23 @@ class PriceConfig implements Renderable {
             <?php endif; ?>
 
             <div class="<?php echo esc_attr( $classes ); ?>"
-                 data-name="<?php echo $name; ?>">
+                data-name="<?php echo esc_attr( $name ); ?>">
 
                 <?php // ---- Price Type Toggle ---- ?>
                 <div class="price-config-type">
                     <label class="price-config-type-option <?php echo ! $is_recurring ? 'is-active' : ''; ?>">
                         <input type="radio"
-                               name="<?php echo $name; ?>_type"
-                               value="one_time"
-                               class="price-config-type-input"
+                                name="<?php echo esc_attr( $name ); ?>_type"
+                                value="one_time"
+                                class="price-config-type-input"
                                 <?php checked( ! $is_recurring ); ?>>
                         <span class="price-config-type-label">One off</span>
                     </label>
                     <label class="price-config-type-option <?php echo $is_recurring ? 'is-active' : ''; ?>">
                         <input type="radio"
-                               name="<?php echo $name; ?>_type"
-                               value="recurring"
-                               class="price-config-type-input"
+                                name="<?php echo esc_attr( $name ); ?>_type"
+                                value="recurring"
+                                class="price-config-type-input"
                                 <?php checked( $is_recurring ); ?>>
                         <span class="price-config-type-label">Recurring</span>
                     </label>
@@ -191,30 +209,30 @@ class PriceConfig implements Renderable {
                 <?php // ---- Amount + Compare At + Currency ---- ?>
                 <div class="price-config-amount-row">
                     <div class="price-config-amount">
-                        <label for="<?php echo $name; ?>_amount">Amount</label>
+                        <label for="<?php echo esc_attr( $name ); ?>_amount">Amount</label>
                         <input type="text"
-                               id="<?php echo $name; ?>_amount"
-                               name="<?php echo $name; ?>[amount]"
-                               value="<?php echo esc_attr( $display_amount ); ?>"
-                               placeholder="0.00"
-                               inputmode="decimal"
-                               autocomplete="off">
+                                id="<?php echo esc_attr( $name ); ?>_amount"
+                                name="<?php echo esc_attr( $name ); ?>[amount]"
+                                value="<?php echo esc_attr( $display_amount ); ?>"
+                                placeholder="0.00"
+                                inputmode="decimal"
+                                autocomplete="off">
                     </div>
                     <div class="price-config-compare-at">
-                        <label for="<?php echo $name; ?>_compare_at">Compare at</label>
+                        <label for="<?php echo esc_attr( $name ); ?>_compare_at">Compare at</label>
                         <input type="text"
-                               id="<?php echo $name; ?>_compare_at"
-                               name="<?php echo $name; ?>[compare_at_amount]"
-                               value="<?php echo esc_attr( $display_compare_at ); ?>"
-                               placeholder="0.00"
-                               inputmode="decimal"
-                               autocomplete="off">
+                                id="<?php echo esc_attr( $name ); ?>_compare_at"
+                                name="<?php echo esc_attr( $name ); ?>[compare_at_amount]"
+                                value="<?php echo esc_attr( $display_compare_at ); ?>"
+                                placeholder="0.00"
+                                inputmode="decimal"
+                                autocomplete="off">
                     </div>
                     <?php if ( $this->config['show_currency'] ) : ?>
                         <div class="price-config-currency">
-                            <label for="<?php echo $name; ?>_currency">Currency</label>
-                            <select id="<?php echo $name; ?>_currency"
-                                    name="<?php echo $name; ?>[currency]">
+                            <label for="<?php echo esc_attr( $name ); ?>_currency">Currency</label>
+                            <select id="<?php echo esc_attr( $name ); ?>_currency"
+                                    name="<?php echo esc_attr( $name ); ?>[currency]">
                                 <?php foreach ( $this->config['currencies'] as $code => $label ) : ?>
                                     <option value="<?php echo esc_attr( $code ); ?>"
                                             <?php selected( $currency, $code ); ?>>
@@ -224,8 +242,8 @@ class PriceConfig implements Renderable {
                             </select>
                         </div>
                     <?php else : ?>
-                        <input type="hidden" name="<?php echo $name; ?>[currency]"
-                               value="<?php echo esc_attr( $currency ); ?>">
+                        <input type="hidden" name="<?php echo esc_attr( $name ); ?>[currency]"
+                                value="<?php echo esc_attr( $currency ); ?>">
                     <?php endif; ?>
                 </div>
 
@@ -233,7 +251,7 @@ class PriceConfig implements Renderable {
                 <div class="price-config-interval" style="<?php echo $is_recurring ? '' : 'display:none;'; ?>">
                     <label>Billing period</label>
 
-                    <select name="<?php echo $name; ?>_billing_preset"
+                    <select name="<?php echo esc_attr( $name ); ?>_billing_preset"
                             class="price-config-preset-select">
                         <?php foreach ( self::BILLING_PRESET_LABELS as $key => $label ) : ?>
                             <option value="<?php echo esc_attr( $key ); ?>"
@@ -246,12 +264,12 @@ class PriceConfig implements Renderable {
                     <div class="price-config-interval-row" style="<?php echo $is_custom ? '' : 'display:none;'; ?>">
                         <span class="price-config-interval-prefix">Every</span>
                         <input type="number"
-                               name="<?php echo $name; ?>[recurring_interval_count]"
-                               value="<?php echo esc_attr( (string) $count ); ?>"
-                               min="1"
-                               max="365"
-                               class="price-config-interval-count">
-                        <select name="<?php echo $name; ?>[recurring_interval]"
+                                name="<?php echo esc_attr( $name ); ?>[recurring_interval_count]"
+                                value="<?php echo esc_attr( (string) $count ); ?>"
+                                min="1"
+                                max="365"
+                                class="price-config-interval-count">
+                        <select name="<?php echo esc_attr( $name ); ?>[recurring_interval]"
                                 class="price-config-interval-select">
                             <?php foreach ( self::INTERVALS as $value => $label ) : ?>
                                 <option value="<?php echo esc_attr( $value ); ?>"
@@ -272,5 +290,4 @@ class PriceConfig implements Renderable {
         <?php
         return ob_get_clean();
     }
-
 }

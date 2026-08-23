@@ -68,10 +68,10 @@ class Timeline implements Renderable {
      */
     private static function get_defaults(): array {
         return [
-                'id'      => '',
-                'items'   => [],  // Changed from 'events' to 'items'
-                'compact' => false,
-                'class'   => ''
+			'id'      => '',
+			'items'   => [],  // Changed from 'events' to 'items'
+			'compact' => false,
+			'class'   => '',
         ];
     }
 
@@ -98,13 +98,13 @@ class Timeline implements Renderable {
         ob_start();
         ?>
         <div id="<?php echo esc_attr( $this->config['id'] ); ?>"
-             class="<?php echo esc_attr( implode( ' ', $classes ) ); ?>">
+            class="<?php echo esc_attr( implode( ' ', $classes ) ); ?>">
             <?php
             $total = count( $this->config['items'] );
             $index = 0;
             foreach ( $this->config['items'] as $item ) :
                 $this->render_item( $item, $index, $total );
-                $index++;
+                ++$index;
             endforeach;
             ?>
         </div>
@@ -136,8 +136,8 @@ class Timeline implements Renderable {
         }
 
         $classes = [
-                'timeline-item',
-                'timeline-item-' . sanitize_html_class( $type )
+			'timeline-item',
+			'timeline-item-' . sanitize_html_class( $type ),
         ];
 
         // Mark last item for CSS
@@ -163,5 +163,4 @@ class Timeline implements Renderable {
         </div>
         <?php
     }
-
 }

@@ -46,11 +46,11 @@ class ActionButtons implements Renderable {
      */
     private static function get_defaults(): array {
         return [
-                'id'      => '',
-                'buttons' => [],
-                'layout'  => 'inline', // inline, stacked, grid
-                'align'   => 'left',   // left, center, right, justify
-                'class'   => ''
+			'id'      => '',
+			'buttons' => [],
+			'layout'  => 'inline', // inline, stacked, grid
+			'align'   => 'left',   // left, center, right, justify
+			'class'   => '',
         ];
     }
 
@@ -65,9 +65,9 @@ class ActionButtons implements Renderable {
         }
 
         $classes = [
-                'wp-flyout-action-buttons',
-                'layout-' . $this->config['layout'],
-                'align-' . $this->config['align']
+			'wp-flyout-action-buttons',
+			'layout-' . $this->config['layout'],
+			'align-' . $this->config['align'],
         ];
 
         if ( ! empty( $this->config['class'] ) ) {
@@ -77,7 +77,7 @@ class ActionButtons implements Renderable {
         ob_start();
         ?>
         <div id="<?php echo esc_attr( $this->config['id'] ); ?>"
-             class="<?php echo esc_attr( implode( ' ', $classes ) ); ?>">
+            class="<?php echo esc_attr( implode( ' ', $classes ) ); ?>">
             <?php foreach ( $this->config['buttons'] as $button ) : ?>
                 <?php $this->render_button( $button ); ?>
             <?php endforeach; ?>
@@ -93,13 +93,13 @@ class ActionButtons implements Renderable {
      */
     private function render_button( array $button ): void {
         $defaults = [
-                'text'    => '',
-                'action'  => '',
-                'style'   => 'secondary', // primary, secondary, link, danger
-                'icon'    => '',
-                'data'    => [],
-                'confirm' => '',
-                'enabled' => true,
+			'text'    => '',
+			'action'  => '',
+			'style'   => 'secondary', // primary, secondary, link, danger
+			'icon'    => '',
+			'data'    => [],
+			'confirm' => '',
+			'enabled' => true,
         ];
 
         $button = wp_parse_args( $button, $defaults );
@@ -109,14 +109,14 @@ class ActionButtons implements Renderable {
         }
 
         $classes = [
-                'button',
-                'button-' . $button['style'],
-                'wp-flyout-action-btn'
+			'button',
+			'button-' . $button['style'],
+			'wp-flyout-action-btn',
         ];
 
         // Build data attributes — no per-button nonce, REST nonce is global.
         $data_attrs = [
-                'action' => $button['action'],
+			'action' => $button['action'],
         ];
 
         if ( ! empty( $button['confirm'] ) ) {
@@ -144,5 +144,4 @@ class ActionButtons implements Renderable {
         </button>
         <?php
     }
-
 }

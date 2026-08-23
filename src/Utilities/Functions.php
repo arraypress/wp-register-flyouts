@@ -72,6 +72,8 @@ if ( ! function_exists( 'render_flyout_button' ) ) {
 	 * @return void
 	 */
 	function render_flyout_button( string $id, array $args = [] ): void {
+		// Returns markup this library assembled and escaped as it built it.
+		// phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
 		echo get_flyout_button( $id, $args );
 	}
 }
@@ -115,6 +117,8 @@ if ( ! function_exists( 'render_flyout_link' ) ) {
 	 * @return void
 	 */
 	function render_flyout_link( string $id, array $args = [] ): void {
+		// Returns markup this library assembled and escaped as it built it.
+		// phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
 		echo get_flyout_link( $id, $args );
 	}
 }

@@ -67,11 +67,11 @@ class Accordion implements Renderable {
      */
     private static function get_defaults(): array {
         return [
-                'id'           => '',
-                'items'        => [],
-                'multiple'     => false,  // Allow multiple sections open
-                'default_open' => null,   // Index or array of indices
-                'class'        => ''
+			'id'           => '',
+			'items'        => [],
+			'multiple'     => false,  // Allow multiple sections open
+			'default_open' => null,   // Index or array of indices
+			'class'        => '',
         ];
     }
 
@@ -95,8 +95,8 @@ class Accordion implements Renderable {
         ob_start();
         ?>
         <div id="<?php echo esc_attr( $this->config['id'] ); ?>"
-             class="<?php echo esc_attr( implode( ' ', $classes ) ); ?>"
-             data-allow-multiple="<?php echo $this->config['multiple'] ? 'true' : 'false'; ?>">
+            class="<?php echo esc_attr( implode( ' ', $classes ) ); ?>"
+            data-allow-multiple="<?php echo $this->config['multiple'] ? 'true' : 'false'; ?>">
             <?php foreach ( $this->config['items'] as $index => $item ) : ?>
                 <?php $this->render_item( $item, $index ); ?>
             <?php endforeach; ?>
@@ -135,8 +135,8 @@ class Accordion implements Renderable {
         // Check if this item should be open by default
         $is_open = false;
         if ( $this->config['default_open'] === $index ||
-             ( is_array( $this->config['default_open'] ) &&
-               in_array( $index, $this->config['default_open'], true ) ) ) {
+            ( is_array( $this->config['default_open'] ) &&
+                in_array( $index, $this->config['default_open'], true ) ) ) {
             $is_open = true;
         }
 
@@ -165,5 +165,4 @@ class Accordion implements Renderable {
         </div>
         <?php
     }
-
 }

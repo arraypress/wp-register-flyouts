@@ -39,5 +39,4 @@ interface Renderable {
 	 * @return string Generated HTML output
 	 */
 	public function render(): string;
-
 }

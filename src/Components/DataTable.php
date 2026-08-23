@@ -47,12 +47,12 @@ class DataTable implements Renderable {
      */
     private static function get_defaults(): array {
         return [
-                'id'          => '',
-                'class'       => '',
-                'columns'     => [],
-                'data'        => [],
-                'empty_text'  => __( 'No data found.', 'wp-flyout' ),
-                'empty_value' => '—'
+			'id'          => '',
+			'class'       => '',
+			'columns'     => [],
+			'data'        => [],
+			'empty_text'  => __( 'No data found.', 'wp-flyout' ),
+			'empty_value' => '—',
         ];
     }
 
@@ -75,7 +75,7 @@ class DataTable implements Renderable {
         ?>
         <div class="datatable-wrapper">
             <table id="<?php echo esc_attr( $this->config['id'] ); ?>"
-                   class="<?php echo esc_attr( implode( ' ', $classes ) ); ?>">
+                    class="<?php echo esc_attr( implode( ' ', $classes ) ); ?>">
 
                 <thead>
                 <tr>
@@ -127,7 +127,7 @@ class DataTable implements Renderable {
             $attrs[] = 'style="width: ' . esc_attr( $width ) . '"';
         }
         ?>
-        <th <?php echo implode( ' ', $attrs ); ?>>
+        <th <?php echo implode( ' ', $attrs ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>>
             <?php echo esc_html( $label ); ?>
         </th>
         <?php
@@ -154,9 +154,8 @@ class DataTable implements Renderable {
         }
         ?>
         <td <?php echo $class ? 'class="' . esc_attr( $class ) . '"' : ''; ?>>
-            <?php echo $value; ?>
+            <?php echo esc_attr( $value ); ?>
         </td>
         <?php
     }
-
 }

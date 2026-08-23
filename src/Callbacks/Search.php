@@ -131,5 +131,4 @@ class Search {
 			return $results;
 		};
 	}
-
 }

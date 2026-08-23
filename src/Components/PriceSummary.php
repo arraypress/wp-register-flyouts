@@ -46,15 +46,15 @@ class PriceSummary implements Renderable {
      */
     private static function get_defaults(): array {
         return [
-                'id'       => '',
-                'items'    => [],
-                'subtotal' => null,
-                'discount' => null,
-                'tax'      => null,
-                'total'    => 0,
-                'refunded' => null,
-                'currency' => 'USD',
-                'class'    => '',
+			'id'       => '',
+			'items'    => [],
+			'subtotal' => null,
+			'discount' => null,
+			'tax'      => null,
+			'total'    => 0,
+			'refunded' => null,
+			'currency' => 'USD',
+			'class'    => '',
         ];
     }
 
@@ -72,7 +72,7 @@ class PriceSummary implements Renderable {
         ob_start();
         ?>
         <div id="<?php echo esc_attr( $this->config['id'] ); ?>"
-             class="<?php echo esc_attr( implode( ' ', $classes ) ); ?>">
+            class="<?php echo esc_attr( implode( ' ', $classes ) ); ?>">
 
             <table class="price-summary-table">
                 <?php if ( ! empty( $this->config['items'] ) ) : ?>
@@ -126,8 +126,8 @@ class PriceSummary implements Renderable {
      */
     private function has_summary_lines(): bool {
         return $this->config['subtotal'] !== null ||
-               $this->config['discount'] !== null ||
-               $this->config['tax'] !== null;
+                $this->config['discount'] !== null ||
+                $this->config['tax'] !== null;
     }
 
     /**
@@ -177,9 +177,9 @@ class PriceSummary implements Renderable {
      */
     private function render_summary_lines(): void {
         $lines = [
-                'subtotal' => __( 'Subtotal', 'wp-flyout' ),
-                'discount' => __( 'Discount', 'wp-flyout' ),
-                'tax'      => __( 'Tax', 'wp-flyout' ),
+			'subtotal' => __( 'Subtotal', 'wp-flyout' ),
+			'discount' => __( 'Discount', 'wp-flyout' ),
+			'tax'      => __( 'Tax', 'wp-flyout' ),
         ];
 
         foreach ( $lines as $key => $label ) {
@@ -204,5 +204,4 @@ class PriceSummary implements Renderable {
             <?php
         }
     }
-
 }

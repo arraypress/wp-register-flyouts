@@ -59,16 +59,16 @@ class FeatureList implements Renderable {
      */
     private static function get_defaults(): array {
         return [
-                'id'          => '',
-                'name'        => 'features',
-                'items'       => [],
-                'label'       => __( 'Features', 'wp-flyout' ),
-                'add_text'    => __( 'Add item', 'wp-flyout' ),
-                'empty_text'  => __( 'No items added yet', 'wp-flyout' ),
-                'placeholder' => __( 'Enter item', 'wp-flyout' ),
-                'max_items'   => 0, // 0 = unlimited
-                'sortable'    => true,
-                'class'       => ''
+			'id'          => '',
+			'name'        => 'features',
+			'items'       => [],
+			'label'       => __( 'Features', 'wp-flyout' ),
+			'add_text'    => __( 'Add item', 'wp-flyout' ),
+			'empty_text'  => __( 'No items added yet', 'wp-flyout' ),
+			'placeholder' => __( 'Enter item', 'wp-flyout' ),
+			'max_items'   => 0, // 0 = unlimited
+			'sortable'    => true,
+			'class'       => '',
         ];
     }
 
@@ -91,11 +91,11 @@ class FeatureList implements Renderable {
         ob_start();
         ?>
         <div id="<?php echo esc_attr( $this->config['id'] ); ?>"
-             class="<?php echo esc_attr( implode( ' ', $classes ) ); ?>"
-             data-name="<?php echo esc_attr( $this->config['name'] ); ?>"
-             data-max-items="<?php echo esc_attr( (string) $this->config['max_items'] ); ?>"
-             data-placeholder="<?php echo esc_attr( $this->config['placeholder'] ); ?>"
-             data-sortable="<?php echo esc_attr( $this->config['sortable'] ? 'true' : 'false' ); ?>">
+            class="<?php echo esc_attr( implode( ' ', $classes ) ); ?>"
+            data-name="<?php echo esc_attr( $this->config['name'] ); ?>"
+            data-max-items="<?php echo esc_attr( (string) $this->config['max_items'] ); ?>"
+            data-placeholder="<?php echo esc_attr( $this->config['placeholder'] ); ?>"
+            data-sortable="<?php echo esc_attr( $this->config['sortable'] ? 'true' : 'false' ); ?>">
 
             <?php if ( ! empty( $this->config['label'] ) ) : ?>
                 <div class="feature-list-header">
@@ -158,10 +158,10 @@ class FeatureList implements Renderable {
             <?php endif; ?>
 
             <input type="text"
-                   name="<?php echo esc_attr( $this->config['name'] ); ?>[]"
-                   value="<?php echo esc_attr( $value ); ?>"
-                   placeholder="<?php echo esc_attr( $this->config['placeholder'] ); ?>"
-                   class="feature-list-input">
+                    name="<?php echo esc_attr( $this->config['name'] ); ?>[]"
+                    value="<?php echo esc_attr( $value ); ?>"
+                    placeholder="<?php echo esc_attr( $this->config['placeholder'] ); ?>"
+                    class="feature-list-input">
 
             <button type="button"
                     class="feature-list-remove"
@@ -171,5 +171,4 @@ class FeatureList implements Renderable {
         </div>
         <?php
     }
-
 }

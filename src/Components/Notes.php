@@ -49,17 +49,17 @@ class Notes implements Renderable {
      */
     private static function get_defaults(): array {
         return [
-                'id'            => '',
-                'name'          => 'notes',
-                'label'         => '',
-                'items'         => [],
-                'editable'      => true,
-                'placeholder'   => __( 'Add a note... (Shift+Enter to submit)', 'arraypress' ),
-                'empty_text'    => __( 'No notes yet.', 'arraypress' ),
-                'object_type'   => '',
-                'add_action'    => 'add',
-                'delete_action' => 'delete',
-                'class'         => ''
+			'id'            => '',
+			'name'          => 'notes',
+			'label'         => '',
+			'items'         => [],
+			'editable'      => true,
+			'placeholder'   => __( 'Add a note... (Shift+Enter to submit)', 'arraypress' ),
+			'empty_text'    => __( 'No notes yet.', 'arraypress' ),
+			'object_type'   => '',
+			'add_action'    => 'add',
+			'delete_action' => 'delete',
+			'class'         => '',
         ];
     }
 
@@ -82,11 +82,11 @@ class Notes implements Renderable {
             <?php endif; ?>
 
             <div id="<?php echo esc_attr( $this->config['id'] ); ?>"
-                 class="<?php echo esc_attr( implode( ' ', $classes ) ); ?>"
-                 data-name="<?php echo esc_attr( $this->config['name'] ); ?>"
-                 data-object-type="<?php echo esc_attr( $this->config['object_type'] ); ?>"
-                 data-add-action="<?php echo esc_attr( $this->config['add_action'] ); ?>"
-                 data-delete-action="<?php echo esc_attr( $this->config['delete_action'] ); ?>">
+                class="<?php echo esc_attr( implode( ' ', $classes ) ); ?>"
+                data-name="<?php echo esc_attr( $this->config['name'] ); ?>"
+                data-object-type="<?php echo esc_attr( $this->config['object_type'] ); ?>"
+                data-add-action="<?php echo esc_attr( $this->config['add_action'] ); ?>"
+                data-delete-action="<?php echo esc_attr( $this->config['delete_action'] ); ?>">
 
                 <div class="notes-list">
                     <?php if ( empty( $this->config['items'] ) ) : ?>
@@ -101,7 +101,7 @@ class Notes implements Renderable {
                 <?php if ( $this->config['editable'] && $this->config['add_action'] ) : ?>
                     <div class="note-add-form">
                     <textarea placeholder="<?php echo esc_attr( $this->config['placeholder'] ); ?>"
-                              rows="3"></textarea>
+                                rows="3"></textarea>
                         <p>
                             <button type="button" class="button button-primary" data-action="add-note">
                                 Add Note
@@ -144,5 +144,4 @@ class Notes implements Renderable {
         </div>
         <?php
     }
-
 }

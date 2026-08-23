@@ -14,6 +14,8 @@ declare( strict_types=1 );
 
 namespace ArrayPress\RegisterFlyouts;
 
+use ArrayPress\RegisterFlyouts\Utils\Runtime;
+
 use WP_Error;
 use WP_REST_Request;
 use WP_REST_Response;
@@ -32,7 +34,9 @@ class RestApi {
 	 *
 	 * @var string
 	 */
-	const NAMESPACE = 'wp-flyout/v1';
+	public static function rest_namespace(): string {
+		return Runtime::rest_namespace();
+	}
 
 	/**
 	 * Whether routes have been registered.
@@ -64,7 +68,7 @@ class RestApi {
 	public static function register_routes(): void {
 
 		// Load flyout HTML.
-		register_rest_route( self::NAMESPACE, '/load', [
+		register_rest_route( self::rest_namespace(), '/load', [
 			'methods'             => 'POST',
 			'callback'            => [ __CLASS__, 'handle_load' ],
 			'permission_callback' => [ __CLASS__, 'check_permission' ],
@@ -72,7 +76,7 @@ class RestApi {
 		] );
 
 		// Save flyout form data.
-		register_rest_route( self::NAMESPACE, '/save', [
+		register_rest_route( self::rest_namespace(), '/save', [
 			'methods'             => 'POST',
 			'callback'            => [ __CLASS__, 'handle_save' ],
 			'permission_callback' => [ __CLASS__, 'check_permission' ],
@@ -85,7 +89,7 @@ class RestApi {
 		] );
 
 		// Delete record.
-		register_rest_route( self::NAMESPACE, '/delete', [
+		register_rest_route( self::rest_namespace(), '/delete', [
 			'methods'             => 'POST',
 			'callback'            => [ __CLASS__, 'handle_delete' ],
 			'permission_callback' => [ __CLASS__, 'check_permission' ],
@@ -93,7 +97,7 @@ class RestApi {
 		] );
 
 		// Search for ajax_select fields.
-		register_rest_route( self::NAMESPACE, '/search', [
+		register_rest_route( self::rest_namespace(), '/search', [
 			'methods'             => 'GET',
 			'callback'            => [ __CLASS__, 'handle_search' ],
 			'permission_callback' => [ __CLASS__, 'check_permission' ],
@@ -117,7 +121,7 @@ class RestApi {
 		] );
 
 		// Action button/menu callbacks.
-		register_rest_route( self::NAMESPACE, '/action', [
+		register_rest_route( self::rest_namespace(), '/action', [
 			'methods'             => 'POST',
 			'callback'            => [ __CLASS__, 'handle_action' ],
 			'permission_callback' => [ __CLASS__, 'check_permission' ],
@@ -188,7 +192,7 @@ class RestApi {
 		 * @param string          $flyout_id      The flyout identifier.
 		 * @param WP_REST_Request $request        Full request object.
 		 */
-		$capability = apply_filters( 'wp_flyout_rest_capability', $capability, $manager_prefix, $flyout_id, $request );
+		$capability = apply_filters( Runtime::hook( 'rest_capability' ), $capability, $manager_prefix, $flyout_id, $request );
 
 		if ( ! current_user_can( $capability ) ) {
 			return new WP_Error(
@@ -219,6 +223,7 @@ class RestApi {
 		if ( ! $manager ) {
 			return new WP_Error(
 				'flyout_manager_not_found',
+				/* translators: %s: flyout manager prefix */
 				sprintf( __( 'Flyout manager "%s" not found.', 'arraypress' ), $prefix ),
 				[ 'status' => 404 ]
 			);
@@ -242,6 +247,7 @@ class RestApi {
 		if ( ! $config ) {
 			return new WP_Error(
 				'flyout_not_found',
+				/* translators: %s: flyout id */
 				sprintf( __( 'Flyout "%s" not found.', 'arraypress' ), $flyout_id ),
 				[ 'status' => 404 ]
 			);
@@ -338,7 +344,7 @@ class RestApi {
 		$normalized_fields = $manager->normalize_fields( $config['fields'] );
 		$sanitized         = Sanitizer::sanitize_form_data( $form_data, $normalized_fields );
 
-		$sanitized = apply_filters( 'wp_flyout_before_save', $sanitized, $config, $manager->get_prefix() );
+		$sanitized = apply_filters( Runtime::hook( 'before_save' ), $sanitized, $config, $manager->get_prefix() );
 
 		// Run validation callback if provided.
 		if ( ! empty( $config['validate'] ) && is_callable( $config['validate'] ) ) {
@@ -362,7 +368,7 @@ class RestApi {
 
 		$result = call_user_func( $config['save'], $id, $sanitized );
 
-		do_action( 'wp_flyout_after_save', $result, $id, $sanitized, $config, $manager->get_prefix() );
+		do_action( Runtime::hook( 'after_save' ), $result, $id, $sanitized, $config, $manager->get_prefix() );
 
 		if ( is_wp_error( $result ) ) {
 			return $result;
@@ -410,11 +416,11 @@ class RestApi {
 
 		$item_id = $request->get_param( 'item_id' );
 
-		$item_id = apply_filters( 'wp_flyout_before_delete', $item_id, $config, $manager->get_prefix() );
+		$item_id = apply_filters( Runtime::hook( 'before_delete' ), $item_id, $config, $manager->get_prefix() );
 
 		$result = call_user_func( $config['delete'], $item_id );
 
-		do_action( 'wp_flyout_after_delete', $result, $item_id, $config, $manager->get_prefix() );
+		do_action( Runtime::hook( 'after_delete' ), $result, $item_id, $config, $manager->get_prefix() );
 
 		if ( is_wp_error( $result ) ) {
 			return $result;
@@ -465,6 +471,7 @@ class RestApi {
 		if ( ! $field ) {
 			return new WP_Error(
 				'flyout_field_not_found',
+				/* translators: %s: field key */
 				sprintf( __( 'Field "%s" not found.', 'arraypress' ), $field_key ),
 				[ 'status' => 404 ]
 			);
@@ -476,6 +483,7 @@ class RestApi {
 		if ( empty( $field['callback'] ) || ! is_callable( $field['callback'] ) ) {
 			return new WP_Error(
 				'flyout_search_no_callback',
+				/* translators: %s: field key */
 				sprintf( __( 'No search callback defined for field "%s".', 'arraypress' ), $field_key ),
 				[ 'status' => 500 ]
 			);
@@ -538,6 +546,7 @@ class RestApi {
 		if ( ! $callback ) {
 			return new WP_Error(
 				'flyout_action_not_found',
+				/* translators: %s: action key */
 				sprintf( __( 'Action "%s" not found.', 'arraypress' ), $action_key ),
 				[ 'status' => 404 ]
 			);
@@ -686,5 +695,4 @@ class RestApi {
 
 		return null;
 	}
-
 }

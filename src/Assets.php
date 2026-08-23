@@ -16,6 +16,8 @@ declare( strict_types=1 );
 
 namespace ArrayPress\RegisterFlyouts;
 
+use ArrayPress\RegisterFlyouts\Utils\Runtime;
+
 /**
  * Assets Manager Class
  *
@@ -25,6 +27,20 @@ namespace ArrayPress\RegisterFlyouts;
  * @since 1.0.0
  */
 class Assets {
+
+	/**
+	 * Handle for the bundled Select2 build.
+	 *
+	 * Deliberately *not* derived per build: registration is guarded, so the
+	 * first library to register wins and the rest reuse it. One copy of a
+	 * third-party dependency on the page is the goal, and it is the inverse of
+	 * the per-build derivation applied to everything this library owns.
+	 *
+	 * Namespaced rather than the bare "select2" so the sharing is limited to
+	 * our own libraries — inheriting whatever version an unrelated plugin
+	 * happened to register first is the failure this avoids.
+	 */
+	private const SELECT2_HANDLE = 'arraypress-select2';
 
 	/**
 	 * Core CSS file
@@ -48,7 +64,7 @@ class Assets {
 		'js/core/forms.js',
 		'js/core/manager.js',
 		'js/core/alert.js',
-		'js/core/conditional-fields.js'
+		'js/core/conditional-fields.js',
 	];
 
 	/**
@@ -61,112 +77,112 @@ class Assets {
 		'file-manager'   => [
 			'script' => 'js/components/file-manager.js',
 			'style'  => 'css/components/file-manager.css',
-			'deps'   => [ 'jquery-ui-sortable' ]
+			'deps'   => [ 'jquery-ui-sortable' ],
 		],
 		'gallery'        => [
 			'script' => 'js/components/gallery.js',
 			'style'  => 'css/components/gallery.css',
-			'deps'   => [ 'jquery-ui-sortable', 'wp-mediaelement' ]
+			'deps'   => [ 'jquery-ui-sortable', 'wp-mediaelement' ],
 		],
 		'image-picker'   => [
 			'script' => 'js/components/image-picker.js',
 			'style'  => '',
-			'deps'   => [ 'wp-mediaelement' ]
+			'deps'   => [ 'wp-mediaelement' ],
 		],
 		'notes'          => [
 			'script' => 'js/components/notes.js',
 			'style'  => 'css/components/notes.css',
-			'deps'   => []
+			'deps'   => [],
 		],
 		'line-items'     => [
 			'script' => 'js/components/line-items.js',
 			'style'  => 'css/components/line-items.css',
-			'deps'   => [ 'wp-flyout-ajax-select' ]
+			'deps'   => [ 'wp-flyout-ajax-select' ],
 		],
 		'feature-list'   => [
 			'script' => 'js/components/feature-list.js',
 			'style'  => 'css/components/feature-list.css',
-			'deps'   => [ 'jquery-ui-sortable' ]
+			'deps'   => [ 'jquery-ui-sortable' ],
 		],
 		'key-value-list' => [
 			'script' => 'js/components/key-value-list.js',
 			'style'  => 'css/components/key-value-list.css',
-			'deps'   => [ 'jquery-ui-sortable' ]
+			'deps'   => [ 'jquery-ui-sortable' ],
 		],
 		'ajax-select'    => [
 			'script' => 'js/components/ajax-select.js',
 			'style'  => 'css/components/ajax-select.css',
-			'deps'   => [ 'select2' ]
+			'deps'   => [ self::SELECT2_HANDLE ],
 		],
 		'accordion'      => [
 			'script' => 'js/components/accordion.js',
 			'style'  => 'css/components/accordion.css',
-			'deps'   => []
+			'deps'   => [],
 		],
 		'card-choice'    => [
 			'script' => '',
 			'style'  => 'css/components/card-choice.css',
-			'deps'   => []
+			'deps'   => [],
 		],
 		'timeline'       => [
 			'script' => '',
 			'style'  => 'css/components/timeline.css',
-			'deps'   => []
+			'deps'   => [],
 		],
 		'price-summary'  => [
 			'script' => '',
 			'style'  => 'css/components/price-summary.css',
-			'deps'   => []
+			'deps'   => [],
 		],
 		'payment-method' => [
 			'script' => '',
 			'style'  => 'css/components/payment-method.css',
-			'deps'   => []
+			'deps'   => [],
 		],
 		'action-buttons' => [
 			'script' => 'js/components/action-buttons.js',
 			'style'  => 'css/components/action-buttons.css',
-			'deps'   => []
+			'deps'   => [],
 		],
 		'action-menu'    => [
 			'script' => 'js/components/action-menu.js',
 			'style'  => 'css/components/action-menu.css',
-			'deps'   => []
+			'deps'   => [],
 		],
 		'articles'       => [
 			'script' => '',
 			'style'  => 'css/components/articles.css',
-			'deps'   => []
+			'deps'   => [],
 		],
 		'stats'          => [
 			'script' => '',
 			'style'  => 'css/components/stats.css',
-			'deps'   => []
+			'deps'   => [],
 		],
 		'price-config'   => [
 			'script' => 'js/components/price-config.js',
 			'style'  => 'css/components/price-config.css',
-			'deps'   => []
+			'deps'   => [],
 		],
 		'refund-form' => [
 			'script' => 'js/components/refund-form.js',
 			'style'  => 'css/components/refund-form.css',
-			'deps'   => []
+			'deps'   => [],
 		],
 		'discount-config' => [
 			'script' => 'js/components/discount-config.js',
 			'style'  => 'css/components/discount-config.css',
-			'deps'   => []
+			'deps'   => [],
 		],
 		'unit-input' => [
 			'script' => '',
 			'style'  => 'css/components/unit-input.css',
-			'deps'   => []
+			'deps'   => [],
 		],
 		'code-generator' => [
 			'script' => 'js/components/code-generator.js',
 			'style'  => 'css/components/code-generator.css',
-			'deps'   => []
+			'deps'   => [],
 		],
 	];
 
@@ -178,7 +194,7 @@ class Assets {
 	 */
 	private static array $last_handles = [
 		'style'  => '',
-		'script' => ''
+		'script' => '',
 	];
 
 	/**
@@ -210,18 +226,18 @@ class Assets {
 
 		// Register core CSS (single consolidated file)
 		wp_register_composer_style(
-			'wp-flyout',
+			Runtime::handle(),
 			$base_file,
 			self::$core_style,
 			[ 'dashicons' ],
 			$version
 		);
-		self::$last_handles['style'] = 'wp-flyout';
+		self::$last_handles['style'] = Runtime::handle();
 
 		// Register core JavaScript files
 		$js_deps = [ 'jquery' ];
 		foreach ( self::$core_scripts as $js_file ) {
-			$handle = 'wp-flyout-' . basename( $js_file, '.js' );
+			$handle = Runtime::handle( basename( $js_file, '.js' ) );
 
 			wp_register_composer_script(
 				$handle,
@@ -257,9 +273,9 @@ class Assets {
 	 * @since 2.0.0
 	 */
 	private static function register_select2( string $version ): void {
-		if ( ! wp_script_is( 'select2', 'registered' ) ) {
+		if ( ! wp_script_is( self::SELECT2_HANDLE, 'registered' ) ) {
 			wp_register_composer_script(
-				'select2',
+				self::SELECT2_HANDLE,
 				__FILE__,
 				'js/libraries/select2.min.js',
 				[ 'jquery' ],
@@ -267,9 +283,9 @@ class Assets {
 			);
 		}
 
-		if ( ! wp_style_is( 'select2', 'registered' ) ) {
+		if ( ! wp_style_is( self::SELECT2_HANDLE, 'registered' ) ) {
 			wp_register_composer_style(
-				'select2',
+				self::SELECT2_HANDLE,
 				__FILE__,
 				'css/libraries/select2.min.css',
 				[],
@@ -289,7 +305,7 @@ class Assets {
 	 */
 	private static function register_components( string $base_file, string $version ): void {
 		foreach ( self::$components as $name => $config ) {
-			$handle = 'wp-flyout-' . $name;
+			$handle = Runtime::handle( $name );
 
 			// Register component script if exists
 			if ( ! empty( $config['script'] ) ) {
@@ -312,7 +328,7 @@ class Assets {
 
 				// Add select2 CSS as dependency for ajax-select
 				if ( $name === 'ajax-select' ) {
-					$style_deps[] = 'select2';
+					$style_deps[] = self::SELECT2_HANDLE;
 				}
 
 				wp_register_composer_style(
@@ -361,15 +377,15 @@ class Assets {
 		// Ensure core is loaded first
 		self::enqueue();
 
-		$handle = 'wp-flyout-' . $component;
+		$handle = Runtime::handle( $component );
 		$config = self::$components[ $component ];
 
 		// Handle dependencies
 		if ( ! empty( $config['deps'] ) ) {
 			foreach ( $config['deps'] as $dep ) {
 				// Check if it's another component dependency
-				if ( str_starts_with( $dep, 'wp-flyout-' ) ) {
-					$dep_component = str_replace( 'wp-flyout-', '', $dep );
+				if ( str_starts_with( $dep, Runtime::handle() . '-' ) ) {
+					$dep_component = str_replace( Runtime::handle() . '-', '', $dep );
 					if ( isset( self::$components[ $dep_component ] ) ) {
 						self::enqueue_component( $dep_component );
 					}
@@ -400,5 +416,4 @@ class Assets {
 
 		return true;
 	}
-
 }

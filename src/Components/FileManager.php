@@ -55,14 +55,14 @@ class FileManager implements Renderable {
      */
     private static function get_defaults(): array {
         return [
-                'id'          => '',
-                'name'        => 'files',
-                'items'       => [],
-                'max_files'   => 0,
-                'sortable'    => true,
-                'add_text'    => __( 'Add File', 'wp-flyout' ),
-                'empty_text'  => __( 'No files attached yet.', 'wp-flyout' ),
-                'class'       => '',
+			'id'          => '',
+			'name'        => 'files',
+			'items'       => [],
+			'max_files'   => 0,
+			'sortable'    => true,
+			'add_text'    => __( 'Add File', 'wp-flyout' ),
+			'empty_text'  => __( 'No files attached yet.', 'wp-flyout' ),
+			'class'       => '',
         ];
     }
 
@@ -89,9 +89,9 @@ class FileManager implements Renderable {
         ob_start();
         ?>
         <div id="<?php echo esc_attr( $this->config['id'] ); ?>"
-             class="<?php echo esc_attr( implode( ' ', $classes ) ); ?>"
-             data-name="<?php echo esc_attr( $this->config['name'] ); ?>"
-             data-max-files="<?php echo esc_attr( (string) $max_files ); ?>">
+            class="<?php echo esc_attr( implode( ' ', $classes ) ); ?>"
+            data-name="<?php echo esc_attr( $this->config['name'] ); ?>"
+            data-max-files="<?php echo esc_attr( (string) $max_files ); ?>">
 
             <div class="file-manager-list <?php echo $count === 0 ? 'is-empty' : ''; ?>">
 
@@ -119,7 +119,7 @@ class FileManager implements Renderable {
 
                 <?php if ( $max_files > 0 ) : ?>
                     <span class="file-manager-count">
-						<span class="current-count"><?php echo $count; ?></span>/<?php echo $max_files; ?>
+						<span class="current-count"><?php echo esc_attr( $count ); ?></span>/<?php echo esc_attr( $max_files ); ?>
 					</span>
                 <?php endif; ?>
             </div>
@@ -144,7 +144,7 @@ class FileManager implements Renderable {
         $attachment_id = $file['attachment_id'] ?? $file['id'] ?? '';
         $lookup_key    = $file['lookup_key'] ?? '';
         ?>
-        <div class="file-manager-item" data-index="<?php echo $index; ?>">
+        <div class="file-manager-item" data-index="<?php echo esc_attr( $index ); ?>">
 
             <?php if ( $this->config['sortable'] ) : ?>
                 <span class="file-handle" title="<?php esc_attr_e( 'Drag to reorder', 'wp-flyout' ); ?>">
@@ -154,26 +154,26 @@ class FileManager implements Renderable {
 
             <div class="file-fields">
                 <input type="text"
-                       name="<?php echo esc_attr( "{$name}[{$index}][name]" ); ?>"
-                       value="<?php echo esc_attr( $file_name ); ?>"
-                       placeholder="<?php esc_attr_e( 'File name', 'wp-flyout' ); ?>"
-                       class="file-name-input">
+                        name="<?php echo esc_attr( "{$name}[{$index}][name]" ); ?>"
+                        value="<?php echo esc_attr( $file_name ); ?>"
+                        placeholder="<?php esc_attr_e( 'File name', 'wp-flyout' ); ?>"
+                        class="file-name-input">
 
                 <input type="url"
-                       name="<?php echo esc_attr( "{$name}[{$index}][url]" ); ?>"
-                       value="<?php echo esc_attr( $file_url ); ?>"
-                       placeholder="<?php esc_attr_e( 'URL or browse media library', 'wp-flyout' ); ?>"
-                       class="file-url-input">
+                        name="<?php echo esc_attr( "{$name}[{$index}][url]" ); ?>"
+                        value="<?php echo esc_attr( $file_url ); ?>"
+                        placeholder="<?php esc_attr_e( 'URL or browse media library', 'wp-flyout' ); ?>"
+                        class="file-url-input">
 
                 <input type="hidden"
-                       name="<?php echo esc_attr( "{$name}[{$index}][attachment_id]" ); ?>"
-                       value="<?php echo esc_attr( (string) $attachment_id ); ?>"
-                       class="file-attachment-id">
+                        name="<?php echo esc_attr( "{$name}[{$index}][attachment_id]" ); ?>"
+                        value="<?php echo esc_attr( (string) $attachment_id ); ?>"
+                        class="file-attachment-id">
 
                 <input type="hidden"
-                       name="<?php echo esc_attr( "{$name}[{$index}][lookup_key]" ); ?>"
-                       value="<?php echo esc_attr( $lookup_key ); ?>"
-                       class="file-lookup-key">
+                        name="<?php echo esc_attr( "{$name}[{$index}][lookup_key]" ); ?>"
+                        value="<?php echo esc_attr( $lookup_key ); ?>"
+                        class="file-lookup-key">
             </div>
 
             <div class="file-actions">
@@ -195,5 +195,4 @@ class FileManager implements Renderable {
         </div>
         <?php
     }
-
 }

@@ -46,13 +46,13 @@ class Separator implements Renderable {
      */
     private static function get_defaults(): array {
         return [
-                'id'     => '',
-                'text'   => '',
-                'icon'   => '',
-                'class'  => '',
-                'margin' => '20px',
-                'style'  => 'line', // line, dotted, dashed, double
-                'align'  => 'center' // left, center, right (for text)
+			'id'     => '',
+			'text'   => '',
+			'icon'   => '',
+			'class'  => '',
+			'margin' => '20px',
+			'style'  => 'line', // line, dotted, dashed, double
+			'align'  => 'center', // left, center, right (for text)
         ];
     }
 
@@ -63,8 +63,8 @@ class Separator implements Renderable {
      */
     public function render(): string {
         $classes = [
-                'wp-flyout-separator',
-                'separator-' . $this->config['style']
+			'wp-flyout-separator',
+			'separator-' . $this->config['style'],
         ];
 
         if ( $this->config['text'] ) {
@@ -90,8 +90,8 @@ class Separator implements Renderable {
         ob_start();
         ?>
         <div id="<?php echo esc_attr( $this->config['id'] ); ?>"
-             class="<?php echo esc_attr( implode( ' ', $classes ) ); ?>"
-             style="<?php echo esc_attr( $style ); ?>">
+            class="<?php echo esc_attr( implode( ' ', $classes ) ); ?>"
+            style="<?php echo esc_attr( $style ); ?>">
 			<span class="separator-text">
 				<?php if ( $this->config['icon'] ) : ?>
                     <span class="dashicons dashicons-<?php echo esc_attr( $this->config['icon'] ); ?>"></span>
@@ -102,5 +102,4 @@ class Separator implements Renderable {
         <?php
         return ob_get_clean();
     }
-
 }

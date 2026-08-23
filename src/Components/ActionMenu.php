@@ -46,13 +46,13 @@ class ActionMenu implements Renderable {
      */
     private static function get_defaults(): array {
         return [
-                'id'           => '',
-                'items'        => [],
-                'button_text'  => 'Actions',
-                'button_icon'  => 'menu-alt',
-                'button_style' => 'secondary',
-                'position'     => 'left', // left or right
-                'class'        => ''
+			'id'           => '',
+			'items'        => [],
+			'button_text'  => 'Actions',
+			'button_icon'  => 'menu-alt',
+			'button_style' => 'secondary',
+			'position'     => 'left', // left or right
+			'class'        => '',
         ];
     }
 
@@ -67,8 +67,8 @@ class ActionMenu implements Renderable {
         }
 
         $classes = [
-                'wp-flyout-action-menu',
-                'position-' . $this->config['position']
+			'wp-flyout-action-menu',
+			'position-' . $this->config['position'],
         ];
 
         if ( ! empty( $this->config['class'] ) ) {
@@ -78,7 +78,7 @@ class ActionMenu implements Renderable {
         ob_start();
         ?>
         <div id="<?php echo esc_attr( $this->config['id'] ); ?>"
-             class="<?php echo esc_attr( implode( ' ', $classes ) ); ?>">
+            class="<?php echo esc_attr( implode( ' ', $classes ) ); ?>">
 
             <button type="button"
                     class="button button-<?php echo esc_attr( $this->config['button_style'] ); ?> action-menu-trigger"
@@ -114,14 +114,14 @@ class ActionMenu implements Renderable {
         }
 
         $defaults = [
-                'text'    => '',
-                'action'  => '',
-                'icon'    => '',
-                'class'   => '',
-                'data'    => [],
-                'confirm' => '',
-                'enabled' => true,
-                'danger'  => false
+			'text'    => '',
+			'action'  => '',
+			'icon'    => '',
+			'class'   => '',
+			'data'    => [],
+			'confirm' => '',
+			'enabled' => true,
+			'danger'  => false,
         ];
 
         $item = wp_parse_args( $item, $defaults );
@@ -157,7 +157,7 @@ class ActionMenu implements Renderable {
         ?>
         <button type="button"
                 class="<?php echo esc_attr( implode( ' ', $classes ) ); ?>"
-                <?php echo $data_attrs; ?>
+                <?php echo esc_attr( $data_attrs ); ?>
                 <?php echo ! $item['enabled'] ? 'disabled' : ''; ?>>
             <?php if ( $item['icon'] ) : ?>
                 <span class="dashicons dashicons-<?php echo esc_attr( $item['icon'] ); ?>"></span>
@@ -166,5 +166,4 @@ class ActionMenu implements Renderable {
         </button>
         <?php
     }
-
 }

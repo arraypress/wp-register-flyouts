@@ -67,19 +67,19 @@ class KeyValueList implements Renderable {
      */
     private static function get_defaults(): array {
         return [
-                'id'              => '',
-                'name'            => 'metadata',
-                'items'           => [],
-                'key_label'       => __( 'Key', 'wp-flyout' ),
-                'value_label'     => __( 'Value', 'wp-flyout' ),
-                'add_text'        => __( 'Add metadata', 'wp-flyout' ),
-                'empty_text'      => __( 'No metadata added yet', 'wp-flyout' ),
-                'key_placeholder' => __( 'Enter key', 'wp-flyout' ),
-                'val_placeholder' => __( 'Enter value', 'wp-flyout' ),
-                'max_items'       => 0, // 0 = unlimited
-                'sortable'        => true,
-                'required_key'    => false, // Keys are optional by default
-                'class'           => ''
+			'id'              => '',
+			'name'            => 'metadata',
+			'items'           => [],
+			'key_label'       => __( 'Key', 'wp-flyout' ),
+			'value_label'     => __( 'Value', 'wp-flyout' ),
+			'add_text'        => __( 'Add metadata', 'wp-flyout' ),
+			'empty_text'      => __( 'No metadata added yet', 'wp-flyout' ),
+			'key_placeholder' => __( 'Enter key', 'wp-flyout' ),
+			'val_placeholder' => __( 'Enter value', 'wp-flyout' ),
+			'max_items'       => 0, // 0 = unlimited
+			'sortable'        => true,
+			'required_key'    => false, // Keys are optional by default
+			'class'           => '',
         ];
     }
 
@@ -102,13 +102,13 @@ class KeyValueList implements Renderable {
         ob_start();
         ?>
         <div id="<?php echo esc_attr( $this->config['id'] ); ?>"
-             class="<?php echo esc_attr( implode( ' ', $classes ) ); ?>"
-             data-name="<?php echo esc_attr( $this->config['name'] ); ?>"
-             data-max-items="<?php echo esc_attr( (string) $this->config['max_items'] ); ?>"
-             data-key-placeholder="<?php echo esc_attr( $this->config['key_placeholder'] ); ?>"
-             data-val-placeholder="<?php echo esc_attr( $this->config['val_placeholder'] ); ?>"
-             data-sortable="<?php echo esc_attr( $this->config['sortable'] ? 'true' : 'false' ); ?>"
-             data-required-key="<?php echo esc_attr( $this->config['required_key'] ? 'true' : 'false' ); ?>">
+            class="<?php echo esc_attr( implode( ' ', $classes ) ); ?>"
+            data-name="<?php echo esc_attr( $this->config['name'] ); ?>"
+            data-max-items="<?php echo esc_attr( (string) $this->config['max_items'] ); ?>"
+            data-key-placeholder="<?php echo esc_attr( $this->config['key_placeholder'] ); ?>"
+            data-val-placeholder="<?php echo esc_attr( $this->config['val_placeholder'] ); ?>"
+            data-sortable="<?php echo esc_attr( $this->config['sortable'] ? 'true' : 'false' ); ?>"
+            data-required-key="<?php echo esc_attr( $this->config['required_key'] ? 'true' : 'false' ); ?>">
 
             <div class="meta-kv-header">
                 <div class="meta-kv-labels">
@@ -130,7 +130,12 @@ class KeyValueList implements Renderable {
                         <?php endforeach; ?>
                     <?php else : ?>
                         <?php // Render one empty row by default ?>
-                        <?php $this->render_item( [ 'key' => '', 'value' => '' ], 0 ); ?>
+                        <?php
+                        $this->render_item( [
+							'key' => '',
+							'value' => '',
+						], 0 );
+?>
                     <?php endif; ?>
                 </div>
             </div>
@@ -169,19 +174,19 @@ class KeyValueList implements Renderable {
 
             <div class="meta-kv-fields">
                 <input type="text"
-                       name="<?php echo esc_attr( $this->config['name'] ); ?>[<?php echo $index; ?>][key]"
-                       value="<?php echo esc_attr( $key ); ?>"
-                       placeholder="<?php echo esc_attr( $this->config['key_placeholder'] ); ?>"
-                       class="meta-kv-key"
-                       data-field="key"
+                        name="<?php echo esc_attr( $this->config['name'] ); ?>[<?php echo esc_attr( $index ); ?>][key]"
+                        value="<?php echo esc_attr( $key ); ?>"
+                        placeholder="<?php echo esc_attr( $this->config['key_placeholder'] ); ?>"
+                        class="meta-kv-key"
+                        data-field="key"
                         <?php echo $this->config['required_key'] ? 'required' : ''; ?>>
 
                 <input type="text"
-                       name="<?php echo esc_attr( $this->config['name'] ); ?>[<?php echo $index; ?>][value]"
-                       value="<?php echo esc_attr( $value ); ?>"
-                       placeholder="<?php echo esc_attr( $this->config['val_placeholder'] ); ?>"
-                       class="meta-kv-value"
-                       data-field="value">
+                        name="<?php echo esc_attr( $this->config['name'] ); ?>[<?php echo esc_attr( $index ); ?>][value]"
+                        value="<?php echo esc_attr( $value ); ?>"
+                        placeholder="<?php echo esc_attr( $this->config['val_placeholder'] ); ?>"
+                        class="meta-kv-value"
+                        data-field="value">
             </div>
 
             <button type="button"
@@ -192,5 +197,4 @@ class KeyValueList implements Renderable {
         </div>
         <?php
     }
-
 }

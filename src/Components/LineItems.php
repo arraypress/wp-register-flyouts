@@ -51,19 +51,19 @@ class LineItems implements Renderable {
      */
     private static function get_defaults(): array {
         return [
-                'id'            => '',
-                'name'          => 'line_items',
-                'items'         => [],
-                'currency'      => 'USD',
-                'show_quantity' => true,
-                'search_key'    => '',       // Field key for the ajax_select search
-                'details_key'   => '',       // Action key for fetching product details
-                'manager'       => '',       // Manager prefix (set by normalize_ajax_fields)
-                'flyout'        => '',       // Flyout ID (set by normalize_ajax_fields)
-                'placeholder'   => 'Search for products...',
-                'empty_text'    => 'No items added yet.',
-                'add_text'      => 'Add Item',
-                'class'         => ''
+			'id'            => '',
+			'name'          => 'line_items',
+			'items'         => [],
+			'currency'      => 'USD',
+			'show_quantity' => true,
+			'search_key'    => '',       // Field key for the ajax_select search
+			'details_key'   => '',       // Action key for fetching product details
+			'manager'       => '',       // Manager prefix (set by normalize_ajax_fields)
+			'flyout'        => '',       // Flyout ID (set by normalize_ajax_fields)
+			'placeholder'   => 'Search for products...',
+			'empty_text'    => 'No items added yet.',
+			'add_text'      => 'Add Item',
+			'class'         => '',
         ];
     }
 
@@ -95,19 +95,19 @@ class LineItems implements Renderable {
         }
 
         $data = [
-                'name'          => $this->config['name'],
-                'currency'      => $this->config['currency'],
-                'show-quantity' => $this->config['show_quantity'] ? '1' : '0',
-                'manager'       => $this->config['manager'],
-                'flyout'        => $this->config['flyout'],
-                'details-key'   => $this->config['details_key'],
+			'name'          => $this->config['name'],
+			'currency'      => $this->config['currency'],
+			'show-quantity' => $this->config['show_quantity'] ? '1' : '0',
+			'manager'       => $this->config['manager'],
+			'flyout'        => $this->config['flyout'],
+			'details-key'   => $this->config['details_key'],
         ];
 
         ob_start();
         ?>
         <div id="<?php echo esc_attr( $this->config['id'] ); ?>"
-             class="<?php echo esc_attr( implode( ' ', $classes ) ); ?>"
-                <?php echo $this->build_data_attributes( $data ); ?>>
+            class="<?php echo esc_attr( implode( ' ', $classes ) ); ?>"
+                <?php echo $this->build_data_attributes( $data ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>>
 
             <?php if ( $this->config['search_key'] ) : ?>
                 <?php $this->render_product_selector(); ?>
@@ -130,12 +130,12 @@ class LineItems implements Renderable {
      * Uses REST /search endpoint via data-ajax-url and data-ajax-params.
      */
     private function render_product_selector(): void {
-        $search_url = rest_url( RestApi::NAMESPACE . '/search' );
+        $search_url = rest_url( RestApi::rest_namespace() . '/search' );
 
         $ajax_params = wp_json_encode( [
-                'manager'   => $this->config['manager'],
-                'flyout'    => $this->config['flyout'],
-                'field_key' => $this->config['search_key'],
+			'manager'   => $this->config['manager'],
+			'flyout'    => $this->config['flyout'],
+			'field_key' => $this->config['search_key'],
         ] );
         ?>
         <div class="line-items-selector">
@@ -200,15 +200,15 @@ class LineItems implements Renderable {
         $quantity = (int) ( $item['quantity'] ?? 1 );
         $total    = $price * $quantity;
         ?>
-        <tr class="line-item" data-index="<?php echo $index; ?>"
+        <tr class="line-item" data-index="<?php echo esc_attr( $index ); ?>"
             data-item-id="<?php echo esc_attr( $item['id'] ?? '' ); ?>">
 
             <td class="column-item">
                 <div>
                     <?php if ( ! empty( $item['thumbnail'] ) ) : ?>
                         <img src="<?php echo esc_url( $item['thumbnail'] ); ?>"
-                             alt="<?php echo esc_attr( $item['name'] ?? '' ); ?>"
-                             class="item-thumbnail">
+                            alt="<?php echo esc_attr( $item['name'] ?? '' ); ?>"
+                            class="item-thumbnail">
                     <?php else : ?>
                         <div class="item-thumbnail-placeholder">
                             <span class="dashicons dashicons-format-image"></span>
@@ -217,29 +217,29 @@ class LineItems implements Renderable {
                     <span><?php echo esc_html( $item['name'] ?? '' ); ?></span>
                 </div>
                 <input type="hidden"
-                       name="<?php echo esc_attr( $this->config['name'] ); ?>[<?php echo $index; ?>][id]"
-                       value="<?php echo esc_attr( $item['id'] ?? '' ); ?>">
+                        name="<?php echo esc_attr( $this->config['name'] ); ?>[<?php echo esc_attr( $index ); ?>][id]"
+                        value="<?php echo esc_attr( $item['id'] ?? '' ); ?>">
                 <input type="hidden"
-                       name="<?php echo esc_attr( $this->config['name'] ); ?>[<?php echo $index; ?>][name]"
-                       value="<?php echo esc_attr( $item['name'] ?? '' ); ?>">
+                        name="<?php echo esc_attr( $this->config['name'] ); ?>[<?php echo esc_attr( $index ); ?>][name]"
+                        value="<?php echo esc_attr( $item['name'] ?? '' ); ?>">
                 <input type="hidden"
-                       name="<?php echo esc_attr( $this->config['name'] ); ?>[<?php echo $index; ?>][thumbnail]"
-                       value="<?php echo esc_url( $item['thumbnail'] ?? '' ); ?>">
+                        name="<?php echo esc_attr( $this->config['name'] ); ?>[<?php echo esc_attr( $index ); ?>][thumbnail]"
+                        value="<?php echo esc_url( $item['thumbnail'] ?? '' ); ?>">
             </td>
 
             <?php if ( $this->config['show_quantity'] ) : ?>
                 <td class="column-quantity">
                     <input type="number"
-                           name="<?php echo esc_attr( $this->config['name'] ); ?>[<?php echo $index; ?>][quantity]"
-                           value="<?php echo esc_attr( (string) $quantity ); ?>"
-                           min="1"
-                           class="quantity-input small-text"
-                           data-action="update-quantity">
+                            name="<?php echo esc_attr( $this->config['name'] ); ?>[<?php echo esc_attr( $index ); ?>][quantity]"
+                            value="<?php echo esc_attr( (string) $quantity ); ?>"
+                            min="1"
+                            class="quantity-input small-text"
+                            data-action="update-quantity">
                 </td>
             <?php else : ?>
                 <input type="hidden"
-                       name="<?php echo esc_attr( $this->config['name'] ); ?>[<?php echo $index; ?>][quantity]"
-                       value="1">
+                        name="<?php echo esc_attr( $this->config['name'] ); ?>[<?php echo esc_attr( $index ); ?>][quantity]"
+                        value="1">
             <?php endif; ?>
 
             <td class="column-price">
@@ -247,8 +247,8 @@ class LineItems implements Renderable {
                     <?php esc_currency_e( $price, $this->config['currency'] ); ?>
                 </span>
                 <input type="hidden"
-                       name="<?php echo esc_attr( $this->config['name'] ); ?>[<?php echo $index; ?>][price]"
-                       value="<?php echo esc_attr( (string) $price ); ?>">
+                        name="<?php echo esc_attr( $this->config['name'] ); ?>[<?php echo esc_attr( $index ); ?>][price]"
+                        value="<?php echo esc_attr( (string) $price ); ?>">
             </td>
 
             <?php if ( $this->config['show_quantity'] ) : ?>
@@ -294,33 +294,33 @@ class LineItems implements Renderable {
                         <span>{{name}}</span>
                     </div>
                     <input type="hidden" name="<?php echo esc_attr( $this->config['name'] ); ?>[{{index}}][id]"
-                           value="{{item_id}}">
+                            value="{{item_id}}">
                     <input type="hidden" name="<?php echo esc_attr( $this->config['name'] ); ?>[{{index}}][name]"
-                           value="{{name}}">
+                            value="{{name}}">
                     <input type="hidden" name="<?php echo esc_attr( $this->config['name'] ); ?>[{{index}}][thumbnail]"
-                           value="{{thumbnail}}">
+                            value="{{thumbnail}}">
                 </td>
 
                 <?php if ( $this->config['show_quantity'] ) : ?>
                     <td class="column-quantity">
                         <input type="number"
-                               name="<?php echo esc_attr( $this->config['name'] ); ?>[{{index}}][quantity]"
-                               value="1"
-                               min="1"
-                               class="quantity-input small-text"
-                               data-action="update-quantity">
+                                name="<?php echo esc_attr( $this->config['name'] ); ?>[{{index}}][quantity]"
+                                value="1"
+                                min="1"
+                                class="quantity-input small-text"
+                                data-action="update-quantity">
                     </td>
                 <?php else : ?>
                     <input type="hidden"
-                           name="<?php echo esc_attr( $this->config['name'] ); ?>[{{index}}][quantity]"
-                           value="1">
+                            name="<?php echo esc_attr( $this->config['name'] ); ?>[{{index}}][quantity]"
+                            value="1">
                 <?php endif; ?>
 
                 <td class="column-price">
                     <span data-price="{{price}}">{{price_formatted}}</span>
                     <input type="hidden"
-                           name="<?php echo esc_attr( $this->config['name'] ); ?>[{{index}}][price]"
-                           value="{{price}}">
+                            name="<?php echo esc_attr( $this->config['name'] ); ?>[{{index}}][price]"
+                            value="{{price}}">
                 </td>
 
                 <?php if ( $this->config['show_quantity'] ) : ?>
@@ -338,5 +338,4 @@ class LineItems implements Renderable {
         </script>
         <?php
     }
-
 }

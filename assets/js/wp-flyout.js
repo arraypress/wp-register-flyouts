@@ -4,6 +4,43 @@
  * Handles flyout mechanics for Manager-based flyouts only
  * @version 2.0.0
  */
+
+/*
+ * Per-build config lookup.
+ *
+ * Each Strauss-prefixed copy of this library enqueues its own scripts under
+ * its own handle prefix and publishes its REST URL and nonce into this
+ * registry keyed by that prefix. A script finds its own entry from the id
+ * WordPress stamps on its <script> element ("{handle}-js"), falling back to
+ * the longest registered key that prefixes it — component scripts are
+ * registered under "{prefix}-{component}" but the config is published once
+ * under "{prefix}".
+ *
+ * Defined idempotently: two builds load two identical copies of this file.
+ */
+window.ArrayPressFlyouts = window.ArrayPressFlyouts || {};
+window.ArrayPressFlyouts.resolve = window.ArrayPressFlyouts.resolve || function (el) {
+    var id = el && el.id ? el.id.replace(/-js$/, '') : '';
+    var reg = window.ArrayPressFlyouts;
+    var best = '';
+    var key;
+
+    if (reg[id]) {
+        return reg[id];
+    }
+
+    for (key in reg) {
+        if (key === 'resolve' || !Object.prototype.hasOwnProperty.call(reg, key)) {
+            continue;
+        }
+        if (id.indexOf(key) === 0 && key.length > best.length) {
+            best = key;
+        }
+    }
+
+    return best ? reg[best] : (window.wpFlyout || {});
+};
+
 (function ($) {
     'use strict';
 

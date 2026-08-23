@@ -47,11 +47,11 @@ class InfoGrid implements Renderable {
      */
     private static function get_defaults(): array {
         return [
-                'id'          => '',
-                'class'       => '',
-                'items'       => [],
-                'columns'     => 2,
-                'empty_value' => '—'
+			'id'          => '',
+			'class'       => '',
+			'items'       => [],
+			'columns'     => 2,
+			'empty_value' => '—',
         ];
     }
 
@@ -66,8 +66,8 @@ class InfoGrid implements Renderable {
         }
 
         $classes = [
-                'wp-flyout-info-grid',
-                'columns-' . $this->config['columns']
+			'wp-flyout-info-grid',
+			'columns-' . $this->config['columns'],
         ];
 
         if ( ! empty( $this->config['class'] ) ) {
@@ -77,8 +77,8 @@ class InfoGrid implements Renderable {
         ob_start();
         ?>
         <div id="<?php echo esc_attr( $this->config['id'] ); ?>"
-             class="<?php echo esc_attr( implode( ' ', $classes ) ); ?>"
-             data-columns="<?php echo esc_attr( $this->config['columns'] ); ?>">
+            class="<?php echo esc_attr( implode( ' ', $classes ) ); ?>"
+            data-columns="<?php echo esc_attr( $this->config['columns'] ); ?>">
             <?php foreach ( $this->config['items'] as $item ) : ?>
                 <?php $this->render_item( $item ); ?>
             <?php endforeach; ?>
@@ -110,10 +110,9 @@ class InfoGrid implements Renderable {
                 <?php echo esc_html( $item['label'] ); ?>
             </div>
             <div class="wp-flyout-info-value">
-                <?php echo $value; ?>
+                <?php echo esc_attr( $value ); ?>
             </div>
         </div>
         <?php
     }
-
 }

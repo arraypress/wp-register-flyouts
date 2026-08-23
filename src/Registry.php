@@ -169,5 +169,4 @@ class Registry {
 			'flyout_id' => $parts['flyout_id'],
 		];
 	}
-
 }

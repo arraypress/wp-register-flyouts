@@ -16,6 +16,8 @@ declare( strict_types=1 );
 
 namespace ArrayPress\RegisterFlyouts;
 
+use ArrayPress\RegisterFlyouts\Utils\Runtime;
+
 use ArrayPress\RegisterFlyouts\Components\FormField;
 use ArrayPress\RegisterFlyouts\Core\Flyout;
 use ArrayPress\RegisterFlyouts\Parts\ActionBar;
@@ -137,7 +139,7 @@ class Manager {
 		$config = wp_parse_args( $config, $defaults );
 
 		// Apply filters for extensibility.
-		$config = apply_filters( 'wp_flyout_register_config', $config, $id, $this->prefix );
+		$config = apply_filters( Runtime::hook( 'register_config' ), $config, $id, $this->prefix );
 		$config = apply_filters( "wp_flyout_{$this->prefix}_{$id}_config", $config );
 
 		// Auto-detect required components.
@@ -178,7 +180,7 @@ class Manager {
 		$flyout->set_subtitle( $config['subtitle'] );
 		$flyout->set_size( $config['size'] );
 
-		$flyout = apply_filters( 'wp_flyout_build_flyout', $flyout, $config, $data, $this->prefix );
+		$flyout = apply_filters( Runtime::hook( 'build_flyout' ), $flyout, $config, $data, $this->prefix );
 
 		if ( ! empty( $config['tabs'] ) ) {
 			$this->build_tab_interface( $flyout, $config['tabs'], $config['fields'], $data );
@@ -299,7 +301,7 @@ class Manager {
 	private function render_fields( array $fields, $data ): string {
 		$output = '';
 
-		$fields = apply_filters( 'wp_flyout_before_render_fields', $fields, $data, $this->prefix );
+		$fields = apply_filters( Runtime::hook( 'before_render_fields' ), $fields, $data, $this->prefix );
 
 		$normalized_fields = $this->normalize_fields( $fields );
 
@@ -310,7 +312,7 @@ class Manager {
 			}
 
 			// Apply field-specific filters.
-			$field = apply_filters( 'wp_flyout_render_field', $field, $field_key, $data, $this->prefix );
+			$field = apply_filters( Runtime::hook( 'render_field' ), $field, $field_key, $data, $this->prefix );
 			$field = apply_filters( "wp_flyout_render_field_{$field_key}", $field, $data, $this->prefix );
 
 			// Normalize AJAX fields (search URL, hydration).
@@ -345,7 +347,7 @@ class Manager {
 			$output .= $field_output;
 		}
 
-		return apply_filters( 'wp_flyout_after_render_fields', $output, $fields, $data, $this->prefix );
+		return apply_filters( Runtime::hook( 'after_render_fields' ), $output, $fields, $data, $this->prefix );
 	}
 
 	/**
@@ -359,7 +361,7 @@ class Manager {
 	 * @since 1.0.0
 	 */
 	public function normalize_fields( array $fields ): array {
-		$fields = apply_filters( 'wp_flyout_before_normalize_fields', $fields, $this->prefix );
+		$fields = apply_filters( Runtime::hook( 'before_normalize_fields' ), $fields, $this->prefix );
 
 		$normalized = [];
 
@@ -375,7 +377,7 @@ class Manager {
 			$normalized[ $field_key ] = $field;
 		}
 
-		return apply_filters( 'wp_flyout_after_normalize_fields', $normalized, $this->prefix );
+		return apply_filters( Runtime::hook( 'after_normalize_fields' ), $normalized, $this->prefix );
 	}
 
 	/**
@@ -433,7 +435,7 @@ class Manager {
 		$data_key = $field['name'] ?? $field_key;
 
 		// Set the REST search URL for Select2.
-		$field['ajax_url']    = rest_url( RestApi::NAMESPACE . '/search' );
+		$field['ajax_url']    = rest_url( RestApi::rest_namespace() . '/search' );
 		$field['ajax_params'] = [
 			'manager'   => $this->prefix,
 			'flyout'    => $this->get_flyout_id_for_field( $field_key ),
@@ -611,7 +613,9 @@ class Manager {
 				$type = 'ajax_select';
 			}
 
-			if ( $asset = Components::get_asset( $type, $field ) ) {
+			$asset = Components::get_asset( $type, $field );
+
+			if ( $asset ) {
 				$this->components[] = $asset;
 			}
 		}
@@ -672,11 +676,25 @@ class Manager {
 			Assets::enqueue_component( $component );
 		}
 
-		// Localize REST API data for JavaScript.
-		wp_localize_script( 'wp-flyout-manager', 'wpFlyout', [
-			'restUrl'   => rest_url( RestApi::NAMESPACE ),
-			'restNonce' => wp_create_nonce( 'wp_rest' ),
-		] );
+		// Published into a registry keyed by this build's core handle rather
+		// than to a bare `wpFlyout` global. Two Strauss-prefixed copies each
+		// enqueue their own scripts, and a shared global would leave whichever
+		// localized last owning the REST URL and nonce for both. Each script
+		// resolves its own entry from the id WordPress stamps on its element.
+		$handle = Runtime::handle();
+
+		wp_add_inline_script(
+			Runtime::handle( 'wp-flyout' ),
+			sprintf(
+				'window.ArrayPressFlyouts=window.ArrayPressFlyouts||{};window.ArrayPressFlyouts[%s]=%s;',
+				wp_json_encode( $handle ),
+				wp_json_encode( [
+					'restUrl'   => rest_url( RestApi::rest_namespace() ),
+					'restNonce' => wp_create_nonce( 'wp_rest' ),
+				] )
+			),
+			'before'
+		);
 
 		$this->assets_enqueued = true;
 	}
@@ -696,6 +714,8 @@ class Manager {
 	 * @since 1.0.0
 	 */
 	public function button( string $flyout_id, array $data = [], array $args = [] ): void {
+		// Returns markup this library assembled and escaped as it built it.
+		// phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
 		echo $this->get_button( $flyout_id, $data, $args );
 	}
 
@@ -780,9 +800,9 @@ class Manager {
 	 * @return array Attributes array.
 	 * @since 1.0.0
 	 */
-	private function build_trigger_attributes( string $flyout_id, array $data, string $class = '' ): array {
+	private function build_trigger_attributes( string $flyout_id, array $data, string $class_name = '' ): array {
 		$attrs = [
-			'class'               => trim( 'wp-flyout-trigger ' . $class ),
+			'class'               => trim( 'wp-flyout-trigger ' . $class_name ),
 			'data-flyout-manager' => $this->prefix,
 			'data-flyout'         => $flyout_id,
 		];
@@ -890,5 +910,4 @@ class Manager {
 
 		return '';
 	}
-
 }

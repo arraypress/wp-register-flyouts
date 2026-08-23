@@ -31,13 +31,13 @@ class PaymentMethod implements Renderable {
      * @var array
      */
     private const CARD_BRANDS = [
-            'visa'       => 'visa.svg',
-            'mastercard' => 'mastercard.svg',
-            'amex'       => 'amex.svg',
-            'discover'   => 'discover.svg',
-            'diners'     => 'diners.svg',
-            'jcb'        => 'jcb.svg',
-            'unionpay'   => 'unionpay.svg',
+		'visa'       => 'visa.svg',
+		'mastercard' => 'mastercard.svg',
+		'amex'       => 'amex.svg',
+		'discover'   => 'discover.svg',
+		'diners'     => 'diners.svg',
+		'jcb'        => 'jcb.svg',
+		'unionpay'   => 'unionpay.svg',
     ];
 
     /**
@@ -60,13 +60,13 @@ class PaymentMethod implements Renderable {
      */
     private static function get_defaults(): array {
         return [
-                'id'                => '',
-                'payment_method'    => 'card',
-                'payment_brand'     => '',
-                'payment_last4'     => '',
-                'stripe_risk_score' => null,
-                'stripe_risk_level' => '',
-                'class'             => '',
+			'id'                => '',
+			'payment_method'    => 'card',
+			'payment_brand'     => '',
+			'payment_last4'     => '',
+			'stripe_risk_score' => null,
+			'stripe_risk_level' => '',
+			'class'             => '',
         ];
     }
 
@@ -89,14 +89,14 @@ class PaymentMethod implements Renderable {
         ob_start();
         ?>
         <div id="<?php echo esc_attr( $this->config['id'] ); ?>"
-             class="<?php echo esc_attr( implode( ' ', $classes ) ); ?>">
+            class="<?php echo esc_attr( implode( ' ', $classes ) ); ?>">
 
             <div class="payment-icon">
-                <?php echo $this->get_payment_icon(); ?>
+                <?php echo $this->get_payment_icon(); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
             </div>
 
             <div class="payment-details">
-                <?php echo $this->get_payment_display(); ?>
+                <?php echo $this->get_payment_display(); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
                 <?php $this->render_risk_indicator(); ?>
             </div>
         </div>
@@ -193,5 +193,4 @@ class PaymentMethod implements Renderable {
             <?php
         }
     }
-
 }

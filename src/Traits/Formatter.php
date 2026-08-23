@@ -65,5 +65,4 @@ trait Formatter {
 		// Default: cast to string
 		return (string) $value;
 	}
-
 }

@@ -109,16 +109,16 @@ class Image implements Renderable {
 		ob_start();
 		?>
         <div class="<?php echo esc_attr( implode( ' ', $picker_classes ) ); ?>"
-             data-name="<?php echo esc_attr( $this->config['name'] ); ?>"
-             data-size="<?php echo esc_attr( $this->config['image_size'] ); ?>"
-             data-icon="<?php echo esc_attr( $this->config['icon'] ); ?>">
+            data-name="<?php echo esc_attr( $this->config['name'] ); ?>"
+            data-size="<?php echo esc_attr( $this->config['image_size'] ); ?>"
+            data-icon="<?php echo esc_attr( $this->config['icon'] ); ?>">
 
 			<?php // Current image or placeholder ?>
             <div class="image-picker-preview">
 				<?php if ( $has_image ) : ?>
                     <img src="<?php echo esc_url( $current_image ); ?>"
-                         alt=""
-                         class="image-picker-img">
+                        alt=""
+                        class="image-picker-img">
 				<?php else : ?>
                     <div class="image-picker-placeholder">
                         <span class="dashicons dashicons-<?php echo esc_attr( $this->config['icon'] ); ?>"></span>
@@ -131,9 +131,13 @@ class Image implements Renderable {
                 <button type="button"
                         class="image-picker-btn"
                         data-action="select-image"
-                        title="<?php echo $has_image
+                        title="
+                        <?php
+                        echo $has_image
 					        ? esc_attr__( 'Change image', 'wp-flyout' )
-					        : esc_attr__( 'Select image', 'wp-flyout' ); ?>">
+					        : esc_attr__( 'Select image', 'wp-flyout' );
+                            ?>
+                            ">
                     <span class="dashicons dashicons-<?php echo $has_image ? 'update' : 'plus-alt2'; ?>"></span>
                 </button>
 
@@ -149,9 +153,9 @@ class Image implements Renderable {
 
 			<?php // Hidden input for form submission ?>
             <input type="hidden"
-                   name="<?php echo esc_attr( $this->config['name'] ); ?>"
-                   value="<?php echo esc_attr( (string) $attachment_id ); ?>"
-                   class="image-picker-value">
+                    name="<?php echo esc_attr( $this->config['name'] ); ?>"
+                    value="<?php echo esc_attr( (string) $attachment_id ); ?>"
+                    class="image-picker-value">
         </div>
 
 		<?php if ( ! empty( $this->config['empty_text'] ) && ! $has_image ) : ?>
@@ -163,5 +167,4 @@ class Image implements Renderable {
 
 		return ob_get_clean();
 	}
-
 }

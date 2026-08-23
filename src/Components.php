@@ -15,6 +15,8 @@ declare( strict_types=1 );
 
 namespace ArrayPress\RegisterFlyouts;
 
+use ArrayPress\RegisterFlyouts\Utils\Runtime;
+
 use ArrayPress\RegisterFlyouts\Components\ActionButtons;
 use ArrayPress\RegisterFlyouts\Components\ActionMenu;
 use ArrayPress\RegisterFlyouts\Components\Articles;
@@ -92,7 +94,7 @@ class Components {
 
 		self::$initialized = true;
 
-		do_action( 'wp_flyout_components_init', self::$components );
+		do_action( Runtime::hook( 'components_init' ), self::$components );
 	}
 
 	// =========================================================================
@@ -124,11 +126,11 @@ class Components {
 				'image_size',
 				'image_shape',
 				'fallback_image',
-				'fallback_attachment_id'
+				'fallback_attachment_id',
 			],
 			'asset'       => null,
 			'category'    => 'display',
-			'description' => 'Unified header for any entity with optional image picker'
+			'description' => 'Unified header for any entity with optional image picker',
 		] );
 
 		// ---- Alerts & Messages ----
@@ -137,7 +139,7 @@ class Components {
 			'data_fields' => [ 'type', 'message', 'title' ],
 			'asset'       => null,
 			'category'    => 'display',
-			'description' => 'Alert messages with various styles'
+			'description' => 'Alert messages with various styles',
 		] );
 
 		self::register( 'empty_state', [
@@ -145,7 +147,7 @@ class Components {
 			'data_fields' => [ 'icon', 'title', 'description', 'action_text' ],
 			'asset'       => null,
 			'category'    => 'display',
-			'description' => 'Empty state messages'
+			'description' => 'Empty state messages',
 		] );
 
 		// ---- Content Lists ----
@@ -154,7 +156,7 @@ class Components {
 			'data_fields' => 'items',
 			'asset'       => 'articles',
 			'category'    => 'display',
-			'description' => 'Article cards with images and excerpts'
+			'description' => 'Article cards with images and excerpts',
 		] );
 
 		self::register( 'timeline', [
@@ -162,7 +164,7 @@ class Components {
 			'data_fields' => 'items',
 			'asset'       => 'timeline',
 			'category'    => 'display',
-			'description' => 'Chronological event timeline'
+			'description' => 'Chronological event timeline',
 		] );
 
 		// ---- Statistics & Metrics ----
@@ -171,7 +173,7 @@ class Components {
 			'data_fields' => 'items',
 			'asset'       => 'stats',
 			'category'    => 'display',
-			'description' => 'Statistical metric cards with trends'
+			'description' => 'Statistical metric cards with trends',
 		] );
 	}
 
@@ -190,7 +192,7 @@ class Components {
 			'data_fields' => 'buttons',
 			'asset'       => 'action-buttons',
 			'category'    => 'interactive',
-			'description' => 'Action buttons with callbacks for operations like refunds'
+			'description' => 'Action buttons with callbacks for operations like refunds',
 		] );
 
 		self::register( 'action_menu', [
@@ -198,7 +200,7 @@ class Components {
 			'data_fields' => 'items',
 			'asset'       => 'action-menu',
 			'category'    => 'interactive',
-			'description' => 'Dropdown menu for multiple actions'
+			'description' => 'Dropdown menu for multiple actions',
 		] );
 
 		// ---- List Management ----
@@ -207,7 +209,7 @@ class Components {
 			'data_fields' => 'items',
 			'asset'       => 'notes',
 			'category'    => 'interactive',
-			'description' => 'Notes/comments with add/delete functionality'
+			'description' => 'Notes/comments with add/delete functionality',
 		] );
 
 		self::register( 'files', [
@@ -215,7 +217,7 @@ class Components {
 			'data_fields' => 'items',
 			'asset'       => 'file-manager',
 			'category'    => 'interactive',
-			'description' => 'File attachments with drag-drop sorting'
+			'description' => 'File attachments with drag-drop sorting',
 		] );
 
 		self::register( 'feature_list', [
@@ -223,7 +225,7 @@ class Components {
 			'data_fields' => 'items',
 			'asset'       => 'feature-list',
 			'category'    => 'interactive',
-			'description' => 'Feature list with drag-drop sorting'
+			'description' => 'Feature list with drag-drop sorting',
 		] );
 
 		self::register( 'key_value_list', [
@@ -231,7 +233,7 @@ class Components {
 			'data_fields' => 'items',
 			'asset'       => 'key-value-list',
 			'category'    => 'interactive',
-			'description' => 'Key value list with drag-drop sorting'
+			'description' => 'Key value list with drag-drop sorting',
 		] );
 
 		// ---- Commerce Components ----
@@ -240,7 +242,7 @@ class Components {
 			'data_fields' => 'items',
 			'asset'       => 'line-items',
 			'category'    => 'interactive',
-			'description' => 'Order line items with quantities and pricing'
+			'description' => 'Order line items with quantities and pricing',
 		] );
 
 		self::register( 'gallery', [
@@ -248,7 +250,7 @@ class Components {
 			'data_fields' => 'items',
 			'asset'       => 'gallery',
 			'category'    => 'interactive',
-			'description' => 'Multi-image gallery with media library and reordering'
+			'description' => 'Multi-image gallery with media library and reordering',
 		] );
 
 		self::register( 'refund_form', [
@@ -256,7 +258,7 @@ class Components {
 			'data_fields' => [ 'amount_paid', 'amount_refunded', 'currency' ],
 			'asset'       => 'refund-form',
 			'category'    => 'interactive',
-			'description' => 'Inline refund form for full or partial refunds'
+			'description' => 'Inline refund form for full or partial refunds',
 		] );
 	}
 
@@ -275,7 +277,7 @@ class Components {
 			'data_fields' => [ 'options', 'value' ],
 			'asset'       => 'card-choice',
 			'category'    => 'form',
-			'description' => 'Card-style radio/checkbox selections'
+			'description' => 'Card-style radio/checkbox selections',
 		] );
 
 		self::register( 'ajax_select', [
@@ -283,7 +285,7 @@ class Components {
 			'data_fields' => 'value',
 			'asset'       => 'ajax-select',
 			'category'    => 'form',
-			'description' => 'AJAX-powered select field'
+			'description' => 'AJAX-powered select field',
 		] );
 
 		// ---- Media Components ----
@@ -292,7 +294,7 @@ class Components {
 			'data_fields' => 'value',
 			'asset'       => 'image-picker',
 			'category'    => 'form',
-			'description' => 'Single image picker with media library integration'
+			'description' => 'Single image picker with media library integration',
 		] );
 
 		// ---- Pricing ----
@@ -301,7 +303,7 @@ class Components {
 			'data_fields' => [ 'amount', 'currency', 'recurring_interval', 'recurring_interval_count' ],
 			'asset'       => 'price-config',
 			'category'    => 'form',
-			'description' => 'Stripe-compatible pricing configuration'
+			'description' => 'Stripe-compatible pricing configuration',
 		] );
 
 		self::register( 'discount_config', [
@@ -309,7 +311,7 @@ class Components {
 			'data_fields' => [ 'rate_type', 'amount', 'currency', 'duration', 'duration_in_months' ],
 			'asset'       => 'discount-config',
 			'category'    => 'form',
-			'description' => 'Stripe-compatible discount/coupon configuration'
+			'description' => 'Stripe-compatible discount/coupon configuration',
 		] );
 
 		self::register( 'unit_input', [
@@ -317,7 +319,7 @@ class Components {
 			'data_fields' => [ 'value', 'unit_value' ],
 			'asset'       => 'unit-input',
 			'category'    => 'form',
-			'description' => 'Numeric input with unit prefix or suffix'
+			'description' => 'Numeric input with unit prefix or suffix',
 		] );
 
 		self::register( 'code_generator', [
@@ -325,7 +327,7 @@ class Components {
 			'data_fields' => 'value',
 			'asset'       => 'code-generator',
 			'category'    => 'form',
-			'description' => 'Text input with code generation button'
+			'description' => 'Text input with code generation button',
 		] );
 	}
 
@@ -344,7 +346,7 @@ class Components {
 			'data_fields' => 'items',
 			'asset'       => 'accordion',
 			'category'    => 'layout',
-			'description' => 'Collapsible content sections'
+			'description' => 'Collapsible content sections',
 		] );
 
 		// ---- Visual Separators ----
@@ -353,7 +355,7 @@ class Components {
 			'data_fields' => [ 'text', 'icon' ],
 			'asset'       => null,
 			'category'    => 'layout',
-			'description' => 'Visual dividers with optional text'
+			'description' => 'Visual dividers with optional text',
 		] );
 	}
 
@@ -372,7 +374,7 @@ class Components {
 			'data_fields' => [ 'columns', 'data' ],
 			'asset'       => null,
 			'category'    => 'data',
-			'description' => 'Structured data table display'
+			'description' => 'Structured data table display',
 		] );
 
 		self::register( 'info_grid', [
@@ -380,7 +382,7 @@ class Components {
 			'data_fields' => 'items',
 			'asset'       => null,
 			'category'    => 'data',
-			'description' => 'Information grid layout'
+			'description' => 'Information grid layout',
 		] );
 
 		// ---- Domain-Specific Data ----
@@ -391,11 +393,11 @@ class Components {
 				'payment_brand',
 				'payment_last4',
 				'stripe_risk_score',
-				'stripe_risk_level'
+				'stripe_risk_level',
 			],
 			'asset'       => 'payment-method',
 			'category'    => 'data',
-			'description' => 'Displays payment method with card brand icons and risk indicators'
+			'description' => 'Displays payment method with card brand icons and risk indicators',
 		] );
 
 		self::register( 'price_summary', [
@@ -403,7 +405,7 @@ class Components {
 			'data_fields' => [ 'items', 'subtotal', 'tax', 'discount', 'total', 'currency' ],
 			'asset'       => 'price-summary',
 			'category'    => 'data',
-			'description' => 'Price summary with line items and totals'
+			'description' => 'Price summary with line items and totals',
 		] );
 	}
 
@@ -423,13 +425,13 @@ class Components {
 	public static function register( string $type, array $config ): void {
 		if ( ! isset( $config['class'] ) ) {
 			throw new InvalidArgumentException(
-				sprintf( 'Component "%s" must have a class defined', $type )
+				esc_html( sprintf( 'Component "%s" must have a class defined', $type ) )
 			);
 		}
 
 		if ( ! class_exists( $config['class'] ) ) {
 			throw new InvalidArgumentException(
-				sprintf( 'Component class "%s" does not exist', $config['class'] )
+				esc_html( sprintf( 'Component class "%s" does not exist', $config['class'] ) )
 			);
 		}
 
@@ -532,7 +534,7 @@ class Components {
 
 		$class = $component_config['class'];
 
-		$config = apply_filters( 'wp_flyout_component_config', $config, $type, $class );
+		$config = apply_filters( Runtime::hook( 'component_config' ), $config, $type, $class );
 		$config = apply_filters( "wp_flyout_component_{$type}_config", $config );
 
 		return new $class( $config );
@@ -745,5 +747,4 @@ class Components {
 		self::$components  = [];
 		self::$initialized = false;
 	}
-
 }

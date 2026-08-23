@@ -133,10 +133,10 @@ class CodeGenerator implements Renderable {
 		?>
 		<div class="<?php echo esc_attr( implode( ' ', $group_classes ) ); ?>">
 			<input type="text"
-			       id="<?php echo esc_attr( $this->config['id'] ); ?>"
-			       name="<?php echo esc_attr( $this->config['name'] ); ?>"
-			       value="<?php echo esc_attr( $this->config['value'] ); ?>"
-			       placeholder="<?php echo esc_attr( $this->config['placeholder'] ); ?>"
+					id="<?php echo esc_attr( $this->config['id'] ); ?>"
+					name="<?php echo esc_attr( $this->config['name'] ); ?>"
+					value="<?php echo esc_attr( $this->config['value'] ); ?>"
+					placeholder="<?php echo esc_attr( $this->config['placeholder'] ); ?>"
 				<?php echo $this->config['required'] ? 'required' : ''; ?>
 				<?php echo $this->config['disabled'] ? 'disabled' : ''; ?>
 				<?php echo $this->config['readonly'] ? 'readonly' : ''; ?>>
@@ -154,5 +154,4 @@ class CodeGenerator implements Renderable {
 		</div>
 		<?php
 	}
-
 }

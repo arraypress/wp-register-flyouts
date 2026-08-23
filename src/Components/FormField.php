@@ -43,23 +43,23 @@ class FormField implements Renderable {
      * @var array
      */
     private static array $type_renderers = [
-            'text'        => 'render_input',
-            'email'       => 'render_input',
-            'url'         => 'render_input',
-            'tel'         => 'render_input',
-            'number'      => 'render_input',
-            'password'    => 'render_input',
-            'date'        => 'render_input',
-            'hidden'      => 'render_hidden',
-            'textarea'    => 'render_textarea',
-            'select'      => 'render_select',
-            'ajax_select' => 'render_ajax_select',
-            'toggle'      => 'render_toggle',
-            'radio'       => 'render_radio',
-            'tags'        => 'render_tags',
-            'color'       => 'render_color',
-            'group'       => 'render_group',
-            'separator'   => 'render_separator',
+		'text'        => 'render_input',
+		'email'       => 'render_input',
+		'url'         => 'render_input',
+		'tel'         => 'render_input',
+		'number'      => 'render_input',
+		'password'    => 'render_input',
+		'date'        => 'render_input',
+		'hidden'      => 'render_hidden',
+		'textarea'    => 'render_textarea',
+		'select'      => 'render_select',
+		'ajax_select' => 'render_ajax_select',
+		'toggle'      => 'render_toggle',
+		'radio'       => 'render_radio',
+		'tags'        => 'render_tags',
+		'color'       => 'render_color',
+		'group'       => 'render_group',
+		'separator'   => 'render_separator',
     ];
 
     /**
@@ -83,20 +83,20 @@ class FormField implements Renderable {
      */
     private function normalize_config( array $config ): array {
         $defaults = [
-                'type'          => 'text',
-                'name'          => '',
-                'id'            => '',
-                'label'         => '',
-                'value'         => '',
-                'description'   => '',
-                'placeholder'   => '',
-                'required'      => false,
-                'disabled'      => false,
-                'readonly'      => false,
-                'class'         => '',
-                'wrapper_class' => '',
-                'data_callback' => null,
-                'condition'     => null,
+			'type'          => 'text',
+			'name'          => '',
+			'id'            => '',
+			'label'         => '',
+			'value'         => '',
+			'description'   => '',
+			'placeholder'   => '',
+			'required'      => false,
+			'disabled'      => false,
+			'readonly'      => false,
+			'class'         => '',
+			'wrapper_class' => '',
+			'data_callback' => null,
+			'condition'     => null,
         ];
 
         $type_defaults = $this->get_type_defaults( $config['type'] ?? 'text' );
@@ -128,47 +128,47 @@ class FormField implements Renderable {
      */
     private function get_type_defaults( string $type ): array {
         $defaults = [
-                'textarea'    => [
-                        'rows' => 5,
-                        'cols' => 50,
-                ],
-                'select'      => [
-                        'options'  => [],
-                        'multiple' => false,
-                ],
-                'ajax_select' => [
-                        'ajax_url'    => '',
-                        'ajax_params' => [],
-                        'options'     => [],
-                        'multiple'    => false,
-                        'tags'        => false,
-                        'placeholder' => __( 'Type to search...', 'wp-flyout' ),
-                ],
-                'number'      => [
-                        'min'  => null,
-                        'max'  => null,
-                        'step' => 1,
-                ],
-                'toggle'      => [
-                        'checked' => false,
-                        'value'   => '1',
-                ],
-                'tags'        => [
-                        'placeholder' => 'Add tags...'
-                ],
-                'radio'       => [
-                        'options' => [],
-                ],
-                'color'       => [
-                        'default' => '#000000',
-                ],
-                'separator'   => [
-                        'text'   => '',
-                        'icon'   => '',
-                        'margin' => '20px',
-                        'style'  => 'line',
-                        'align'  => 'center'
-                ],
+			'textarea'    => [
+				'rows' => 5,
+				'cols' => 50,
+			],
+			'select'      => [
+				'options'  => [],
+				'multiple' => false,
+			],
+			'ajax_select' => [
+				'ajax_url'    => '',
+				'ajax_params' => [],
+				'options'     => [],
+				'multiple'    => false,
+				'tags'        => false,
+				'placeholder' => __( 'Type to search...', 'wp-flyout' ),
+			],
+			'number'      => [
+				'min'  => null,
+				'max'  => null,
+				'step' => 1,
+			],
+			'toggle'      => [
+				'checked' => false,
+				'value'   => '1',
+			],
+			'tags'        => [
+				'placeholder' => 'Add tags...',
+			],
+			'radio'       => [
+				'options' => [],
+			],
+			'color'       => [
+				'default' => '#000000',
+			],
+			'separator'   => [
+				'text'   => '',
+				'icon'   => '',
+				'margin' => '20px',
+				'style'  => 'line',
+				'align'  => 'center',
+			],
         ];
 
         return $defaults[ $type ] ?? [];
@@ -184,13 +184,13 @@ class FormField implements Renderable {
      */
     private function get_default_class( string $type ): string {
         $classes = [
-                'text'     => 'regular-text',
-                'email'    => 'regular-text',
-                'url'      => 'large-text',
-                'textarea' => 'large-text',
-                'select'   => 'regular-text',
-                'number'   => 'small-text',
-                'color'    => 'small-text',
+			'text'     => 'regular-text',
+			'email'    => 'regular-text',
+			'url'      => 'large-text',
+			'textarea' => 'large-text',
+			'select'   => 'regular-text',
+			'number'   => 'small-text',
+			'color'    => 'small-text',
         ];
 
         return $classes[ $type ] ?? '';
@@ -226,9 +226,9 @@ class FormField implements Renderable {
         }
 
         $wrapper_classes = [
-                'wp-flyout-field',
-                'field-type-' . $this->config['type'],
-                $this->config['wrapper_class']
+			'wp-flyout-field',
+			'field-type-' . $this->config['type'],
+			$this->config['wrapper_class'],
         ];
 
         $wrapper_attrs = $this->config['wrapper_attrs'] ?? [];
@@ -255,7 +255,7 @@ class FormField implements Renderable {
 
         ob_start();
         ?>
-        <div class="<?php echo esc_attr( implode( ' ', array_filter( $wrapper_classes ) ) ); ?>"<?php echo $attrs_html; ?>>
+        <div class="<?php echo esc_attr( implode( ' ', array_filter( $wrapper_classes ) ) ); ?>"<?php echo esc_attr( $attrs_html ); ?>>
             <?php if ( ! in_array( $this->config['type'], [ 'toggle', 'radio' ], true ) && $this->config['label'] ) : ?>
                 <label for="<?php echo esc_attr( $this->config['id'] ); ?>">
                     <?php echo esc_html( $this->config['label'] ); ?>
@@ -265,7 +265,7 @@ class FormField implements Renderable {
                 </label>
             <?php endif; ?>
 
-            <?php echo $this->render_field(); ?>
+            <?php echo $this->render_field(); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
 
             <?php if ( $this->config['description'] ) : ?>
                 <p class="description"><?php echo esc_html( $this->config['description'] ); ?></p>
@@ -303,12 +303,12 @@ class FormField implements Renderable {
         $type        = in_array( $this->config['type'], $valid_types, true ) ? $this->config['type'] : 'text';
 
         $attrs = [
-                'type'        => $type,
-                'id'          => $this->config['id'],
-                'name'        => $this->config['name'],
-                'value'       => $this->config['value'],
-                'class'       => $this->config['class'],
-                'placeholder' => $this->config['placeholder'],
+			'type'        => $type,
+			'id'          => $this->config['id'],
+			'name'        => $this->config['name'],
+			'value'       => $this->config['value'],
+			'class'       => $this->config['class'],
+			'placeholder' => $this->config['placeholder'],
         ];
 
         if ( $type === 'number' ) {
@@ -407,7 +407,8 @@ class FormField implements Renderable {
                         } else {
                             selected( $this->config['value'], $value );
                         }
-                        ?>>
+                        ?>
+                        >
                     <?php echo esc_html( $label ); ?>
                 </option>
             <?php endforeach; ?>
@@ -429,9 +430,9 @@ class FormField implements Renderable {
         ?>
         <label class="wp-flyout-toggle">
             <input type="checkbox"
-                   name="<?php echo esc_attr( $this->config['name'] ); ?>"
-                   id="<?php echo esc_attr( $this->config['id'] ); ?>"
-                   value="<?php echo esc_attr( $this->config['value'] ?: '1' ); ?>"
+                    name="<?php echo esc_attr( $this->config['name'] ); ?>"
+                    id="<?php echo esc_attr( $this->config['id'] ); ?>"
+                    value="<?php echo esc_attr( $this->config['value'] ?: '1' ); ?>"
                     <?php checked( $is_checked ); ?>
                     <?php disabled( $this->config['disabled'] ); ?>>
             <span class="toggle-slider"></span>
@@ -473,7 +474,8 @@ class FormField implements Renderable {
                 <?php echo $this->config['required'] ? 'required' : ''; ?>
                 <?php echo $this->config['disabled'] ? 'disabled' : ''; ?>>
 
-            <?php if ( ! empty( $this->config['options'] ) && is_array( $this->config['options'] ) ) :
+            <?php
+            if ( ! empty( $this->config['options'] ) && is_array( $this->config['options'] ) ) :
                 $current_value = $this->config['value'];
                 $current_values = is_array( $current_value ) ? $current_value : [ $current_value ];
 
@@ -483,8 +485,10 @@ class FormField implements Renderable {
                     <option value="<?php echo esc_attr( $value ); ?>"<?php echo $is_selected ? ' selected' : ''; ?>>
                         <?php echo esc_html( $label ); ?>
                     </option>
-                <?php endforeach;
-            endif; ?>
+                <?php
+                endforeach;
+            endif;
+            ?>
         </select>
         <?php
         return ob_get_clean();
@@ -501,7 +505,7 @@ class FormField implements Renderable {
         ob_start();
         ?>
         <div class="wp-flyout-tag-input"
-             data-name="<?php echo esc_attr( $this->config['name'] ); ?>">
+            data-name="<?php echo esc_attr( $this->config['name'] ); ?>">
             <div class="tag-input-container">
                 <?php foreach ( $value as $tag ) : ?>
                     <span class="tag-item" data-tag="<?php echo esc_attr( $tag ); ?>">
@@ -515,14 +519,14 @@ class FormField implements Renderable {
                 <?php endforeach; ?>
                 <?php if ( ! $this->config['readonly'] ) : ?>
                     <input type="text"
-                           class="tag-input-field"
-                           placeholder="<?php echo esc_attr( $this->config['placeholder'] ); ?>">
+                            class="tag-input-field"
+                            placeholder="<?php echo esc_attr( $this->config['placeholder'] ); ?>">
                 <?php endif; ?>
             </div>
             <?php foreach ( $value as $tag ) : ?>
                 <input type="hidden"
-                       name="<?php echo esc_attr( $this->config['name'] ); ?>[]"
-                       value="<?php echo esc_attr( $tag ); ?>">
+                        name="<?php echo esc_attr( $this->config['name'] ); ?>[]"
+                        value="<?php echo esc_attr( $tag ); ?>">
             <?php endforeach; ?>
         </div>
         <?php
@@ -542,8 +546,8 @@ class FormField implements Renderable {
             <?php foreach ( $this->config['options'] as $value => $label ) : ?>
                 <label class="wp-flyout-radio">
                     <input type="radio"
-                           name="<?php echo esc_attr( $this->config['name'] ); ?>"
-                           value="<?php echo esc_attr( $value ); ?>"
+                            name="<?php echo esc_attr( $this->config['name'] ); ?>"
+                            value="<?php echo esc_attr( $value ); ?>"
                             <?php checked( $this->config['value'], $value ); ?>
                             <?php echo $this->config['required'] ? 'required' : ''; ?>
                             <?php echo $this->config['disabled'] ? 'disabled' : ''; ?>>
@@ -568,16 +572,16 @@ class FormField implements Renderable {
         ?>
         <div class="wp-flyout-color-wrapper">
             <input type="color"
-                   id="<?php echo esc_attr( $this->config['id'] ); ?>"
-                   name="<?php echo esc_attr( $this->config['name'] ); ?>"
-                   value="<?php echo esc_attr( $value ); ?>"
-                   class="wp-flyout-color-input"
+                    id="<?php echo esc_attr( $this->config['id'] ); ?>"
+                    name="<?php echo esc_attr( $this->config['name'] ); ?>"
+                    value="<?php echo esc_attr( $value ); ?>"
+                    class="wp-flyout-color-input"
                     <?php echo $this->config['required'] ? 'required' : ''; ?>
                     <?php echo $this->config['disabled'] ? 'disabled' : ''; ?>>
             <input type="text"
-                   value="<?php echo esc_attr( $value ); ?>"
-                   class="wp-flyout-color-preview"
-                   readonly>
+                    value="<?php echo esc_attr( $value ); ?>"
+                    class="wp-flyout-color-preview"
+                    readonly>
         </div>
         <?php
         return ob_get_clean();
@@ -599,14 +603,14 @@ class FormField implements Renderable {
         ob_start();
         ?>
         <div class="wp-flyout-field-group"
-             style="display: <?php echo esc_attr( $layout_class ); ?>; <?php echo esc_attr( $gap_style ); ?>;">
+            style="display: <?php echo esc_attr( $layout_class ); ?>; <?php echo esc_attr( $gap_style ); ?>;">
             <?php foreach ( $this->config['fields'] as $field_config ) : ?>
                 <?php
                 $field = new self( $field_config );
                 $flex  = $field_config['flex'] ?? 1;
                 ?>
                 <div style="flex: <?php echo esc_attr( $flex ); ?>;">
-                    <?php echo $field->render(); ?>
+                    <?php echo $field->render(); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
                 </div>
             <?php endforeach; ?>
         </div>
@@ -621,14 +625,13 @@ class FormField implements Renderable {
      */
     private function render_separator(): string {
         $separator = new Separator( [
-                'text'   => $this->config['text'] ?? '',
-                'icon'   => $this->config['icon'] ?? '',
-                'margin' => $this->config['margin'] ?? '20px',
-                'style'  => $this->config['style'] ?? 'line',
-                'align'  => $this->config['align'] ?? 'center'
+			'text'   => $this->config['text'] ?? '',
+			'icon'   => $this->config['icon'] ?? '',
+			'margin' => $this->config['margin'] ?? '20px',
+			'style'  => $this->config['style'] ?? 'line',
+			'align'  => $this->config['align'] ?? 'center',
         ] );
 
         return $separator->render();
     }
-
 }

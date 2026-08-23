@@ -216,7 +216,7 @@ class UnitInput implements Renderable {
 		echo '<input class="unit-input-field"';
 		foreach ( $attrs as $key => $value ) {
 			if ( $value !== '' && $value !== null ) {
-				printf( ' %s="%s"', $key, esc_attr( (string) $value ) );
+				printf( ' %s="%s"', esc_attr( $key ), esc_attr( (string) $value ) );
 			}
 		}
 		if ( $this->config['required'] ) {
@@ -261,5 +261,4 @@ class UnitInput implements Renderable {
 			<?php
 		}
 	}
-
 }

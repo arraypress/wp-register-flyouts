@@ -48,15 +48,15 @@ class EmptyState implements Renderable {
      */
     private static function get_defaults(): array {
         return [
-                'id'           => '',
-                'icon'         => 'admin-page',
-                'title'        => '',
-                'description'  => '',
-                'action_text'  => '',
-                'action_url'   => '',
-                'action_class' => 'button',
-                'action_attrs' => [],
-                'class'        => ''
+			'id'           => '',
+			'icon'         => 'admin-page',
+			'title'        => '',
+			'description'  => '',
+			'action_text'  => '',
+			'action_url'   => '',
+			'action_class' => 'button',
+			'action_attrs' => [],
+			'class'        => '',
         ];
     }
 
@@ -74,7 +74,7 @@ class EmptyState implements Renderable {
         ob_start();
         ?>
         <div id="<?php echo esc_attr( $this->config['id'] ); ?>"
-             class="<?php echo esc_attr( implode( ' ', $classes ) ); ?>">
+            class="<?php echo esc_attr( implode( ' ', $classes ) ); ?>">
 
             <?php if ( $this->config['icon'] ) : ?>
                 <span class="empty-state-icon dashicons dashicons-<?php echo esc_attr( $this->config['icon'] ); ?>"></span>
@@ -105,8 +105,8 @@ class EmptyState implements Renderable {
         if ( $this->config['action_url'] ) {
             ?>
             <a href="<?php echo esc_url( $this->config['action_url'] ); ?>"
-               class="<?php echo esc_attr( $this->config['action_class'] ); ?>"
-                    <?php echo $this->build_attributes( $attrs ); ?>>
+                class="<?php echo esc_attr( $this->config['action_class'] ); ?>"
+                    <?php echo $this->build_attributes( $attrs ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>>
                 <?php echo esc_html( $this->config['action_text'] ); ?>
             </a>
             <?php
@@ -114,11 +114,10 @@ class EmptyState implements Renderable {
             ?>
             <button type="button"
                     class="<?php echo esc_attr( $this->config['action_class'] ); ?>"
-                    <?php echo $this->build_attributes( $attrs ); ?>>
+                    <?php echo $this->build_attributes( $attrs ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>>
                 <?php echo esc_html( $this->config['action_text'] ); ?>
             </button>
             <?php
         }
     }
-
 }

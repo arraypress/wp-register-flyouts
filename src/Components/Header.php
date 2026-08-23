@@ -75,33 +75,33 @@ class Header implements Renderable {
      */
     private static function get_defaults(): array {
         return [
-                'id'                     => '',
-                'name'                   => 'header_image',
-                'title'                  => '',
-                'subtitle'               => '',
+			'id'                     => '',
+			'name'                   => 'header_image',
+			'title'                  => '',
+			'subtitle'               => '',
 
             // Image display
                 'image'                  => '',
-                'image_size'             => 'thumbnail',
-                'image_shape'            => 'square', // square, circle, rounded
-                'thumbnail_width'        => 60,       // Display size in pixels (always square)
+			'image_size'             => 'thumbnail',
+			'image_shape'            => 'square', // square, circle, rounded
+			'thumbnail_width'        => 60,       // Display size in pixels (always square)
 
             // Image picker (interactive)
-                'editable'               => false,
-                'attachment_id'          => 0,
+			'editable'               => false,
+			'attachment_id'          => 0,
 
             // Fallback when no image is set
                 'fallback_image'         => '',
-                'fallback_attachment_id' => 0,
+			'fallback_attachment_id' => 0,
 
             // Icon (used when no image at all)
                 'icon'                   => '',
 
             // Other header content
                 'badges'                 => [],
-                'meta'                   => [],
-                'description'            => '',
-                'class'                  => ''
+			'meta'                   => [],
+			'description'            => '',
+			'class'                  => '',
         ];
     }
 
@@ -136,7 +136,7 @@ class Header implements Renderable {
         ob_start();
         ?>
         <div id="<?php echo esc_attr( $this->config['id'] ); ?>"
-             class="<?php echo esc_attr( implode( ' ', $classes ) ); ?>">
+            class="<?php echo esc_attr( implode( ' ', $classes ) ); ?>">
 
             <?php if ( $has_visual ) : ?>
                 <div class="entity-header-visual">
@@ -144,12 +144,12 @@ class Header implements Renderable {
                         <?php $this->render_editable_image(); ?>
                     <?php elseif ( $this->config['image'] ) : ?>
                         <img src="<?php echo esc_url( $this->config['image'] ); ?>"
-                             alt="<?php echo esc_attr( $this->config['title'] ); ?>"
-                             class="entity-header-image shape-<?php echo esc_attr( $this->config['image_shape'] ); ?>"
-                             style="<?php echo esc_attr( $this->get_size_style() ); ?>">
+                            alt="<?php echo esc_attr( $this->config['title'] ); ?>"
+                            class="entity-header-image shape-<?php echo esc_attr( $this->config['image_shape'] ); ?>"
+                            style="<?php echo esc_attr( $this->get_size_style() ); ?>">
                     <?php elseif ( $this->config['icon'] ) : ?>
                         <span class="entity-header-icon dashicons dashicons-<?php echo esc_attr( $this->config['icon'] ); ?>"
-                              style="<?php echo esc_attr( $this->get_size_style() ); ?>"></span>
+                                style="<?php echo esc_attr( $this->get_size_style() ); ?>"></span>
                     <?php endif; ?>
                 </div>
             <?php endif; ?>
@@ -200,27 +200,27 @@ class Header implements Renderable {
         $shape_class   = 'shape-' . ( $this->config['image_shape'] ?? 'square' );
 
         $picker_classes = [
-                'image-picker',
-                $shape_class,
+			'image-picker',
+			$shape_class,
         ];
         if ( $has_image ) {
             $picker_classes[] = 'has-image';
         }
         ?>
         <div class="<?php echo esc_attr( implode( ' ', $picker_classes ) ); ?>"
-             style="<?php echo esc_attr( $this->get_size_style() ); ?>"
-             data-name="<?php echo esc_attr( $this->config['name'] ); ?>"
-             data-size="<?php echo esc_attr( $this->config['image_size'] ); ?>"
-             data-icon="<?php echo esc_attr( $this->config['icon'] ?: 'format-image' ); ?>"
-             data-fallback-image="<?php echo esc_attr( $this->config['fallback_image'] ?? '' ); ?>"
-             data-fallback-attachment-id="<?php echo esc_attr( (string) ( $this->config['fallback_attachment_id'] ?? 0 ) ); ?>">
+            style="<?php echo esc_attr( $this->get_size_style() ); ?>"
+            data-name="<?php echo esc_attr( $this->config['name'] ); ?>"
+            data-size="<?php echo esc_attr( $this->config['image_size'] ); ?>"
+            data-icon="<?php echo esc_attr( $this->config['icon'] ?: 'format-image' ); ?>"
+            data-fallback-image="<?php echo esc_attr( $this->config['fallback_image'] ?? '' ); ?>"
+            data-fallback-attachment-id="<?php echo esc_attr( (string) ( $this->config['fallback_attachment_id'] ?? 0 ) ); ?>">
 
             <?php // Current image or placeholder ?>
             <div class="image-picker-preview">
                 <?php if ( $has_image ) : ?>
                     <img src="<?php echo esc_url( $current_image ); ?>"
-                         alt="<?php echo esc_attr( $this->config['title'] ); ?>"
-                         class="image-picker-img">
+                        alt="<?php echo esc_attr( $this->config['title'] ); ?>"
+                        class="image-picker-img">
                 <?php else : ?>
                     <div class="image-picker-placeholder">
                         <span class="dashicons dashicons-<?php echo esc_attr( $this->config['icon'] ?: 'format-image' ); ?>"></span>
@@ -233,9 +233,13 @@ class Header implements Renderable {
                 <button type="button"
                         class="image-picker-btn"
                         data-action="select-image"
-                        title="<?php echo $has_image
+                        title="
+                        <?php
+                        echo $has_image
                                 ? esc_attr__( 'Change image', 'wp-flyout' )
-                                : esc_attr__( 'Select image', 'wp-flyout' ); ?>">
+                                : esc_attr__( 'Select image', 'wp-flyout' );
+                                ?>
+                                ">
                     <span class="dashicons dashicons-<?php echo $has_image ? 'update' : 'plus-alt2'; ?>"></span>
                 </button>
 
@@ -251,9 +255,9 @@ class Header implements Renderable {
 
             <?php // Hidden input for form submission ?>
             <input type="hidden"
-                   name="<?php echo esc_attr( $this->config['name'] ); ?>"
-                   value="<?php echo esc_attr( (string) $attachment_id ); ?>"
-                   class="image-picker-value">
+                    name="<?php echo esc_attr( $this->config['name'] ); ?>"
+                    value="<?php echo esc_attr( (string) $attachment_id ); ?>"
+                    class="image-picker-value">
         </div>
         <?php
     }
@@ -311,5 +315,4 @@ class Header implements Renderable {
             <?php
         }
     }
-
 }

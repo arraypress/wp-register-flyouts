@@ -13,6 +13,9 @@
  */
 (function ($) {
     'use strict';
+    // This build's REST config; see the resolver in wp-flyout.js.
+    var wpFlyout = window.ArrayPressFlyouts.resolve(document.currentScript);
+
 
     const AjaxSelect = {
 

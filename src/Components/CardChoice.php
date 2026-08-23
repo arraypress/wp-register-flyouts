@@ -58,13 +58,13 @@ class CardChoice implements Renderable {
      */
     private static function get_defaults(): array {
         return [
-                'id'      => '',
-                'name'    => '',
-                'mode'    => 'radio', // Changed from 'type' to 'mode'
-                'options' => [],
-                'value'   => null,
-                'columns' => 2,
-                'class'   => ''
+			'id'      => '',
+			'name'    => '',
+			'mode'    => 'radio', // Changed from 'type' to 'mode'
+			'options' => [],
+			'value'   => null,
+			'columns' => 2,
+			'class'   => '',
         ];
     }
 
@@ -79,8 +79,8 @@ class CardChoice implements Renderable {
         }
 
         $classes = [
-                'wp-flyout-card-choice-group',
-                'columns-' . $this->config['columns']
+			'wp-flyout-card-choice-group',
+			'columns-' . $this->config['columns'],
         ];
 
         if ( ! empty( $this->config['class'] ) ) {
@@ -90,8 +90,8 @@ class CardChoice implements Renderable {
         ob_start();
         ?>
         <div id="<?php echo esc_attr( $this->config['id'] ); ?>"
-             class="<?php echo esc_attr( implode( ' ', $classes ) ); ?>"
-             role="<?php echo $this->config['mode'] === 'radio' ? 'radiogroup' : 'group'; ?>">
+            class="<?php echo esc_attr( implode( ' ', $classes ) ); ?>"
+            role="<?php echo $this->config['mode'] === 'radio' ? 'radiogroup' : 'group'; ?>">
             <?php foreach ( $this->config['options'] as $value => $option ) : ?>
                 <?php $this->render_option( $value, $option ); ?>
             <?php endforeach; ?>
@@ -137,9 +137,9 @@ class CardChoice implements Renderable {
         ?>
         <div class="card-choice">
             <input type="<?php echo esc_attr( $input_type ); ?>"
-                   id="<?php echo esc_attr( $input_id ); ?>"
-                   name="<?php echo esc_attr( $input_name ); ?>"
-                   value="<?php echo esc_attr( $value ); ?>"
+                    id="<?php echo esc_attr( $input_id ); ?>"
+                    name="<?php echo esc_attr( $input_name ); ?>"
+                    value="<?php echo esc_attr( $value ); ?>"
                     <?php checked( $is_checked ); ?>>
 
             <label class="card-choice-label" for="<?php echo esc_attr( $input_id ); ?>">
@@ -178,10 +178,9 @@ class CardChoice implements Renderable {
     private function is_checked( string $value ): bool {
         if ( $this->config['mode'] === 'checkbox' ) {
             return is_array( $this->config['value'] ) &&
-                   in_array( $value, $this->config['value'], true );
+                    in_array( $value, $this->config['value'], true );
         }
 
         return $this->config['value'] === $value;
     }
-
 }

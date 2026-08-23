@@ -69,5 +69,4 @@ trait HtmlAttributes {
 	protected function build_classes( array $classes ): string {
 		return esc_attr( implode( ' ', array_filter( $classes ) ) );
 	}
-
 }

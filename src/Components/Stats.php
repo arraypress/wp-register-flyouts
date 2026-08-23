@@ -65,7 +65,7 @@ class Stats implements Renderable {
 			'id'      => '',
 			'items'   => [],
 			'columns' => 3, // 2, 3, or 4
-			'class'   => ''
+			'class'   => '',
 		];
 	}
 
@@ -90,7 +90,7 @@ class Stats implements Renderable {
 		ob_start();
 		?>
         <div id="<?php echo esc_attr( $this->config['id'] ); ?>"
-             class="<?php echo esc_attr( implode( ' ', $classes ) ); ?>">
+            class="<?php echo esc_attr( implode( ' ', $classes ) ); ?>">
             <div class="stats-grid">
 				<?php foreach ( $this->config['items'] as $stat ) : ?>
 					<?php $this->render_stat( $stat ); ?>
@@ -151,5 +151,4 @@ class Stats implements Renderable {
         </div>
 		<?php
 	}
-
 }

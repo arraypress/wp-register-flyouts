@@ -62,11 +62,11 @@ class Articles implements Renderable {
      */
     private static function get_defaults(): array {
         return [
-                'id'         => '',
-                'items'      => [],
-                'empty_text' => __( 'No articles found.', 'wp-flyout' ),
-                'columns'    => 1, // 1 or 2 column layout
-                'class'      => ''
+			'id'         => '',
+			'items'      => [],
+			'empty_text' => __( 'No articles found.', 'wp-flyout' ),
+			'columns'    => 1, // 1 or 2 column layout
+			'class'      => '',
         ];
     }
 
@@ -88,7 +88,7 @@ class Articles implements Renderable {
         ob_start();
         ?>
         <div id="<?php echo esc_attr( $this->config['id'] ); ?>"
-             class="<?php echo esc_attr( implode( ' ', $classes ) ); ?>">
+            class="<?php echo esc_attr( implode( ' ', $classes ) ); ?>">
 
             <?php if ( empty( $this->config['items'] ) ) : ?>
                 <p class="articles-empty"><?php echo esc_html( $this->config['empty_text'] ); ?></p>
@@ -122,7 +122,7 @@ class Articles implements Renderable {
                     <a href="<?php echo esc_url( $article['url'] ); ?>">
                         <?php endif; ?>
                         <img src="<?php echo esc_url( $article['image'] ); ?>"
-                             alt="<?php echo esc_attr( $article['title'] ?? '' ); ?>">
+                            alt="<?php echo esc_attr( $article['title'] ?? '' ); ?>">
                         <?php if ( $has_link ) : ?>
                     </a>
                 <?php endif; ?>
@@ -159,5 +159,4 @@ class Articles implements Renderable {
         </article>
         <?php
     }
-
 }

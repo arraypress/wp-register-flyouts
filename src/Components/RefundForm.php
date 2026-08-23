@@ -131,13 +131,13 @@ class RefundForm implements Renderable {
 
 		ob_start();
 		?>
-		<div id="<?php echo $id; ?>"
-		     class="<?php echo esc_attr( $classes ); ?>"
-		     data-action="<?php echo $action; ?>"
-		     data-currency="<?php echo esc_attr( $currency ); ?>"
-		     data-paid="<?php echo esc_attr( (string) $amount_paid ); ?>"
-		     data-refunded="<?php echo esc_attr( (string) $amount_refunded ); ?>"
-		     data-refundable="<?php echo esc_attr( (string) $refundable ); ?>">
+		<div id="<?php echo esc_attr( $id ); ?>"
+			class="<?php echo esc_attr( $classes ); ?>"
+			data-action="<?php echo esc_attr( $action ); ?>"
+			data-currency="<?php echo esc_attr( $currency ); ?>"
+			data-paid="<?php echo esc_attr( (string) $amount_paid ); ?>"
+			data-refunded="<?php echo esc_attr( (string) $amount_refunded ); ?>"
+			data-refundable="<?php echo esc_attr( (string) $refundable ); ?>">
 
 			<?php // ---- Trigger Button ---- ?>
 			<button type="button" class="button button-secondary refund-trigger">
@@ -170,25 +170,25 @@ class RefundForm implements Renderable {
 
 				<?php // ---- Amount Input ---- ?>
 				<div class="refund-field">
-					<label for="<?php echo $id; ?>_amount"><?php esc_html_e( 'Refund amount', 'wp-flyout' ); ?></label>
+					<label for="<?php echo esc_attr( $id ); ?>_amount"><?php esc_html_e( 'Refund amount', 'wp-flyout' ); ?></label>
 					<div class="refund-amount-wrap">
 						<span class="refund-currency-symbol"><?php echo esc_html( $currency ); ?></span>
 						<input type="text"
-						       id="<?php echo $id; ?>_amount"
-						       name="<?php echo $name; ?>[amount]"
-						       class="refund-amount-input"
-						       value="<?php echo esc_attr( $this->format_decimal( $refundable ) ); ?>"
-						       placeholder="0.00"
-						       inputmode="decimal"
-						       autocomplete="off">
+								id="<?php echo esc_attr( $id ); ?>_amount"
+								name="<?php echo esc_attr( $name ); ?>[amount]"
+								class="refund-amount-input"
+								value="<?php echo esc_attr( $this->format_decimal( $refundable ) ); ?>"
+								placeholder="0.00"
+								inputmode="decimal"
+								autocomplete="off">
 					</div>
 				</div>
 
 				<?php // ---- Reason Select ---- ?>
 				<div class="refund-field">
-					<label for="<?php echo $id; ?>_reason"><?php esc_html_e( 'Reason', 'wp-flyout' ); ?></label>
-					<select id="<?php echo $id; ?>_reason"
-					        name="<?php echo $name; ?>[reason]"
+					<label for="<?php echo esc_attr( $id ); ?>_reason"><?php esc_html_e( 'Reason', 'wp-flyout' ); ?></label>
+					<select id="<?php echo esc_attr( $id ); ?>_reason"
+					        name="<?php echo esc_attr( $name ); ?>[reason]"
 					        class="refund-reason-select">
 						<?php foreach ( $this->config['reasons'] as $value => $label ) : ?>
 							<option value="<?php echo esc_attr( $value ); ?>">
@@ -204,13 +204,13 @@ class RefundForm implements Renderable {
 				<?php // ---- Custom Reason (hidden by default) ---- ?>
 				<?php if ( $this->config['allow_custom'] ) : ?>
 					<div class="refund-field refund-custom-reason" style="display: none;">
-						<label for="<?php echo $id; ?>_custom_reason"><?php esc_html_e( 'Details', 'wp-flyout' ); ?></label>
+						<label for="<?php echo esc_attr( $id ); ?>_custom_reason"><?php esc_html_e( 'Details', 'wp-flyout' ); ?></label>
 						<input type="text"
-						       id="<?php echo $id; ?>_custom_reason"
-						       name="<?php echo $name; ?>[custom_reason]"
-						       class="refund-custom-input"
-						       placeholder="<?php esc_attr_e( 'Enter reason...', 'wp-flyout' ); ?>"
-						       autocomplete="off">
+								id="<?php echo esc_attr( $id ); ?>_custom_reason"
+								name="<?php echo esc_attr( $name ); ?>[custom_reason]"
+								class="refund-custom-input"
+								placeholder="<?php esc_attr_e( 'Enter reason...', 'wp-flyout' ); ?>"
+								autocomplete="off">
 					</div>
 				<?php endif; ?>
 
@@ -218,9 +218,9 @@ class RefundForm implements Renderable {
 				<div class="refund-actions">
 					<button type="button"
 					        class="button button-primary refund-submit"
-					        data-template="<?php esc_attr_e( 'Refund %s', 'wp-flyout' ); ?>">
+					        data-template="<?php /* translators: %s: formatted refund amount */ esc_attr_e( 'Refund %s', 'wp-flyout' ); ?>">
 						<span class="button-text">
-							<?php printf( esc_html__( 'Refund %s', 'wp-flyout' ), esc_html( $this->format_amount( $refundable ) ) ); ?>
+							<?php /* translators: %s: formatted refund amount */ printf( esc_html__( 'Refund %s', 'wp-flyout' ), esc_html( $this->format_amount( $refundable ) ) ); ?>
 						</span>
 						<span class="button-spinner" style="display: none;">
 							<span class="dashicons dashicons-update spin"></span>
@@ -262,5 +262,4 @@ class RefundForm implements Renderable {
 		<?php
 		return ob_get_clean();
 	}
-
 }

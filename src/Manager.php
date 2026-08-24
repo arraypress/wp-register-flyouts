@@ -19,6 +19,7 @@ namespace ArrayPress\RegisterFlyouts;
 use ArrayPress\FieldKit\Context\ObjectContext;
 use ArrayPress\FieldKit\Search\CallbackSource;
 use ArrayPress\FieldKit\Search\Sources;
+use ArrayPress\FieldKit\Field;
 use ArrayPress\FieldKit\FieldSet;
 use ArrayPress\FieldKit\Assets as KitAssets;
 use ArrayPress\FieldKit\Registry as KitRegistry;
@@ -102,6 +103,12 @@ class Manager {
 	 */
 	public function __construct( string $prefix ) {
 		$this->prefix = sanitize_key( $prefix );
+
+		// One key of this library's own: which tab a field belongs to. The
+		// kit warns about configuration nothing reads, and it is right to —
+		// a key nobody reads is a documented option that quietly does
+		// nothing. This one is read here, so it is declared here.
+		Field::allow_config_keys( [ 'tab' ] );
 
 		// Register this manager in the global registry.
 		Registry::register( $this->prefix, $this );

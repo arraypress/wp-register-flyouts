@@ -142,6 +142,7 @@ return array(
     'ArrayPress\\RegisterFlyouts\\Registry' => $baseDir . '/src/Registry.php',
     'ArrayPress\\RegisterFlyouts\\RestApi' => $baseDir . '/src/RestApi.php',
     'ArrayPress\\RegisterFlyouts\\Sanitizer' => $baseDir . '/src/Sanitizer.php',
+    'ArrayPress\\RegisterFlyouts\\Tests\\FormFieldTest' => $baseDir . '/tests/FormFieldTest.php',
     'ArrayPress\\RegisterFlyouts\\Tests\\NoSharedRuntimeKeysTest' => $baseDir . '/tests/NoSharedRuntimeKeysTest.php',
     'ArrayPress\\RegisterFlyouts\\Tests\\RuntimeTest' => $baseDir . '/tests/RuntimeTest.php',
     'ArrayPress\\RegisterFlyouts\\Traits\\Formatter' => $baseDir . '/src/Traits/Formatter.php',

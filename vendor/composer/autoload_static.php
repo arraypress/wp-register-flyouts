@@ -11,7 +11,7 @@ class ComposerStaticInit9af7ec7636251962a060a2deb62ce3c6
         '8474ceb2bc3362bdd41c18730ae242f7' => __DIR__ . '/..' . '/arraypress/wp-composer-assets/src/Functions.php',
         'abe92dd206d0a350e520ab9702b76101' => __DIR__ . '/..' . '/arraypress/wp-currencies/src/Functions.php',
         'ec07570ca5a812141189b1fa81503674' => __DIR__ . '/..' . '/phpunit/phpunit/src/Framework/Assert/Functions.php',
-        '6b4a1a3bc9694e77a7d20d5c35caaa9e' => __DIR__ . '/../..' . '/src/Utilities/Functions.php',
+        '9032099ac1a02f7c9c396f3b685905ee' => __DIR__ . '/../..' . '/src/Functions.php',
     );
 
     public static $prefixLengthsPsr4 = array (
@@ -206,6 +206,7 @@ class ComposerStaticInit9af7ec7636251962a060a2deb62ce3c6
         'ArrayPress\\RegisterFlyouts\\Registry' => __DIR__ . '/../..' . '/src/Registry.php',
         'ArrayPress\\RegisterFlyouts\\RestApi' => __DIR__ . '/../..' . '/src/RestApi.php',
         'ArrayPress\\RegisterFlyouts\\Sanitizer' => __DIR__ . '/../..' . '/src/Sanitizer.php',
+        'ArrayPress\\RegisterFlyouts\\Tests\\FormFieldTest' => __DIR__ . '/../..' . '/tests/FormFieldTest.php',
         'ArrayPress\\RegisterFlyouts\\Tests\\NoSharedRuntimeKeysTest' => __DIR__ . '/../..' . '/tests/NoSharedRuntimeKeysTest.php',
         'ArrayPress\\RegisterFlyouts\\Tests\\RuntimeTest' => __DIR__ . '/../..' . '/tests/RuntimeTest.php',
         'ArrayPress\\RegisterFlyouts\\Traits\\Formatter' => __DIR__ . '/../..' . '/src/Traits/Formatter.php',

@@ -10,5 +10,5 @@ return array(
     '8474ceb2bc3362bdd41c18730ae242f7' => $vendorDir . '/arraypress/wp-composer-assets/src/Functions.php',
     'abe92dd206d0a350e520ab9702b76101' => $vendorDir . '/arraypress/wp-currencies/src/Functions.php',
     'ec07570ca5a812141189b1fa81503674' => $vendorDir . '/phpunit/phpunit/src/Framework/Assert/Functions.php',
-    '6b4a1a3bc9694e77a7d20d5c35caaa9e' => $baseDir . '/src/Utilities/Functions.php',
+    '9032099ac1a02f7c9c396f3b685905ee' => $baseDir . '/src/Functions.php',
 );

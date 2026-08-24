@@ -20,15 +20,30 @@
     --wp-flyout-width-large: 800px;
     --wp-flyout-width-full: calc(100vw - 160px);
 
-    /* Colors */
+    /* Colours.
+
+       The accent follows the user's admin colour scheme rather than being
+       blue because blue is what WordPress happened to ship with: core
+       publishes --wp-admin-theme-color and recolours it per scheme, so a
+       panel that hardcodes #2271b1 is the one thing on the screen that does
+       not change when someone picks Midnight or Ectoplasm.
+
+       The hex after each is a fallback for a context where core's variables
+       are not on the page at all — the login screen, a front-end render.
+
+       The greys and the status colours stay literal: core does not publish
+       variables for them, and inventing our own names for #dcdcde would be a
+       second vocabulary rather than fewer. */
     --wp-flyout-bg: #fff;
     --wp-flyout-border: #dcdcde;
     --wp-flyout-shadow: rgba(0, 0, 0, 0.1);
     --wp-flyout-text: #1e1e1e;
     --wp-flyout-text-muted: #646970;
     --wp-flyout-text-secondary: #8c8f94;
-    --wp-flyout-primary: #2271b1;
-    --wp-flyout-primary-hover: #135e96;
+    --wp-flyout-primary: var(--wp-admin-theme-color, #2271b1);
+    --wp-flyout-primary-hover: var(--wp-admin-theme-color-darker-10, #135e96);
+    --wp-flyout-primary-active: var(--wp-admin-theme-color-darker-20, #0a4b78);
+    --wp-flyout-focus-width: var(--wp-admin-border-width-focus, 2px);
     --wp-flyout-success: #00a32a;
     --wp-flyout-warning: #dba617;
     --wp-flyout-error: #d63638;

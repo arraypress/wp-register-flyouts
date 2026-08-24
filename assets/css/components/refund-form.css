@@ -132,8 +132,8 @@
 }
 
 .refund-amount-wrap:focus-within {
-    border-color: #2271b1;
-    box-shadow: 0 0 0 1px #2271b1;
+    border-color: var(--wp-flyout-primary);
+    box-shadow: 0 0 0 1px var(--wp-flyout-primary);
 }
 
 .refund-currency-symbol {
@@ -187,8 +187,8 @@
 
 .refund-reason-select:focus,
 .refund-custom-input:focus {
-    border-color: #2271b1;
-    box-shadow: 0 0 0 1px #2271b1;
+    border-color: var(--wp-flyout-primary);
+    box-shadow: 0 0 0 1px var(--wp-flyout-primary);
     outline: none;
 }
 

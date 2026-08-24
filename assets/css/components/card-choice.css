@@ -55,14 +55,14 @@
 
 /* Selected state */
 .card-choice input:checked + .card-choice-label {
-    border-color: #2271b1;
+    border-color: var(--wp-flyout-primary);
     background: #f0f6fc;
-    box-shadow: 0 0 0 1px #2271b1;
+    box-shadow: 0 0 0 1px var(--wp-flyout-primary);
 }
 
 .card-choice input:checked:hover + .card-choice-label {
-    border-color: #135e96;
-    box-shadow: 0 0 0 1px #135e96, 0 2px 6px rgba(0, 0, 0, 0.08);
+    border-color: var(--wp-flyout-primary-hover);
+    box-shadow: 0 0 0 1px var(--wp-flyout-primary-hover), 0 2px 6px rgba(0, 0, 0, 0.08);
 }
 
 /* Disabled state */
@@ -102,7 +102,7 @@
 }
 
 .card-choice input:checked + .card-choice-label .card-choice-icon {
-    color: #2271b1;
+    color: var(--wp-flyout-primary);
 }
 
 .card-choice-icon .dashicons,
@@ -133,8 +133,8 @@
 
 /* Checked indicator */
 .card-choice input:checked + .card-choice-label .card-choice-check {
-    border-color: #2271b1;
-    background: #2271b1;
+    border-color: var(--wp-flyout-primary);
+    background: var(--wp-flyout-primary);
 }
 
 /* Radio dot */
@@ -204,7 +204,7 @@
 
 .card-choice-badge.badge-popular {
     background: #e0f2ff;
-    color: #0a4b78;
+    color: var(--wp-flyout-primary-active);
 }
 
 .card-choice-badge.badge-new {
@@ -250,7 +250,7 @@
 
 /* Focus state */
 .card-choice input:focus-visible + .card-choice-label {
-    outline: 2px solid #2271b1;
+    outline: 2px solid var(--wp-flyout-primary);
     outline-offset: 2px;
 }
 

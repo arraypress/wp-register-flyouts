@@ -48,8 +48,8 @@
 }
 
 .discount-config-amount-wrap:focus-within {
-    border-color: #2271b1;
-    box-shadow: 0 0 0 1px #2271b1;
+    border-color: var(--wp-flyout-primary);
+    box-shadow: 0 0 0 1px var(--wp-flyout-primary);
 }
 
 /* Rate type select — embedded on the left */
@@ -131,8 +131,8 @@
 }
 
 .discount-config-months-input:focus {
-    border-color: #2271b1;
-    box-shadow: 0 0 0 1px #2271b1;
+    border-color: var(--wp-flyout-primary);
+    box-shadow: 0 0 0 1px var(--wp-flyout-primary);
     outline: none;
 }
 
@@ -157,8 +157,8 @@
 }
 
 .discount-config-redemptions-input:focus {
-    border-color: #2271b1;
-    box-shadow: 0 0 0 1px #2271b1;
+    border-color: var(--wp-flyout-primary);
+    box-shadow: 0 0 0 1px var(--wp-flyout-primary);
     outline: none;
 }
 

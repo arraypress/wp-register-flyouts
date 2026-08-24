@@ -88,7 +88,7 @@
 
 .payment-risk.risk-normal {
     background: #e0f2ff;
-    color: #0a4b78;
+    color: var(--wp-flyout-primary-active);
 }
 
 .payment-risk.risk-elevated {

@@ -74,8 +74,8 @@
 }
 
 .timeline-item-info .timeline-badge {
-    border-color: #2271b1;
-    background: #2271b1;
+    border-color: var(--wp-flyout-primary);
+    background: var(--wp-flyout-primary);
 }
 
 .timeline-item-warning .timeline-badge {

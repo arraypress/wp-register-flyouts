@@ -117,7 +117,7 @@
 
 .file-manager-item.ui-sortable-placeholder {
     background: #e5f3ff;
-    border: 2px dashed #2271b1;
+    border: 2px dashed var(--wp-flyout-primary);
     border-radius: 8px;
     visibility: visible !important;
 }
@@ -132,7 +132,7 @@
 }
 
 .file-handle:hover {
-    color: #2271b1;
+    color: var(--wp-flyout-primary);
 }
 
 .file-handle .dashicons {
@@ -174,8 +174,8 @@
 
 .file-name-input:focus,
 .file-url-input:focus {
-    border-color: #2271b1;
-    box-shadow: 0 0 0 1px #2271b1;
+    border-color: var(--wp-flyout-primary);
+    box-shadow: 0 0 0 1px var(--wp-flyout-primary);
     outline: none;
 }
 

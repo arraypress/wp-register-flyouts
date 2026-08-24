@@ -20,8 +20,8 @@
 }
 
 .unit-input-group:focus-within {
-    border-color: #2271b1;
-    box-shadow: 0 0 0 1px #2271b1;
+    border-color: var(--wp-flyout-primary);
+    box-shadow: 0 0 0 1px var(--wp-flyout-primary);
 }
 
 /* ==========================================================================

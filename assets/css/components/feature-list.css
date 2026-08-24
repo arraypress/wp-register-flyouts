@@ -118,7 +118,7 @@
 
 .feature-list-item-placeholder {
     background: #e5f3ff !important;
-    border: 2px dashed #2271b1 !important;
+    border: 2px dashed var(--wp-flyout-primary) !important;
     border-radius: 4px;
     visibility: visible !important;
 }
@@ -136,7 +136,7 @@
 }
 
 .feature-list-handle:hover {
-    color: #2271b1;
+    color: var(--wp-flyout-primary);
 }
 
 .feature-list-handle .dashicons {
@@ -165,8 +165,8 @@
 }
 
 .feature-list-input:focus {
-    border-color: #2271b1;
-    box-shadow: 0 0 0 1px #2271b1;
+    border-color: var(--wp-flyout-primary);
+    box-shadow: 0 0 0 1px var(--wp-flyout-primary);
     outline: none;
 }
 
@@ -311,7 +311,7 @@
 .feature-list-input:focus-visible,
 .feature-list-remove:focus-visible,
 .feature-list-add:focus-visible {
-    outline: 2px solid #2271b1;
+    outline: 2px solid var(--wp-flyout-primary);
     outline-offset: 2px;
 }
 

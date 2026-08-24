@@ -62,7 +62,7 @@
 }
 
 .accordion-header:focus {
-    outline: 2px solid #2271b1;
+    outline: 2px solid var(--wp-flyout-primary);
     outline-offset: -2px;
 }
 

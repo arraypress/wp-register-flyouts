@@ -125,7 +125,7 @@
 
 .meta-kv-item-placeholder {
     background: #e5f3ff !important;
-    border: 2px dashed #2271b1 !important;
+    border: 2px dashed var(--wp-flyout-primary) !important;
     visibility: visible !important;
 }
 
@@ -142,7 +142,7 @@
 }
 
 .meta-kv-handle:hover {
-    color: #2271b1;
+    color: var(--wp-flyout-primary);
 }
 
 .meta-kv-handle .dashicons {
@@ -180,8 +180,8 @@
 
 .meta-kv-key:focus,
 .meta-kv-value:focus {
-    border-color: #2271b1;
-    box-shadow: 0 0 0 1px #2271b1;
+    border-color: var(--wp-flyout-primary);
+    box-shadow: 0 0 0 1px var(--wp-flyout-primary);
     outline: none;
 }
 

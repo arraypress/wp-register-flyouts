@@ -192,8 +192,8 @@
 }
 
 .quantity-input:focus {
-    border-color: #2271b1;
-    box-shadow: 0 0 0 1px #2271b1;
+    border-color: var(--wp-flyout-primary);
+    box-shadow: 0 0 0 1px var(--wp-flyout-primary);
     outline: none;
 }
 
@@ -227,8 +227,8 @@
 }
 
 .price-input:focus {
-    border-color: #2271b1;
-    box-shadow: 0 0 0 1px #2271b1;
+    border-color: var(--wp-flyout-primary);
+    box-shadow: 0 0 0 1px var(--wp-flyout-primary);
     outline: none;
 }
 
@@ -350,7 +350,7 @@
     height: 24px;
     margin: -12px 0 0 -12px;
     border: 2px solid #e0e0e0;
-    border-top-color: #2271b1;
+    border-top-color: var(--wp-flyout-primary);
     border-radius: 50%;
     animation: li-spin 0.6s linear infinite;
 }

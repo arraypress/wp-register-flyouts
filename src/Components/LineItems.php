@@ -44,6 +44,42 @@ class LineItems implements Renderable {
         if ( ! is_array( $this->config['items'] ) ) {
             $this->config['items'] = [];
         }
+
+        $this->warn_about_unnamed_rows();
+    }
+
+    /**
+     * Complain, under WP_DEBUG, about a row with no name.
+     *
+     * A row is `name` and `price`, and a price is in minor units. Get either
+     * wrong and nothing breaks: the row renders with a blank label and a
+     * total of zero, which reads as a data problem rather than a spelling
+     * one. It cost an afternoon in this library's own demo, where the rows
+     * said `title` and `amount`.
+     *
+     * @return void
+     */
+    private function warn_about_unnamed_rows(): void {
+        if ( ! defined( 'WP_DEBUG' ) || ! WP_DEBUG ) {
+            return;
+        }
+
+        foreach ( $this->config['items'] as $index => $item ) {
+            if ( ! is_array( $item ) || '' !== (string) ( $item['name'] ?? '' ) ) {
+                continue;
+            }
+
+            _doing_it_wrong(
+                __METHOD__,
+                sprintf(
+                    /* translators: 1: row index, 2: comma-separated list of the keys the row does have */
+                    esc_html__( 'Line item %1$s has no "name". It has: %2$s. A row is name and price, and the price is in minor units.', 'arraypress' ),
+                    esc_html( (string) $index ),
+                    esc_html( implode( ', ', array_keys( $item ) ) )
+                ),
+                '4.0.0'
+            );
+        }
     }
 
     /**

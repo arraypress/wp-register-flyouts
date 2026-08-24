@@ -7,7 +7,6 @@
 | `header`      | Entity header with image, badges, meta | `title`, `subtitle`, `image`, `icon`, `badges`, `meta`, `description`, `attachment_id`, `editable`, `image_size`, `image_shape`, `fallback_image`, `fallback_attachment_id` |
 | `alert`       | Alert messages with styles             | `type`, `message`, `title`                                                                                                                                                  |
 | `empty_state` | Empty state with icon and action       | `icon`, `title`, `description`, `action_text`                                                                                                                               |
-| `articles`    | Article card list                      | `items`                                                                                                                                                                     |
 | `timeline`    | Chronological event list               | `items`                                                                                                                                                                     |
 | `stats`       | Metric cards with trends               | `items`                                                                                                                                                                     |
 
@@ -32,7 +31,6 @@
 | `key_value_list` | Key-value pair manager           | `items` (array of `{key, value}`)            |
 | `refund_form`    | Inline refund panel              | `amount_paid`, `amount_refunded`, `currency` |
 | `action_buttons` | AJAX action buttons              | `buttons`                                    |
-| `action_menu`    | Dropdown action menu             | `items`                                      |
 
 ## Form Components (input fields)
 
@@ -52,10 +50,6 @@
 | `color`                                           | Color picker                                           |
 | `tags`                                            | Tag input                                              |
 | `card_choice`                                     | Visual card selection                                  |
-| `price_config`                                    | Stripe pricing (one-time or recurring)                 |
-| `discount_config`                                 | Stripe discount/coupon configuration                   |
-| `unit_input`                                      | Numeric input with unit prefix or suffix               |
-| `code_generator`                                  | Text input with code generation button                 |
 | `hidden`                                          | Hidden input                                           |
 | `group`                                           | Nested field group with layout                         |
 
@@ -63,5 +57,4 @@
 
 | Type        | Description                        |
 |-------------|------------------------------------|
-| `separator` | Visual divider with optional label |
 | `accordion` | Collapsible sections               |

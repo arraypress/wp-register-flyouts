@@ -29,7 +29,6 @@
   - [Payment Method](components/payment-method.md)
   - [Alert](components/alert.md)
   - [Empty State](components/empty-state.md)
-  - [Articles](components/articles.md)
 
 - **Interactive Components**
   - [Gallery](components/gallery.md)
@@ -38,18 +37,12 @@
   - [Notes](components/notes.md)
   - [Feature List](components/feature-list.md)
   - [Key-Value List](components/key-value-list.md)
-  - [Price Config](components/price-config.md)
-  - [Discount Config](components/discount-config.md)
-  - [Unit Input](components/unit-input.md)
-  - [Code Generator](components/code-generator.md)
   - [Refund Form](components/refund-form.md)
   - [Card Choice](components/card-choice.md)
   - [Accordion](components/accordion.md)
-  - [Separator](components/separator.md)
 
 - **Action Components**
   - [Action Buttons](components/action-buttons.md)
-  - [Action Menu](components/action-menu.md)
 
 - **Advanced**
   - [Sanitization](advanced/sanitization.md)

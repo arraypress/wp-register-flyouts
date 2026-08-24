@@ -250,4 +250,141 @@ final class FormFieldTest extends TestCase {
 		$this->assertSame( 'overridden', $values['count'] );
 	}
 
+	/**
+	 * A field's own `value` becomes the kit's default.
+	 *
+	 * This library has always let a field carry a literal value; the kit has
+	 * no notion of one — a field set reads from a context and falls back to a
+	 * default. Without the translation every field written that way rendered
+	 * empty, which is what the demo's own coupon code and weight did, in a
+	 * panel whose whole job was to show them.
+	 */
+	public function test_a_literal_value_becomes_the_default(): void {
+		$kit = FormField::to_kit( [ 'type' => 'text', 'value' => 'SUMMER-2026' ] );
+
+		$this->assertSame( 'SUMMER-2026', $kit['default'] );
+		$this->assertArrayNotHasKey( 'value', $kit );
+	}
+
+	/**
+	 * An explicit default wins, and an empty value is not one.
+	 */
+	public function test_an_explicit_default_wins(): void {
+		$kit = FormField::to_kit( [ 'type' => 'text', 'value' => 'v', 'default' => 'd' ] );
+		$this->assertSame( 'd', $kit['default'] );
+
+		$kit = FormField::to_kit( [ 'type' => 'text', 'value' => '' ] );
+		$this->assertArrayNotHasKey( 'default', $kit );
+	}
+
+	/**
+	 * A price configuration becomes a group of kit fields.
+	 *
+	 * It was a component: 292 lines of PHP, a stylesheet with a hand-rolled
+	 * chevron SVG, and a script to show one control when another changed —
+	 * which is what `depends` does. The submitted shape is unchanged, because
+	 * a group stores its children under one key, which is what the component
+	 * already did.
+	 */
+	public function test_a_price_configuration_becomes_a_group(): void {
+		$kit = FormField::to_kit(
+			[
+				'type'       => 'price_config',
+				'name'       => 'price',
+				'amount'     => 1999,
+				'currency'   => 'GBP',
+				'currencies' => [ 'GBP', 'USD' ],
+			]
+		);
+
+		$this->assertSame( 'group', $kit['type'] );
+		$this->assertSame( 'price', $kit['name'] );
+		$this->assertSame(
+			[ 'amount', 'recurring_interval', 'recurring_interval_count' ],
+			array_keys( $kit['fields'] )
+		);
+
+		$amount = $kit['fields']['amount'];
+
+		$this->assertSame( 'amount_type', $amount['type'] );
+		$this->assertSame( 1999, $amount['default'] );
+		$this->assertSame( 'currency', $amount['type_meta_key'] );
+		$this->assertSame( [ 'GBP' => 'GBP', 'USD' => 'USD' ], $amount['type_options'] );
+	}
+
+	/**
+	 * A discount configuration likewise, and its months field depends.
+	 *
+	 * A script used to show and hide that field by setting an inline style,
+	 * which left it in the tab order and readable by a screen reader while
+	 * invisible. The kit's conditions do it properly.
+	 */
+	public function test_a_discount_configuration_becomes_a_group(): void {
+		$kit = FormField::to_kit(
+			[
+				'type'             => 'discount_config',
+				'name'             => 'discount',
+				'amount'           => 10,
+				'rate_type'        => 'percent',
+				'currency_symbol'  => '£',
+				'show_redemptions' => true,
+			]
+		);
+
+		$this->assertSame( 'group', $kit['type'] );
+		$this->assertSame(
+			[ 'amount', 'duration', 'duration_in_months', 'max_redemptions' ],
+			array_keys( $kit['fields'] )
+		);
+
+		$this->assertSame( 'rate_type', $kit['fields']['amount']['type_meta_key'] );
+		$this->assertSame( [ 'percent' => '%', 'fixed' => '£' ], $kit['fields']['amount']['type_options'] );
+		$this->assertSame( [ 'duration' => 'repeating' ], $kit['fields']['duration_in_months']['depends'] );
+	}
+
+	/**
+	 * Redemptions are not shown unless asked for.
+	 */
+	public function test_redemptions_are_opt_in(): void {
+		$kit = FormField::to_kit( [ 'type' => 'discount_config', 'name' => 'discount' ] );
+
+		$this->assertArrayNotHasKey( 'max_redemptions', $kit['fields'] );
+	}
+
+	/**
+	 * A unit input is the kit's amount type, in the kit's spelling.
+	 */
+	public function test_a_unit_input_becomes_an_amount(): void {
+		$kit = FormField::to_kit(
+			[
+				'type'       => 'unit_input',
+				'name'       => 'weight',
+				'unit_value' => 'kg',
+				'units'      => [ 'kg' => 'kg', 'lb' => 'lb' ],
+			]
+		);
+
+		$this->assertSame( 'amount_type', $kit['type'] );
+		$this->assertSame( [ 'kg' => 'kg', 'lb' => 'lb' ], $kit['type_options'] );
+		$this->assertSame( 'kg', $kit['current_type'] );
+
+		// And the old spellings do not travel on as keys nothing reads.
+		$this->assertArrayNotHasKey( 'units', $kit );
+		$this->assertArrayNotHasKey( 'unit_value', $kit );
+	}
+
+	/**
+	 * One unit is a fixed unit, not a select of one option.
+	 *
+	 * A dropdown you cannot change is a control that looks like a decision
+	 * and is not one.
+	 */
+	public function test_a_single_unit_is_fixed_rather_than_a_select(): void {
+		$kit = FormField::to_kit(
+			[ 'type' => 'unit_input', 'name' => 'weight', 'units' => [ 'kg' => 'kg' ] ]
+		);
+
+		$this->assertSame( 'kg', $kit['unit'] );
+		$this->assertArrayNotHasKey( 'type_options', $kit );
+	}
 }

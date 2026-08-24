@@ -104,44 +104,14 @@ class Assets {
 			'style'  => 'css/components/action-buttons.css',
 			'deps'   => [],
 		],
-		'action-menu'    => [
-			'script' => 'js/components/action-menu.js',
-			'style'  => 'css/components/action-menu.css',
-			'deps'   => [],
-		],
-		'articles'       => [
-			'script' => '',
-			'style'  => 'css/components/articles.css',
-			'deps'   => [],
-		],
 		'stats'          => [
 			'script' => '',
 			'style'  => 'css/components/stats.css',
 			'deps'   => [],
 		],
-		'price-config'   => [
-			'script' => 'js/components/price-config.js',
-			'style'  => 'css/components/price-config.css',
-			'deps'   => [],
-		],
 		'refund-form' => [
 			'script' => 'js/components/refund-form.js',
 			'style'  => 'css/components/refund-form.css',
-			'deps'   => [],
-		],
-		'discount-config' => [
-			'script' => 'js/components/discount-config.js',
-			'style'  => 'css/components/discount-config.css',
-			'deps'   => [],
-		],
-		'unit-input' => [
-			'script' => '',
-			'style'  => 'css/components/unit-input.css',
-			'deps'   => [],
-		],
-		'code-generator' => [
-			'script' => 'js/components/code-generator.js',
-			'style'  => 'css/components/code-generator.css',
 			'deps'   => [],
 		],
 	];

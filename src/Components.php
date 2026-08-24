@@ -2,112 +2,50 @@
 /**
  * Component Registry
  *
- * Central registry for all flyout components.
- *
  * @package     ArrayPress\RegisterFlyouts
  * @copyright   Copyright (c) 2025, ArrayPress Limited
  * @license     GPL2+
- * @version     3.0.0
- * @author      David Sherlock
+ * @since       1.0.0
  */
 
 declare( strict_types=1 );
 
 namespace ArrayPress\RegisterFlyouts;
 
+use ArrayPress\FieldKit\Support\Resolve;
 use ArrayPress\RegisterFlyouts\Utils\Runtime;
-
-use ArrayPress\RegisterFlyouts\Components\ActionButtons;
-use ArrayPress\RegisterFlyouts\Components\ActionMenu;
-use ArrayPress\RegisterFlyouts\Components\Articles;
-use ArrayPress\RegisterFlyouts\Components\PaymentMethod;
-use ArrayPress\RegisterFlyouts\Components\PriceSummary;
-use ArrayPress\RegisterFlyouts\Components\FormField;
-use ArrayPress\RegisterFlyouts\Components\Notes;
-use ArrayPress\RegisterFlyouts\Components\LineItems;
-use ArrayPress\RegisterFlyouts\Components\Accordion;
-use ArrayPress\RegisterFlyouts\Components\RefundForm;
-use ArrayPress\RegisterFlyouts\Components\Stats;
-use ArrayPress\RegisterFlyouts\Components\Timeline;
-use ArrayPress\RegisterFlyouts\Components\Header;
-use ArrayPress\RegisterFlyouts\Components\Separator;
-use ArrayPress\RegisterFlyouts\Components\EmptyState;
-use ArrayPress\RegisterFlyouts\Components\DataTable;
-use ArrayPress\RegisterFlyouts\Components\InfoGrid;
-use ArrayPress\RegisterFlyouts\Components\Alert;
-use ArrayPress\RegisterFlyouts\Components\PriceConfig;
-use ArrayPress\RegisterFlyouts\Components\DiscountConfig;
-use ArrayPress\RegisterFlyouts\Components\UnitInput;
-use ArrayPress\RegisterFlyouts\Components\CodeGenerator;
 use InvalidArgumentException;
 
 /**
- * Class Components
+ * What a flyout can put on a panel that is not a field.
  *
- * Manages registration and instantiation of flyout components.
+ * A field collects a value and the kit draws it. A component displays
+ * something — a timeline, a set of stats, a table of line items — and this is
+ * the list of them, in the same shape as the kit's own type registry: a
+ * constant map, plus whatever a consumer registered on top.
+ *
+ * Each entry says three things. The class that draws it. The `data` its
+ * configuration expects, which is what lets a component be populated from
+ * whatever the `load` callback returned rather than spelled out by hand. And
+ * the asset handle it needs, or null.
+ *
+ * There used to be two more — a `category` and a `description` — and five
+ * public methods for reading them back. Nothing ever called any of the five.
+ * They described a component browser that was never built, and a description
+ * nobody reads is a comment that has to be kept true.
  */
 class Components {
 
-	// =========================================================================
-	// PROPERTIES
-	// =========================================================================
-
 	/**
-	 * Registered component configurations
+	 * Component type => class, data keys, asset handle.
 	 *
-	 * @var array<string, array>
+	 * @var array<string, array{class: class-string, data: string|string[], asset: string|null}>
 	 */
-	private static array $components = [];
-
-	/**
-	 * Whether default components have been initialized
-	 *
-	 * @var bool
-	 */
-	private static bool $initialized = false;
-
-	// =========================================================================
-	// INITIALIZATION
-	// =========================================================================
-
-	/**
-	 * Initialize default components
-	 *
-	 * @return void
-	 */
-	public static function init(): void {
-		if ( self::$initialized ) {
-			return;
-		}
-
-		self::register_display_components();
-		self::register_interactive_components();
-		self::register_form_components();
-		self::register_layout_components();
-		self::register_data_components();
-
-		self::$initialized = true;
-
-		do_action( Runtime::hook( 'components_init' ), self::$components );
-	}
-
-	// =========================================================================
-	// COMPONENT REGISTRATION BY CATEGORY
-	// =========================================================================
-
-	/**
-	 * Register display components
-	 *
-	 * Components that primarily display information without user interaction
-	 *
-	 * @return void
-	 * @since 1.0.0
-	 */
-	private static function register_display_components(): void {
-		// ---- Headers & Titles ----
-		self::register( 'header', [
-			'class'       => Header::class,
-			'data_fields' => [
+	private const COMPONENTS = [
+		// ---- Display ----
+		'header'         => [
+			'class' => Components\Header::class,
+			'data'  => [
 				'title',
 				'subtitle',
 				'image',
@@ -122,262 +60,146 @@ class Components {
 				'fallback_image',
 				'fallback_attachment_id',
 			],
-			'asset'       => null,
-			'category'    => 'display',
-			'description' => 'Unified header for any entity with optional image picker',
-		] );
 
-		// ---- Alerts & Messages ----
-		self::register( 'alert', [
-			'class'       => Alert::class,
-			'data_fields' => [ 'type', 'message', 'title' ],
-			'asset'       => null,
-			'category'    => 'display',
-			'description' => 'Alert messages with various styles',
-		] );
+			// The one asset that depends on configuration rather than type:
+			// a header only needs the media frame when it is editable.
+			'asset' => null,
+		],
+		'alert'          => [
+			'class' => Components\Alert::class,
+			'data'  => [ 'type', 'message', 'title' ],
+			'asset' => null,
+		],
+		'empty_state'    => [
+			'class' => Components\EmptyState::class,
+			'data'  => [ 'icon', 'title', 'description', 'action_text' ],
+			'asset' => null,
+		],
+		'timeline'       => [
+			'class' => Components\Timeline::class,
+			'data'  => 'items',
+			'asset' => 'timeline',
+		],
+		'stats'          => [
+			'class' => Components\Stats::class,
+			'data'  => 'items',
+			'asset' => 'stats',
+		],
 
-		self::register( 'empty_state', [
-			'class'       => EmptyState::class,
-			'data_fields' => [ 'icon', 'title', 'description', 'action_text' ],
-			'asset'       => null,
-			'category'    => 'display',
-			'description' => 'Empty state messages',
-		] );
+		// ---- Interactive ----
+		'action_buttons' => [
+			'class' => Components\ActionButtons::class,
+			'data'  => 'buttons',
+			'asset' => 'action-buttons',
+		],
+		'notes'          => [
+			'class' => Components\Notes::class,
+			'data'  => 'items',
+			'asset' => 'notes',
+		],
+		'line_items'     => [
+			'class' => Components\LineItems::class,
+			'data'  => 'items',
+			'asset' => 'line-items',
+		],
+		'refund_form'    => [
+			'class' => Components\RefundForm::class,
+			'data'  => [ 'amount_paid', 'amount_refunded', 'currency' ],
+			'asset' => 'refund-form',
+		],
 
-		// ---- Content Lists ----
-		self::register( 'articles', [
-			'class'       => Articles::class,
-			'data_fields' => 'items',
-			'asset'       => 'articles',
-			'category'    => 'display',
-			'description' => 'Article cards with images and excerpts',
-		] );
 
-		self::register( 'timeline', [
-			'class'       => Timeline::class,
-			'data_fields' => 'items',
-			'asset'       => 'timeline',
-			'category'    => 'display',
-			'description' => 'Chronological event timeline',
-		] );
+		// ---- Layout ----
+		'accordion'      => [
+			'class' => Components\Accordion::class,
+			'data'  => 'items',
+			'asset' => 'accordion',
+		],
 
-		// ---- Statistics & Metrics ----
-		self::register( 'stats', [
-			'class'       => Stats::class,
-			'data_fields' => 'items',
-			'asset'       => 'stats',
-			'category'    => 'display',
-			'description' => 'Statistical metric cards with trends',
-		] );
-	}
-
-	/**
-	 * Register interactive components
-	 *
-	 * Components that allow user interaction and data manipulation
-	 *
-	 * @return void
-	 * @since 1.0.0
-	 */
-	private static function register_interactive_components(): void {
-		// ---- Action Components ----
-		self::register( 'action_buttons', [
-			'class'       => ActionButtons::class,
-			'data_fields' => 'buttons',
-			'asset'       => 'action-buttons',
-			'category'    => 'interactive',
-			'description' => 'Action buttons with callbacks for operations like refunds',
-		] );
-
-		self::register( 'action_menu', [
-			'class'       => ActionMenu::class,
-			'data_fields' => 'items',
-			'asset'       => 'action-menu',
-			'category'    => 'interactive',
-			'description' => 'Dropdown menu for multiple actions',
-		] );
-
-		// ---- List Management ----
-		// `feature_list`, `key_value_list` and `files` are not registered.
-		//
-		// Each was a list with add, remove and reorder written out by hand —
-		// about 1,700 lines of stylesheet and script between them — and each is
-		// a repeater the kit now has with its columns already decided: `list`,
-		// `key_value` and `files`. FormField aliases the old names, so a
-		// configuration that used them keeps working.
-
-		self::register( 'notes', [
-			'class'       => Notes::class,
-			'data_fields' => 'items',
-			'asset'       => 'notes',
-			'category'    => 'interactive',
-			'description' => 'Notes/comments with add/delete functionality',
-		] );
-
-		// ---- Commerce Components ----
-		self::register( 'line_items', [
-			'class'       => LineItems::class,
-			'data_fields' => 'items',
-			'asset'       => 'line-items',
-			'category'    => 'interactive',
-			'description' => 'Order line items with quantities and pricing',
-		] );
-
-		// `gallery` and `image` are not registered here.
-		//
-		// Both duplicated a type wp-field-kit already has, with their own
-		// markup, their own unprefixed class names and 290 lines of stylesheet
-		// of their own — a picker that looked like neither core nor the rest of
-		// the panel. Leaving them unregistered sends both through FormField to
-		// the kit, which draws them with core's own controls and already has
-		// the media frame, the ordering and the accessible move buttons.
-
-		self::register( 'refund_form', [
-			'class'       => RefundForm::class,
-			'data_fields' => [ 'amount_paid', 'amount_refunded', 'currency' ],
-			'asset'       => 'refund-form',
-			'category'    => 'interactive',
-			'description' => 'Inline refund form for full or partial refunds',
-		] );
-	}
-
-	/**
-	 * Register form components
-	 *
-	 * Components specifically for form input and selection
-	 *
-	 * @return void
-	 * @since 1.0.0
-	 */
-	private static function register_form_components(): void {
-		// ---- Selection Components ----
-
-		// ---- Media Components ----
-
-		// ---- Pricing ----
-		self::register( 'price_config', [
-			'class'       => PriceConfig::class,
-			'data_fields' => [ 'amount', 'currency', 'recurring_interval', 'recurring_interval_count' ],
-			'asset'       => 'price-config',
-			'category'    => 'form',
-			'description' => 'Stripe-compatible pricing configuration',
-		] );
-
-		self::register( 'discount_config', [
-			'class'       => DiscountConfig::class,
-			'data_fields' => [ 'rate_type', 'amount', 'currency', 'duration', 'duration_in_months' ],
-			'asset'       => 'discount-config',
-			'category'    => 'form',
-			'description' => 'Stripe-compatible discount/coupon configuration',
-		] );
-
-		self::register( 'unit_input', [
-			'class'       => UnitInput::class,
-			'data_fields' => [ 'value', 'unit_value' ],
-			'asset'       => 'unit-input',
-			'category'    => 'form',
-			'description' => 'Numeric input with unit prefix or suffix',
-		] );
-
-		self::register( 'code_generator', [
-			'class'       => CodeGenerator::class,
-			'data_fields' => 'value',
-			'asset'       => 'code-generator',
-			'category'    => 'form',
-			'description' => 'Text input with code generation button',
-		] );
-	}
-
-	/**
-	 * Register layout components
-	 *
-	 * Components that organize and structure content
-	 *
-	 * @return void
-	 * @since 1.0.0
-	 */
-	private static function register_layout_components(): void {
-		// ---- Collapsible Content ----
-		self::register( 'accordion', [
-			'class'       => Accordion::class,
-			'data_fields' => 'items',
-			'asset'       => 'accordion',
-			'category'    => 'layout',
-			'description' => 'Collapsible content sections',
-		] );
-
-		// ---- Visual Separators ----
-		self::register( 'separator', [
-			'class'       => Separator::class,
-			'data_fields' => [ 'text', 'icon' ],
-			'asset'       => null,
-			'category'    => 'layout',
-			'description' => 'Visual dividers with optional text',
-		] );
-	}
-
-	/**
-	 * Register data display components
-	 *
-	 * Components for structured data presentation
-	 *
-	 * @return void
-	 * @since 1.0.0
-	 */
-	private static function register_data_components(): void {
-		// ---- Tables & Grids ----
-		self::register( 'data_table', [
-			'class'       => DataTable::class,
-			'data_fields' => [ 'columns', 'data' ],
-			'asset'       => null,
-			'category'    => 'data',
-			'description' => 'Structured data table display',
-		] );
-
-		self::register( 'info_grid', [
-			'class'       => InfoGrid::class,
-			'data_fields' => 'items',
-			'asset'       => null,
-			'category'    => 'data',
-			'description' => 'Information grid layout',
-		] );
-
-		// ---- Domain-Specific Data ----
-		self::register( 'payment_method', [
-			'class'       => PaymentMethod::class,
-			'data_fields' => [
+		// ---- Data ----
+		'data_table'     => [
+			'class' => Components\DataTable::class,
+			'data'  => [ 'columns', 'data' ],
+			'asset' => null,
+		],
+		'info_grid'      => [
+			'class' => Components\InfoGrid::class,
+			'data'  => 'items',
+			'asset' => null,
+		],
+		'payment_method' => [
+			'class' => Components\PaymentMethod::class,
+			'data'  => [
 				'payment_method',
 				'payment_brand',
 				'payment_last4',
 				'stripe_risk_score',
 				'stripe_risk_level',
 			],
-			'asset'       => 'payment-method',
-			'category'    => 'data',
-			'description' => 'Displays payment method with card brand icons and risk indicators',
-		] );
+			'asset' => 'payment-method',
+		],
+		'price_summary'  => [
+			'class' => Components\PriceSummary::class,
+			'data'  => [ 'items', 'subtotal', 'tax', 'discount', 'total', 'currency' ],
+			'asset' => 'price-summary',
+		],
+	];
 
-		self::register( 'price_summary', [
-			'class'       => PriceSummary::class,
-			'data_fields' => [ 'items', 'subtotal', 'tax', 'discount', 'total', 'currency' ],
-			'asset'       => 'price-summary',
-			'category'    => 'data',
-			'description' => 'Price summary with line items and totals',
-		] );
-	}
+	/*
+	 * Dropped rather than moved.
+	 *
+	 * `action_menu` was a dropdown of actions inside a panel that already has
+	 * an action bar along the bottom and an `action_buttons` component — a
+	 * third way to trigger the same thing, and the one that did not work.
+	 *
+	 * `articles` drew article cards with images and excerpts, which is a
+	 * content-listing widget and has nothing to do with editing a record.
+	 */
 
-	// =========================================================================
-	// REGISTRATION & MANAGEMENT
-	// =========================================================================
+	/*
+	 * Not registered, deliberately, and each for the same reason.
+	 *
+	 * `feature_list`, `key_value_list` and `file_manager` were lists with add,
+	 * remove and reorder written out by hand — about 1,700 lines of stylesheet
+	 * and script between them — and each is a repeater the kit has with its
+	 * columns already decided: `list`, `key_value` and `files`.
+	 *
+	 * `gallery` and `image` duplicated a kit type each, with their own markup,
+	 * their own unprefixed class names and 290 lines of stylesheet — a picker
+	 * that looked like neither core nor the rest of the panel.
+	 *
+	 * `card_choice`, `ajax_select` and `separator` likewise.
+	 *
+	 * `unit_input` was a number with a unit, which is what `amount_type` is,
+	 * and `code_generator` is a kit type now — both were carrying a stylesheet
+	 * with a hand-rolled chevron SVG of their own.
+	 *
+	 * `price_config` and `discount_config` were compound fields all along: an
+	 * amount with a unit beside it, and a couple of things that only matter
+	 * depending on what the unit says. That is a group with a `depends`, and
+	 * FormField expands them into one — same submitted shape, no markup, no
+	 * stylesheet and no script.
+	 *
+	 * FormField aliases every one of the old names, so a configuration
+	 * written against them still works; it reaches the kit instead of a
+	 * second implementation.
+	 */
 
 	/**
-	 * Register a custom component
+	 * Components a consumer registered at runtime.
 	 *
-	 * @param string $type   Component type identifier
-	 * @param array  $config Component configuration
+	 * @var array<string, array{class: class-string, data: string|string[], asset: string|null}>
+	 */
+	private static array $custom = [];
+
+	/**
+	 * Register a component of your own.
+	 *
+	 * @param string $type   Component type identifier.
+	 * @param array  $config Component configuration.
 	 *
 	 * @return void
-	 * @throws InvalidArgumentException If component class doesn't exist
+	 * @throws InvalidArgumentException When the class is missing or does not exist.
 	 */
 	public static function register( string $type, array $config ): void {
 		if ( ! isset( $config['class'] ) ) {
@@ -392,104 +214,63 @@ class Components {
 			);
 		}
 
-		self::$components[ $type ] = $config;
+		self::$custom[ $type ] = [
+			'class' => $config['class'],
+
+			// `data_fields` was the old spelling, and a consumer's array is
+			// the one place it could still appear.
+			'data'  => $config['data'] ?? $config['data_fields'] ?? 'value',
+			'asset' => $config['asset'] ?? null,
+		];
 	}
 
 	/**
-	 * Unregister a component
+	 * Every registered component.
 	 *
-	 * @param string $type Component type to unregister
-	 *
-	 * @return bool True if component was unregistered
+	 * @return array<string, array{class: class-string, data: string|string[], asset: string|null}>
 	 */
-	public static function unregister( string $type ): bool {
-		if ( isset( self::$components[ $type ] ) ) {
-			unset( self::$components[ $type ] );
-
-			return true;
-		}
-
-		return false;
+	public static function all(): array {
+		return array_merge( self::COMPONENTS, self::$custom );
 	}
 
-	// =========================================================================
-	// COMPONENT RETRIEVAL
-	// =========================================================================
-
 	/**
-	 * Get component configuration
+	 * A component's configuration.
 	 *
-	 * @param string $type Component type
+	 * @param string $type Component type.
 	 *
-	 * @return array|null Component configuration or null if not found
+	 * @return array{class: class-string, data: string|string[], asset: string|null}|null
 	 */
 	public static function get( string $type ): ?array {
-		self::ensure_initialized();
-
-		return self::$components[ $type ] ?? null;
+		return self::$custom[ $type ] ?? self::COMPONENTS[ $type ] ?? null;
 	}
 
 	/**
-	 * Get all registered components
+	 * Whether a type is a component rather than a field.
 	 *
-	 * @return array<string, array> All registered components
-	 */
-	public static function get_all(): array {
-		self::ensure_initialized();
-
-		return self::$components;
-	}
-
-	/**
-	 * Check if type is a registered component
+	 * @param string $type Component type to check.
 	 *
-	 * @param string $type Component type to check
-	 *
-	 * @return bool True if component is registered
+	 * @return bool
 	 */
 	public static function is_component( string $type ): bool {
-		self::ensure_initialized();
-
-		return isset( self::$components[ $type ] );
+		return null !== self::get( $type );
 	}
 
 	/**
-	 * Get components by category
+	 * Build a component.
 	 *
-	 * @param string $category Category name (display, interactive, form, layout, data)
+	 * @param string $type   Component type.
+	 * @param array  $config Component configuration.
 	 *
-	 * @return array Components in that category
-	 * @since 1.0.0
-	 */
-	public static function get_by_category( string $category ): array {
-		self::ensure_initialized();
-
-		return array_filter( self::$components, function ( $component ) use ( $category ) {
-			return isset( $component['category'] ) && $component['category'] === $category;
-		} );
-	}
-
-	// =========================================================================
-	// COMPONENT INSTANTIATION
-	// =========================================================================
-
-	/**
-	 * Create component instance
-	 *
-	 * @param string $type   Component type
-	 * @param array  $config Component configuration
-	 *
-	 * @return object|null Component instance or null if type not found
+	 * @return object|null Null when the type is not a component.
 	 */
 	public static function create( string $type, array $config ) {
-		self::ensure_initialized();
+		$component = self::get( $type );
 
-		$component_config = self::get( $type );
-		if ( ! $component_config || ! isset( $component_config['class'] ) ) {
+		if ( null === $component ) {
 			return null;
 		}
 
-		$class = $component_config['class'];
+		$class = $component['class'];
 
 		$config = apply_filters( Runtime::hook( 'component_config' ), $config, $type, $class );
 		$config = apply_filters( "wp_flyout_component_{$type}_config", $config );
@@ -497,227 +278,92 @@ class Components {
 		return new $class( $config );
 	}
 
-	// =========================================================================
-	// DATA RESOLUTION
-	// =========================================================================
+	/**
+	 * The asset handle a component needs, if any.
+	 *
+	 * @param string $type   Component type.
+	 * @param array  $config The field's configuration.
+	 *
+	 * @return string|null
+	 */
+	public static function get_asset( string $type, array $config = [] ): ?string {
+		// A header only needs the media frame when it can be edited, which is
+		// the one asset that depends on configuration rather than type.
+		if ( 'header' === $type ) {
+			return empty( $config['editable'] ) ? null : 'image-picker';
+		}
+
+		return self::get( $type )['asset'] ?? null;
+	}
 
 	/**
-	 * Resolve component data from a data source
+	 * Populate a component's configuration from a data source.
 	 *
-	 * Attempts to resolve data for a component from various sources:
-	 * 1. Looks for a method that returns the complete data structure (field_key_data)
-	 * 2. Tries to get a pre-built array/object at field_key
-	 * 3. Falls back to resolving individual fields
+	 * A component is configured rather than valued: a timeline wants `items`,
+	 * a payment method wants five keys. This finds them on whatever the
+	 * `load` callback returned, so a flyout does not have to spell out what
+	 * the row already knows.
 	 *
-	 * @param string $type      Component type
-	 * @param string $field_key Field identifier
-	 * @param mixed  $data      Data source (object or array)
+	 * Two shapes are accepted, because both are natural. A source may hold
+	 * the whole configuration at the field's own key — a `timeline_data()`
+	 * method returning `[ 'items' => [ ... ] ]` — or it may hold each key
+	 * separately, which is what a plain database row looks like.
 	 *
-	 * @return array Resolved data array
+	 * @param string $type      Component type.
+	 * @param string $field_key Field identifier.
+	 * @param mixed  $data      Data source, object or array.
+	 *
+	 * @return array<string, mixed>
 	 */
 	public static function resolve_data( string $type, string $field_key, $data ): array {
-		self::ensure_initialized();
-
 		$component = self::get( $type );
 
-		// Non-components default to 'value'
-		if ( ! $component || ! isset( $component['data_fields'] ) ) {
+		if ( null === $component ) {
 			return [ 'value' => self::resolve_value( $field_key, $data ) ];
 		}
 
-		$data_fields = $component['data_fields'];
-
-		// Try to get pre-built array/object at field_key
+		$keys     = $component['data'];
 		$resolved = self::resolve_value( $field_key, $data );
 
-		// If we got an array with the fields we need, use it
+		// The whole configuration, at the field's own key.
 		if ( is_array( $resolved ) ) {
-			if ( is_string( $data_fields ) ) {
-				// Single field - check if array contains it
-				if ( isset( $resolved[ $data_fields ] ) ) {
+			foreach ( (array) $keys as $key ) {
+				if ( isset( $resolved[ $key ] ) ) {
 					return $resolved;
-				}
-			} else {
-				// Multiple fields - check if array has any
-				foreach ( $data_fields as $field ) {
-					if ( isset( $resolved[ $field ] ) ) {
-						return $resolved;
-					}
 				}
 			}
 		}
 
-		// Build result from individual fields
-		if ( is_string( $data_fields ) ) {
-			// Single field component
-			return [ $data_fields => $resolved ];
+		// A component with one key takes whatever was there.
+		if ( is_string( $keys ) ) {
+			return [ $keys => $resolved ];
 		}
 
-		// Multiple field component - resolve each
+		// Otherwise each key is looked up in its own right. `value` is the
+		// exception: it means the field's own key, not a column called
+		// "value".
 		$result = [];
-		foreach ( $data_fields as $field ) {
-			$key              = ( $field === 'value' ) ? $field_key : $field;
-			$result[ $field ] = self::resolve_value( $key, $data );
+
+		foreach ( $keys as $key ) {
+			$result[ $key ] = self::resolve_value( 'value' === $key ? $field_key : $key, $data );
 		}
 
 		return $result;
 	}
 
 	/**
-	 * Resolve a single value from data source
+	 * Find a named value on whatever the `load` callback returned.
 	 *
-	 * Resolution order:
-	 * 1. Explicit data method (field_data()) — returns complete data for a field
-	 * 2. Array key access — direct array lookup (fast, no method calls)
-	 * 3. Getter method (get_field()) — standard getter pattern
+	 * The walk is the kit's — `{key}_data()`, an array key, `get_{key}()`,
+	 * then a property — because it is the same question a field set asks of
+	 * the same object, and the two answers had better agree.
 	 *
-	 * @param string $key  Property/method name to resolve
-	 * @param mixed  $data Data source (object or array)
+	 * @param string $key  Property, method or array key to resolve.
+	 * @param mixed  $data Data source, object or array.
 	 *
-	 * @return mixed Resolved value or null if not found
+	 * @return mixed Null when it is not there.
 	 */
 	public static function resolve_value( string $key, $data ) {
-		if ( ! $data ) {
-			return null;
-		}
-
-		// 1. Try explicit data method first (field_data())
-		if ( is_object( $data ) ) {
-			$data_method = $key . '_data';
-			if ( method_exists( $data, $data_method ) ) {
-				return $data->$data_method();
-			}
-		}
-
-		// 2. Array key access
-		if ( is_array( $data ) && isset( $data[ $key ] ) ) {
-			return $data[ $key ];
-		}
-
-		// 3. Getter method (get_field)
-		if ( is_object( $data ) ) {
-			$getter = 'get_' . $key;
-			if ( method_exists( $data, $getter ) ) {
-				return $data->$getter();
-			}
-		}
-
-		// 4. A public property.
-		//
-		// Which is what a plain object has, and what WP_Post and WP_Term have
-		// — post_title and name are properties, not getters. Without this a
-		// `load` callback returning one of them populated nothing at all and
-		// the flyout opened with every field empty, which is also what this
-		// library's own README example does:
-		//
-		//     'load' => fn( $id ) => get_post( $id )
-		//
-		// Checked with isset() rather than property_exists(), so a magic
-		// __isset/__get pair — WP_Post has both — answers for itself.
-		if ( is_object( $data ) && isset( $data->$key ) ) {
-			return $data->$key;
-		}
-
-		return null;
-	}
-
-	// =========================================================================
-	// ASSET MANAGEMENT
-	// =========================================================================
-
-	/**
-	 * Get required asset for component
-	 *
-	 * For the header component, the asset is conditionally required
-	 * only when the 'editable' flag is set in the field config.
-	 *
-	 * @param string $type   Component type
-	 * @param array  $config Optional field config for conditional asset detection
-	 *
-	 * @return string|null Asset handle or null if no asset required
-	 */
-	public static function get_asset( string $type, array $config = [] ): ?string {
-		self::ensure_initialized();
-
-		// Header component conditionally needs assets only when editable
-		if ( $type === 'header' ) {
-			return ! empty( $config['editable'] ) ? 'image-picker' : null;
-		}
-
-		return self::$components[ $type ]['asset'] ?? null;
-	}
-
-	/**
-	 * Get all required assets for registered components
-	 *
-	 * @return array<string> Unique asset handles
-	 */
-	public static function get_all_assets(): array {
-		self::ensure_initialized();
-
-		$assets = [];
-		foreach ( self::$components as $component ) {
-			if ( ! empty( $component['asset'] ) ) {
-				$assets[] = $component['asset'];
-			}
-		}
-
-		return array_unique( $assets );
-	}
-
-	// =========================================================================
-	// COMPONENT INFORMATION
-	// =========================================================================
-
-	/**
-	 * Get component description
-	 *
-	 * @param string $type Component type
-	 *
-	 * @return string|null Component description or null if not found
-	 * @since 1.0.0
-	 */
-	public static function get_description( string $type ): ?string {
-		self::ensure_initialized();
-
-		$component = self::get( $type );
-
-		return $component['description'] ?? null;
-	}
-
-	/**
-	 * Get available categories
-	 *
-	 * @return array List of available categories
-	 * @since 1.0.0
-	 */
-	public static function get_categories(): array {
-		return [ 'display', 'interactive', 'form', 'layout', 'data' ];
-	}
-
-	// =========================================================================
-	// UTILITY METHODS
-	// =========================================================================
-
-	/**
-	 * Ensure components are initialized
-	 *
-	 * @return void
-	 */
-	private static function ensure_initialized(): void {
-		if ( ! self::$initialized ) {
-			self::init();
-		}
-	}
-
-	/**
-	 * Reset registry (for testing)
-	 *
-	 * @return void
-	 * @internal
-	 */
-	public static function reset(): void {
-		self::$components  = [];
-		self::$initialized = false;
+		return Resolve::value( $data, $key );
 	}
 }

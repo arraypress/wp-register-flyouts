@@ -438,7 +438,7 @@ class RestApi {
 		$action_key = $request->get_param( 'action_key' );
 		$item_id    = $request->get_param( 'item_id' );
 
-		// Find the action callback within action_buttons or action_menu fields.
+		// Find the action callback within the fields that declare one.
 		$callback = self::find_action_callback( $config['fields'], $action_key );
 
 		if ( ! $callback ) {
@@ -480,7 +480,7 @@ class RestApi {
 	/**
 	 * Find an action callback by action key within the fields array.
 	 *
-	 * Searches action_buttons, action_menu, and notes field types for matching action keys.
+	 * Searches action_buttons and notes field types for matching action keys.
 	 *
 	 * @param array  $fields     Flat fields array from flyout config.
 	 * @param string $action_key Action key to find.
@@ -511,14 +511,12 @@ class RestApi {
 				return $field[ $callback_key ];
 			}
 
-			// Action buttons/menu: search within items array.
-			if ( $type === 'action_buttons' ) {
-				$items = $field['buttons'] ?? [];
-			} elseif ( $type === 'action_menu' ) {
-				$items = $field['items'] ?? [];
-			} else {
+			// Action buttons: search within the buttons array.
+			if ( 'action_buttons' !== $type ) {
 				continue;
 			}
+
+			$items = $field['buttons'] ?? [];
 
 			foreach ( $items as $item ) {
 				if ( isset( $item['type'] ) && $item['type'] === 'separator' ) {

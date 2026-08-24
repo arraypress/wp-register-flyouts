@@ -20,4 +20,4 @@ Assets::enqueue_component( 'code-generator' );
 
 ## Available Component Assets
 
-`file-manager`, `gallery`, `image-picker`, `notes`, `line-items`, `feature-list`, `key-value-list`, `ajax-select`, `accordion`, `card-choice`, `timeline`, `price-summary`, `payment-method`, `action-buttons`, `action-menu`, `articles`, `stats`, `price-config`, `discount-config`, `refund-form`, `unit-input`, `code-generator`.
+`image-picker`, `notes`, `line-items`, `accordion`, `timeline`, `price-summary`, `payment-method`, `action-buttons`, `stats`, `refund-form`.

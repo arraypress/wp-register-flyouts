@@ -20,13 +20,10 @@ use ArrayPress\RegisterFlyouts\Utils\Runtime;
 use ArrayPress\RegisterFlyouts\Components\ActionButtons;
 use ArrayPress\RegisterFlyouts\Components\ActionMenu;
 use ArrayPress\RegisterFlyouts\Components\Articles;
-use ArrayPress\RegisterFlyouts\Components\FeatureList;
-use ArrayPress\RegisterFlyouts\Components\KeyValueList;
 use ArrayPress\RegisterFlyouts\Components\PaymentMethod;
 use ArrayPress\RegisterFlyouts\Components\PriceSummary;
 use ArrayPress\RegisterFlyouts\Components\CardChoice;
 use ArrayPress\RegisterFlyouts\Components\FormField;
-use ArrayPress\RegisterFlyouts\Components\FileManager;
 use ArrayPress\RegisterFlyouts\Components\Notes;
 use ArrayPress\RegisterFlyouts\Components\LineItems;
 use ArrayPress\RegisterFlyouts\Components\Accordion;
@@ -202,36 +199,20 @@ class Components {
 		] );
 
 		// ---- List Management ----
+		// `feature_list`, `key_value_list` and `files` are not registered.
+		//
+		// Each was a list with add, remove and reorder written out by hand —
+		// about 1,700 lines of stylesheet and script between them — and each is
+		// a repeater the kit now has with its columns already decided: `list`,
+		// `key_value` and `files`. FormField aliases the old names, so a
+		// configuration that used them keeps working.
+
 		self::register( 'notes', [
 			'class'       => Notes::class,
 			'data_fields' => 'items',
 			'asset'       => 'notes',
 			'category'    => 'interactive',
 			'description' => 'Notes/comments with add/delete functionality',
-		] );
-
-		self::register( 'files', [
-			'class'       => FileManager::class,
-			'data_fields' => 'items',
-			'asset'       => 'file-manager',
-			'category'    => 'interactive',
-			'description' => 'File attachments with drag-drop sorting',
-		] );
-
-		self::register( 'feature_list', [
-			'class'       => FeatureList::class,
-			'data_fields' => 'items',
-			'asset'       => 'feature-list',
-			'category'    => 'interactive',
-			'description' => 'Feature list with drag-drop sorting',
-		] );
-
-		self::register( 'key_value_list', [
-			'class'       => KeyValueList::class,
-			'data_fields' => 'items',
-			'asset'       => 'key-value-list',
-			'category'    => 'interactive',
-			'description' => 'Key value list with drag-drop sorting',
 		] );
 
 		// ---- Commerce Components ----

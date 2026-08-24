@@ -61,6 +61,13 @@ class FormField implements Renderable {
 	private const TYPE_ALIASES = [
 		'ajax_select' => 'ajax',
 		'card_choice' => 'radio',
+
+		// Three lists this library drew by hand — add, remove and reorder,
+		// three times over — which the kit now has as repeaters with their
+		// columns already decided.
+		'feature_list'   => 'list',
+		'key_value_list' => 'key_value',
+		'file_manager'   => 'files',
 	];
 
 	/**
@@ -97,6 +104,22 @@ class FormField implements Renderable {
 
 		$config['type'] = self::TYPE_ALIASES[ $type ] ?? $type;
 
+		// These three carry their rows in configuration under `items`, where
+		// the kit reads a repeater's rows from the context. Handed over as
+		// the field's default so a flyout that passes them still shows them.
+		//
+		// One spelling differs: a file manager's rows call the URL `url` and
+		// the kit's files type calls it `file`.
+		if ( isset( $config['items'] ) && is_array( $config['items'] )
+			&& in_array( $config['type'], [ 'list', 'key_value', 'files' ], true ) ) {
+
+			$config['default'] = 'files' === $config['type']
+				? array_map( [ self::class, 'to_kit_file' ], $config['items'] )
+				: $config['items'];
+
+			unset( $config['items'] );
+		}
+
 		// A value resolved at render time. A field set reads from a context,
 		// so this is resolved here and handed over as the field's default —
 		// the context has nothing to read for it.
@@ -106,6 +129,23 @@ class FormField implements Renderable {
 		}
 
 		return $config;
+	}
+
+	/**
+	 * One file row, in the kit's spelling.
+	 *
+	 * @param mixed $item A file manager row.
+	 *
+	 * @return array<string, mixed>
+	 */
+	private static function to_kit_file( $item ): array {
+		$item = (array) $item;
+
+		if ( isset( $item['url'] ) && ! isset( $item['file'] ) ) {
+			$item['file'] = $item['url'];
+		}
+
+		return $item;
 	}
 
 	/**

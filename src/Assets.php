@@ -78,11 +78,6 @@ class Assets {
 	 * @since 1.0.0
 	 */
 	private static array $components = [
-		'file-manager'   => [
-			'script' => 'js/components/file-manager.js',
-			'style'  => 'css/components/file-manager.css',
-			'deps'   => [ 'jquery-ui-sortable' ],
-		],
 		'image-picker'   => [
 			'script' => 'js/components/image-picker.js',
 			'style'  => '',
@@ -97,16 +92,6 @@ class Assets {
 			'script' => 'js/components/line-items.js',
 			'style'  => 'css/components/line-items.css',
 			'deps'   => [ 'wp-flyout-ajax-select' ],
-		],
-		'feature-list'   => [
-			'script' => 'js/components/feature-list.js',
-			'style'  => 'css/components/feature-list.css',
-			'deps'   => [ 'jquery-ui-sortable' ],
-		],
-		'key-value-list' => [
-			'script' => 'js/components/key-value-list.js',
-			'style'  => 'css/components/key-value-list.css',
-			'deps'   => [ 'jquery-ui-sortable' ],
 		],
 		'ajax-select'    => [
 			'script' => 'js/components/ajax-select.js',
@@ -409,7 +394,7 @@ class Assets {
 		}
 
 		// Handle special requirements (media library)
-		if ( in_array( $component, [ 'file-manager', 'image-picker' ], true ) ) {
+		if ( in_array( $component, [ 'image-picker' ], true ) ) {
 			wp_enqueue_media();
 		}
 

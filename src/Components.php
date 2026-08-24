@@ -21,8 +21,6 @@ use ArrayPress\RegisterFlyouts\Components\ActionButtons;
 use ArrayPress\RegisterFlyouts\Components\ActionMenu;
 use ArrayPress\RegisterFlyouts\Components\Articles;
 use ArrayPress\RegisterFlyouts\Components\FeatureList;
-use ArrayPress\RegisterFlyouts\Components\Image;
-use ArrayPress\RegisterFlyouts\Components\Gallery;
 use ArrayPress\RegisterFlyouts\Components\KeyValueList;
 use ArrayPress\RegisterFlyouts\Components\PaymentMethod;
 use ArrayPress\RegisterFlyouts\Components\PriceSummary;
@@ -245,13 +243,14 @@ class Components {
 			'description' => 'Order line items with quantities and pricing',
 		] );
 
-		self::register( 'gallery', [
-			'class'       => Gallery::class,
-			'data_fields' => 'items',
-			'asset'       => 'gallery',
-			'category'    => 'interactive',
-			'description' => 'Multi-image gallery with media library and reordering',
-		] );
+		// `gallery` and `image` are not registered here.
+		//
+		// Both duplicated a type wp-field-kit already has, with their own
+		// markup, their own unprefixed class names and 290 lines of stylesheet
+		// of their own — a picker that looked like neither core nor the rest of
+		// the panel. Leaving them unregistered sends both through FormField to
+		// the kit, which draws them with core's own controls and already has
+		// the media frame, the ordering and the accessible move buttons.
 
 		self::register( 'refund_form', [
 			'class'       => RefundForm::class,
@@ -289,13 +288,6 @@ class Components {
 		] );
 
 		// ---- Media Components ----
-		self::register( 'image', [
-			'class'       => Image::class,
-			'data_fields' => 'value',
-			'asset'       => 'image-picker',
-			'category'    => 'form',
-			'description' => 'Single image picker with media library integration',
-		] );
 
 		// ---- Pricing ----
 		self::register( 'price_config', [

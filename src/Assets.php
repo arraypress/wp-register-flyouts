@@ -59,12 +59,16 @@ class Assets {
 	 * @var array<string>
 	 * @since 1.0.0
 	 */
+	// No conditional-fields.js: the kit's Conditions module reads the same
+	// data-conditions attribute, understands the same operators, and now runs
+	// over a flyout when it opens. Two implementations of that would disagree
+	// eventually, and the kit's is the one the settings and metabox screens
+	// already use.
 	private static array $core_scripts = [
 		'js/wp-flyout.js',
 		'js/core/forms.js',
 		'js/core/manager.js',
 		'js/core/alert.js',
-		'js/core/conditional-fields.js',
 	];
 
 	/**

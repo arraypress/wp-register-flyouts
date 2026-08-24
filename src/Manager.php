@@ -399,64 +399,19 @@ class Manager {
 	 * @since 4.0.0
 	 */
 	private function normalize_ajax_fields( array $field, string $field_key, $data ): array {
-		$type = $field['type'] ?? 'text';
-
-		// Convert derivative types to ajax_select with built-in callback.
-		switch ( $type ) {
-			case 'post':
-				$field['type']     = 'ajax_select';
-				$field['callback'] = Callbacks\Search::posts(
-					$field['post_type'] ?? 'post',
-					$field['query_args'] ?? []
-				);
-				break;
-
-			case 'taxonomy':
-				$field['type']     = 'ajax_select';
-				$field['callback'] = Callbacks\Search::taxonomy(
-					$field['taxonomy'] ?? 'category',
-					$field['query_args'] ?? []
-				);
-				break;
-
-			case 'user':
-				$field['type']     = 'ajax_select';
-				$field['callback'] = Callbacks\Search::users(
-					$field['role'] ?? '',
-					$field['query_args'] ?? []
-				);
-				break;
-		}
-
-		if ( $field['type'] !== 'ajax_select' ) {
-			// Line items need manager/flyout context for their embedded search and details.
-			if ( $field['type'] === 'line_items' ) {
-				$field['manager'] = $this->prefix;
-				$field['flyout']  = $this->get_flyout_id_for_field( $field_key );
-			}
-
-			return $field;
-		}
-
-		$data_key = $field['name'] ?? $field_key;
-
-		// Set the REST search URL for Select2.
-		$field['ajax_url']    = rest_url( RestApi::rest_namespace() . '/search' );
-		$field['ajax_params'] = [
-			'manager'   => $this->prefix,
-			'flyout'    => $this->get_flyout_id_for_field( $field_key ),
-			'field_key' => $data_key,
-		];
-
-		// Resolve value if not already set.
-		if ( ! isset( $field['value'] ) && $data ) {
-			$field['value'] = Components::resolve_value( $data_key, $data );
-		}
-
-		// Hydrate options from callback if we have a value but no options.
-		if ( ! empty( $field['value'] ) && empty( $field['options'] ) && ! empty( $field['callback'] ) && is_callable( $field['callback'] ) ) {
-			$ids              = is_array( $field['value'] ) ? $field['value'] : [ $field['value'] ];
-			$field['options'] = call_user_func( $field['callback'], '', $ids );
+		// `post`, `taxonomy` and `user` used to be converted here into this
+		// library's own ajax_select, with a hand-written search callback, so
+		// they never reached the kit's types of the same names at all — which
+		// is why a relational field in a flyout came out as a plain <select>
+		// reading "— Select —" while the same field on a settings page was a
+		// searchable combobox. They go straight through now, and the kit's
+		// search endpoint answers for them.
+		//
+		// What is left here is the context two components cannot work out for
+		// themselves: which manager and which flyout they belong to.
+		if ( 'line_items' === ( $field['type'] ?? '' ) ) {
+			$field['manager'] = $this->prefix;
+			$field['flyout']  = $this->get_flyout_id_for_field( $field_key );
 		}
 
 		return $field;

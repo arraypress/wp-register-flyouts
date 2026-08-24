@@ -279,14 +279,6 @@ class Components {
 			'description' => 'Card-style radio/checkbox selections',
 		] );
 
-		self::register( 'ajax_select', [
-			'class'       => FormField::class,
-			'data_fields' => 'value',
-			'asset'       => 'ajax-select',
-			'category'    => 'form',
-			'description' => 'AJAX-powered select field',
-		] );
-
 		// ---- Media Components ----
 
 		// ---- Pricing ----

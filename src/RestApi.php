@@ -477,8 +477,10 @@ class RestApi {
 			);
 		}
 
-		// Resolve derivative types to their built-in callbacks.
-		$field = self::resolve_field_callback( $field );
+		// No derivative-type resolution here any more. `post`, `taxonomy` and
+		// `user` are the kit's types now and are searched through the kit's
+		// own endpoint; what still reaches this one is a component with a
+		// search of its own — line items — or a consumer's own callback.
 
 		if ( empty( $field['callback'] ) || ! is_callable( $field['callback'] ) ) {
 			return new WP_Error(
@@ -578,48 +580,6 @@ class RestApi {
 	// FIELD & ACTION RESOLUTION
 	// =========================================================================
 
-	/**
-	 * Resolve derivative field types to their built-in callbacks.
-	 *
-	 * Converts post, taxonomy, and user types to ajax_select with
-	 * the appropriate Callbacks\Search closure.
-	 *
-	 * @param array $field Field configuration.
-	 *
-	 * @return array Field with callback resolved.
-	 */
-	private static function resolve_field_callback( array $field ): array {
-		if ( ! empty( $field['callback'] ) && is_callable( $field['callback'] ) ) {
-			return $field;
-		}
-
-		$type = $field['type'] ?? '';
-
-		switch ( $type ) {
-			case 'post':
-				$field['callback'] = Callbacks\Search::posts(
-					$field['post_type'] ?? 'post',
-					$field['query_args'] ?? []
-				);
-				break;
-
-			case 'taxonomy':
-				$field['callback'] = Callbacks\Search::taxonomy(
-					$field['taxonomy'] ?? 'category',
-					$field['query_args'] ?? []
-				);
-				break;
-
-			case 'user':
-				$field['callback'] = Callbacks\Search::users(
-					$field['role'] ?? '',
-					$field['query_args'] ?? []
-				);
-				break;
-		}
-
-		return $field;
-	}
 
 	/**
 	 * Find a field configuration by key within the flat fields array.

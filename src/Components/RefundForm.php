@@ -67,17 +67,27 @@ class RefundForm implements Renderable {
 	 * @return int
 	 */
 	private function get_refundable(): int {
-		return max( 0, $this->config['amount_paid'] - $this->config['amount_refunded'] );
+		// Cast, because what arrives is whatever the consumer had: a float
+		// from a form, a numeric string out of a database. max() returns the
+		// type it was given, so a float here was a TypeError against the int
+		// return — and a TypeError inside a component takes the whole panel
+		// down rather than just that component.
+		$paid     = (float) ( $this->config['amount_paid'] ?? 0 );
+		$refunded = (float) ( $this->config['amount_refunded'] ?? 0 );
+
+		return (int) round( max( 0, $paid - $refunded ) );
 	}
 
 	/**
 	 * Format cents to display amount
 	 *
-	 * @param int $amount Amount in cents
+	 * @param int|float|string $amount Amount in cents, as whatever the consumer had.
 	 *
 	 * @return string
 	 */
-	private function format_amount( int $amount ): string {
+	private function format_amount( $amount ): string {
+		$amount = (int) round( (float) $amount );
+
 		$currency = strtoupper( $this->config['currency'] );
 
 		if ( function_exists( 'format_currency' ) ) {
@@ -90,7 +100,7 @@ class RefundForm implements Renderable {
 	/**
 	 * Format cents to decimal for input value
 	 *
-	 * @param int $amount Amount in cents
+	 * @param int|float|string $amount Amount in cents, as whatever the consumer had.
 	 *
 	 * @return string
 	 */

@@ -244,7 +244,7 @@ class LineItems implements Renderable {
 
             <td class="column-price">
                 <span data-price="<?php echo esc_attr( (string) $price ); ?>">
-                    <?php esc_currency_e( $price, $this->config['currency'] ); ?>
+                    <?php esc_currency_e( self::minor_units( $price ), $this->config['currency'] ); ?>
                 </span>
                 <input type="hidden"
                         name="<?php echo esc_attr( $this->config['name'] ); ?>[<?php echo esc_attr( $index ); ?>][price]"
@@ -253,7 +253,7 @@ class LineItems implements Renderable {
 
             <?php if ( $this->config['show_quantity'] ) : ?>
                 <td class="column-total">
-                    <span class="item-total"><?php esc_currency_e( $total, $this->config['currency'] ); ?></span>
+                    <span class="item-total"><?php esc_currency_e( self::minor_units( $total ), $this->config['currency'] ); ?></span>
                 </td>
             <?php endif; ?>
 
@@ -275,7 +275,7 @@ class LineItems implements Renderable {
         <div class="line-items-total">
             <span class="total-label">Total:</span>
             <span class="total-amount" data-value="<?php echo esc_attr( (string) $total ); ?>">
-                <?php esc_currency_e( $total, $this->config['currency'] ); ?>
+                <?php esc_currency_e( self::minor_units( $total ), $this->config['currency'] ); ?>
             </span>
         </div>
         <?php
@@ -337,5 +337,28 @@ class LineItems implements Renderable {
             </tr>
         </script>
         <?php
+    }
+
+    /**
+     * An amount in the smallest currency unit.
+     *
+     * esc_currency_e() takes an int in minor units — cents, pence — and a
+     * float is a TypeError that takes the whole panel down with it. What
+     * actually arrives is whatever the consumer had: 148.00 from a form,
+     * "148.00" out of a database, 14800 from a payment processor.
+     *
+     * A value with a fractional part is read as a major-unit amount and
+     * converted; a whole number is taken as already being minor units, which
+     * is what the currency library documents. Rounded rather than cast, so
+     * 14.999 does not become 1499.
+     *
+     * @param mixed $amount The amount.
+     *
+     * @return int
+     */
+    private static function minor_units( $amount ): int {
+        $amount = is_numeric( $amount ) ? (float) $amount : 0.0;
+
+        return (int) round( fmod( $amount, 1.0 ) !== 0.0 ? $amount * 100 : $amount );
     }
 }

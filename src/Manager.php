@@ -280,7 +280,11 @@ class Manager {
 			$actions[] = [
 				'text'  => __( 'Delete', 'wp-flyout' ),
 				'style' => 'link-delete',
-				'class' => 'wp-flyout-delete button-link-delete',
+				// The kit's, which is core's Site Icon treatment: red text, red
+				// border, filling red on hover. .button-link-delete is core's
+				// red *link* and gives red text with no border — combined with
+				// .button it produced a blue label inside a red outline.
+				'class' => 'wp-flyout-delete field-kit__button--delete',
 			];
 		}
 

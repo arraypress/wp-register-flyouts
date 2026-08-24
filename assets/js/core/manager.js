@@ -147,6 +147,17 @@
 
             // Bind handlers
             this.bindHandlers($flyout, flyoutId, config);
+
+            // Every field in here is rendered by wp-field-kit, and the kit
+            // binds its modules on DOMContentLoaded — which has long since
+            // passed by the time this markup is fetched and appended. So none
+            // of it ran: no combobox on a searchable select, no reorder on a
+            // sortable, no rows on a repeater, no colour picker, no code
+            // editor. init() is documented as safe to call again for exactly
+            // this, and each module marks what it has bound.
+            if (window.ArrayPressFieldKitModules && typeof window.ArrayPressFieldKitModules.init === 'function') {
+                window.ArrayPressFieldKitModules.init($flyout[0]);
+            }
         },
 
         /**

@@ -16,6 +16,8 @@ declare( strict_types=1 );
 
 namespace ArrayPress\RegisterFlyouts;
 
+use ArrayPress\FieldKit\Assets as KitAssets;
+use ArrayPress\FieldKit\Registry as KitRegistry;
 use ArrayPress\RegisterFlyouts\Utils\Runtime;
 
 use ArrayPress\RegisterFlyouts\Components\FormField;
@@ -679,12 +681,60 @@ class Manager {
 	}
 
 	/**
+	 * What the field types across every flyout on this screen need.
+	 *
+	 * The media frame, the colour picker, the code editor: each is a
+	 * dependency of a particular type rather than of the kit, and each has to
+	 * be enqueued before the kit's own script so it is there when the kit
+	 * looks for it.
+	 *
+	 * Asked of the types rather than of a field set, because a flyout has no
+	 * field set — it renders one FormField at a time.
+	 *
+	 * @return array{scripts: string[], styles: string[], code_editors: string[]}
+	 */
+	private function field_dependencies(): array {
+		$registry = new KitRegistry();
+		$scripts  = [];
+		$styles   = [];
+
+		foreach ( $this->flyouts as $config ) {
+			foreach ( (array) ( $config['fields'] ?? [] ) as $field ) {
+				$id = (string) ( $field['type'] ?? 'text' );
+
+				if ( ! $registry->has( $id ) ) {
+					continue;
+				}
+
+				$needs   = $registry->get( $id )->dependencies();
+				$scripts = array_merge( $scripts, $needs['scripts'] ?? [] );
+				$styles  = array_merge( $styles, $needs['styles'] ?? [] );
+			}
+		}
+
+		return [
+			'scripts'      => array_values( array_unique( $scripts ) ),
+			'styles'       => array_values( array_unique( $styles ) ),
+			'code_editors' => [],
+		];
+	}
+
+	/**
 	 * Enqueue required assets.
 	 *
 	 * @return void
 	 * @since 1.0.0
 	 */
 	public function enqueue_assets(): void {
+		// The kit's, first. Every field in a flyout is rendered by
+		// wp-field-kit, and its stylesheet and script were never enqueued
+		// here — so the markup arrived with none of the rules or behaviour
+		// that make it work. A button group came out as stacked radios, a
+		// toggle as a plain checkbox, a sortable as a numbered list, a
+		// tooltip as a bare question mark in a box, and every searchable
+		// select stayed a plain <select> because the combobox never ran.
+		( new KitAssets() )->enqueue( $this->field_dependencies() );
+
 		Assets::enqueue();
 
 		foreach ( $this->components as $component ) {

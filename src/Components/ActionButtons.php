@@ -16,7 +16,7 @@ declare( strict_types=1 );
 namespace ArrayPress\RegisterFlyouts\Components;
 
 use ArrayPress\FieldKit\Support\Button;
-use ArrayPress\RegisterFlyouts\Interfaces\Renderable;
+use ArrayPress\RegisterFlyouts\Renderable;
 
 class ActionButtons implements Renderable {
 

@@ -14,7 +14,7 @@ declare( strict_types=1 );
 
 namespace ArrayPress\RegisterFlyouts\Components;
 
-use ArrayPress\RegisterFlyouts\Interfaces\Renderable;
+use ArrayPress\RegisterFlyouts\Renderable;
 use ArrayPress\FieldKit\Support\Display;
 
 class InfoGrid implements Renderable {

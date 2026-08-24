@@ -15,7 +15,7 @@
 
 declare( strict_types=1 );
 
-namespace ArrayPress\RegisterFlyouts\Core;
+namespace ArrayPress\RegisterFlyouts;
 
 use ArrayPress\RegisterFlyouts\Utils\Runtime;
 

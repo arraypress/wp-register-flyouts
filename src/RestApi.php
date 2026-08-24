@@ -261,7 +261,11 @@ class RestApi {
 		// Call the load callback to get the data object.
 		$data = null;
 		if ( ! empty( $config['load'] ) && is_callable( $config['load'] ) ) {
-			$data = call_user_func( $config['load'], $item_id );
+			$data = self::run( $config['load'], 'load', $item_id );
+
+			if ( is_wp_error( $data ) ) {
+				return $data;
+			}
 		}
 
 		if ( is_wp_error( $data ) ) {
@@ -325,7 +329,7 @@ class RestApi {
 
 		// Run validation callback if provided.
 		if ( ! empty( $config['validate'] ) && is_callable( $config['validate'] ) ) {
-			$validation = call_user_func( $config['validate'], $sanitized );
+			$validation = self::run( $config['validate'], 'validate', $sanitized );
 
 			if ( is_wp_error( $validation ) ) {
 				return $validation;
@@ -343,7 +347,7 @@ class RestApi {
 		// Resolve the ID — may come from form data or request param.
 		$id = $sanitized['id'] ?? $item_id;
 
-		$result = call_user_func( $config['save'], $id, $sanitized );
+		$result = self::run( $config['save'], 'save', $id, $sanitized );
 
 		do_action( Runtime::hook( 'after_save' ), $result, $id, $sanitized, $config, $manager->get_prefix() );
 
@@ -395,7 +399,7 @@ class RestApi {
 
 		$item_id = apply_filters( Runtime::hook( 'before_delete' ), $item_id, $config, $manager->get_prefix() );
 
-		$result = call_user_func( $config['delete'], $item_id );
+		$result = self::run( $config['delete'], 'delete', $item_id );
 
 		do_action( Runtime::hook( 'after_delete' ), $result, $item_id, $config, $manager->get_prefix() );
 
@@ -455,7 +459,7 @@ class RestApi {
 		$params['id']         = $item_id;
 		$params['action_key'] = $action_key;
 
-		$result = call_user_func( $callback, $params );
+		$result = self::run( $callback, $action_key, $params );
 
 		if ( is_wp_error( $result ) ) {
 			return $result;
@@ -470,6 +474,48 @@ class RestApi {
 			'success' => true,
 			'message' => __( 'Action completed successfully.', 'arraypress' ),
 		] );
+	}
+
+	/**
+	 * Call a consumer's callback without letting it take the admin down.
+	 *
+	 * These are somebody else's functions, reached from a REST route, and a
+	 * TypeError in one is a white screen on the whole page rather than a
+	 * failed request — which is what a handler declared as `save( $data )`
+	 * did, since every save callback here is called as `( $id, $data )`.
+	 *
+	 * Caught and returned as an error instead: the panel shows what went
+	 * wrong and stays open. Only under WP_DEBUG is the message passed on,
+	 * because a message from an exception is as likely to name a file path as
+	 * to be useful to anybody.
+	 *
+	 * @param callable $callback The consumer's callback.
+	 * @param string   $what     What it was for, for the message.
+	 * @param mixed    ...$args  Arguments to pass.
+	 *
+	 * @return mixed|WP_Error
+	 */
+	private static function run( callable $callback, string $what, ...$args ) {
+		try {
+			return $callback( ...$args );
+		} catch ( \Throwable $error ) {
+			return new WP_Error(
+				'flyout_callback_failed',
+				defined( 'WP_DEBUG' ) && WP_DEBUG
+					? sprintf(
+						/* translators: 1: callback name, 2: error message */
+						__( 'The "%1$s" callback failed: %2$s', 'arraypress' ),
+						$what,
+						$error->getMessage()
+					)
+					: sprintf(
+						/* translators: %s: callback name */
+						__( 'The "%s" callback failed.', 'arraypress' ),
+						$what
+					),
+				[ 'status' => 500 ]
+			);
+		}
 	}
 
 	// =========================================================================

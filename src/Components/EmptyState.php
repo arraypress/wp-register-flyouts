@@ -14,11 +14,11 @@ declare( strict_types=1 );
 
 namespace ArrayPress\RegisterFlyouts\Components;
 
-use ArrayPress\RegisterFlyouts\Interfaces\Renderable;
-use ArrayPress\RegisterFlyouts\Traits\HtmlAttributes;
+use ArrayPress\RegisterFlyouts\Renderable;
+use ArrayPress\FieldKit\Attributes;
+use ArrayPress\FieldKit\Support\Button;
 
 class EmptyState implements Renderable {
-    use HtmlAttributes;
 
     /**
      * Component configuration
@@ -100,24 +100,32 @@ class EmptyState implements Renderable {
      * Render the action button/link
      */
     private function render_action(): void {
-        $attrs = $this->config['action_attrs'];
+        $attributes = new Attributes( (array) $this->config['action_attrs'] );
+        $attributes->add_class( (string) $this->config['action_class'] );
 
+        // A link when it goes somewhere, a button when it does something.
         if ( $this->config['action_url'] ) {
-            ?>
-            <a href="<?php echo esc_url( $this->config['action_url'] ); ?>"
-                class="<?php echo esc_attr( $this->config['action_class'] ); ?>"
-                    <?php echo $this->build_attributes( $attrs ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>>
-                <?php echo esc_html( $this->config['action_text'] ); ?>
-            </a>
-            <?php
-        } else {
-            ?>
-            <button type="button"
-                    class="<?php echo esc_attr( $this->config['action_class'] ); ?>"
-                    <?php echo $this->build_attributes( $attrs ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>>
-                <?php echo esc_html( $this->config['action_text'] ); ?>
-            </button>
-            <?php
+            $attributes->set( 'href', $this->config['action_url'] );
+
+            printf(
+                '<a%s>%s</a>',
+                $attributes->render(), // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
+                esc_html( (string) $this->config['action_text'] )
+            );
+
+            return;
         }
+
+        $html = Button::render(
+            [
+                'label'      => (string) $this->config['action_text'],
+                'class'      => (string) $this->config['action_class'],
+                'attributes' => (array) $this->config['action_attrs'],
+            ]
+        );
+
+        // The kit escapes the label and the attributes; the rest is its own
+        // markup.
+        echo $html; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
     }
 }

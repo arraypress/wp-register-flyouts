@@ -3,7 +3,7 @@
 ## Creating a Component
 
 ```php
-use ArrayPress\RegisterFlyouts\Interfaces\Renderable;
+use ArrayPress\RegisterFlyouts\Renderable;
 
 class My_Custom_Component implements Renderable {
 

@@ -4,7 +4,7 @@
  *
  * Renders action buttons for forms and dialogs.
  *
- * @package     ArrayPress\RegisterFlyouts\Parts
+ * @package     ArrayPress\RegisterFlyouts
  * @copyright   Copyright (c) 2025, ArrayPress Limited
  * @license     GPL2+
  * @version     1.0.0
@@ -12,10 +12,10 @@
 
 declare( strict_types=1 );
 
-namespace ArrayPress\RegisterFlyouts\Parts;
+namespace ArrayPress\RegisterFlyouts;
 
 use ArrayPress\FieldKit\Support\Button;
-use ArrayPress\RegisterFlyouts\Interfaces\Renderable;
+use ArrayPress\RegisterFlyouts\Renderable;
 
 class ActionBar implements Renderable {
 

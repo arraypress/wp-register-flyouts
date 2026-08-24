@@ -15,7 +15,7 @@ namespace ArrayPress\RegisterFlyouts\Components;
 use ArrayPress\FieldKit\Field;
 use ArrayPress\FieldKit\Registry;
 use ArrayPress\FieldKit\Renderer;
-use ArrayPress\RegisterFlyouts\Interfaces\Renderable;
+use ArrayPress\RegisterFlyouts\Renderable;
 
 /**
  * One form control inside a flyout.

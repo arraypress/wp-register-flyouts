@@ -6,7 +6,7 @@
  * All components must implement this interface to ensure consistent
  * rendering behavior across the flyout system.
  *
- * @package     ArrayPress\RegisterFlyouts\Interfaces
+ * @package     ArrayPress\RegisterFlyouts
  * @copyright   Copyright (c) 2025, ArrayPress Limited
  * @license     GPL2+
  * @version     1.0.0
@@ -16,7 +16,7 @@
 
 declare( strict_types=1 );
 
-namespace ArrayPress\RegisterFlyouts\Interfaces;
+namespace ArrayPress\RegisterFlyouts;
 
 /**
  * Interface Renderable

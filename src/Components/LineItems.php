@@ -14,13 +14,12 @@ namespace ArrayPress\RegisterFlyouts\Components;
 
 use ArrayPress\FieldKit\Utils\Runtime as KitRuntime;
 
-use ArrayPress\RegisterFlyouts\Interfaces\Renderable;
+use ArrayPress\RegisterFlyouts\Renderable;
 use ArrayPress\RegisterFlyouts\RestApi;
-use ArrayPress\RegisterFlyouts\Traits\HtmlAttributes;
+use ArrayPress\FieldKit\Attributes;
 use function esc_currency_e;
 
 class LineItems implements Renderable {
-    use HtmlAttributes;
 
     /**
      * Component configuration
@@ -133,20 +132,26 @@ class LineItems implements Renderable {
             $classes[] = $this->config['class'];
         }
 
-        $data = [
-			'name'          => $this->config['name'],
-			'currency'      => $this->config['currency'],
-			'show-quantity' => $this->config['show_quantity'] ? '1' : '0',
-			'manager'       => $this->config['manager'],
-			'flyout'        => $this->config['flyout'],
-			'details-key'   => $this->config['details_key'],
-        ];
+        $attributes = new Attributes();
+        $attributes->set( 'id', $this->config['id'] );
+        $attributes->add_class( ...$classes );
+
+        foreach (
+            [
+                'name'          => $this->config['name'],
+                'currency'      => $this->config['currency'],
+                'show-quantity' => $this->config['show_quantity'] ? '1' : '0',
+                'manager'       => $this->config['manager'],
+                'flyout'        => $this->config['flyout'],
+                'details-key'   => $this->config['details_key'],
+            ] as $key => $value
+        ) {
+            $attributes->set_if( '' !== (string) $value, 'data-' . $key, (string) $value );
+        }
 
         ob_start();
         ?>
-        <div id="<?php echo esc_attr( $this->config['id'] ); ?>"
-            class="<?php echo esc_attr( implode( ' ', $classes ) ); ?>"
-                <?php echo $this->build_data_attributes( $data ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>>
+        <div <?php echo $attributes->render(); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>>
 
             <?php if ( $this->config['search_key'] ) : ?>
                 <?php $this->render_product_selector(); ?>

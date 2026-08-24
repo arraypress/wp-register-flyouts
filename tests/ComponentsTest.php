@@ -183,7 +183,7 @@ final class ComponentsTest extends TestCase {
 /**
  * A component to register, for the registration test.
  */
-final class DemoComponent implements \ArrayPress\RegisterFlyouts\Interfaces\Renderable {
+final class DemoComponent implements \ArrayPress\RegisterFlyouts\Renderable {
 
 	/**
 	 * Construct.

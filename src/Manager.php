@@ -17,6 +17,8 @@ declare( strict_types=1 );
 namespace ArrayPress\RegisterFlyouts;
 
 use ArrayPress\FieldKit\Context\ObjectContext;
+use ArrayPress\FieldKit\Actions\Actions;
+use ArrayPress\FieldKit\Actions\CallbackAction;
 use ArrayPress\FieldKit\Search\CallbackSource;
 use ArrayPress\FieldKit\Search\Sources;
 use ArrayPress\FieldKit\Field;
@@ -26,8 +28,8 @@ use ArrayPress\FieldKit\Registry as KitRegistry;
 use ArrayPress\RegisterFlyouts\Utils\Runtime;
 
 use ArrayPress\RegisterFlyouts\Components\FormField;
-use ArrayPress\RegisterFlyouts\Core\Flyout;
-use ArrayPress\RegisterFlyouts\Parts\ActionBar;
+use ArrayPress\RegisterFlyouts\Flyout;
+use ArrayPress\RegisterFlyouts\ActionBar;
 
 /**
  * Class Manager
@@ -171,6 +173,7 @@ class Manager {
 		// so a source registered while drawing the panel does not exist by
 		// the time anyone types into it.
 		$config['fields'] = $this->register_search_sources( $id, (array) $config['fields'] );
+		$config['fields'] = $this->register_field_actions( $id, (array) $config['fields'] );
 
 		// Store flyout configuration.
 		$this->flyouts[ $id ] = $config;
@@ -418,6 +421,71 @@ class Manager {
 		);
 
 		return $name;
+	}
+
+	/**
+	 * Register the action handlers every field declares.
+	 *
+	 * The same arrangement as the search sources, for the same reason: the
+	 * request that presses a button is not the request that drew it, so a
+	 * handler registered while rendering does not exist by the time anyone
+	 * clicks. An action button in a panel came back "Unknown action." every
+	 * time.
+	 *
+	 * The names are written back onto the field, and are the manager's, the
+	 * flyout's and the field's. A field set given no input prefix would
+	 * derive them from the field key alone, and two panels each with an
+	 * `activate` button would name the same handler.
+	 *
+	 * @param string                              $flyout_id The flyout.
+	 * @param array<string, array<string, mixed>> $fields    Field configuration.
+	 *
+	 * @return array<string, array<string, mixed>>
+	 */
+	private function register_field_actions( string $flyout_id, array $fields ): array {
+		$actions = Actions::shared();
+
+		foreach ( $fields as $key => $field ) {
+			if ( ! is_array( $field ) ) {
+				continue;
+			}
+
+			$handlers = (array) ( $field['actions'] ?? [] );
+
+			if ( isset( $field['action_callback'] ) ) {
+				$handlers['run'] = $field['action_callback'];
+			}
+
+			$names = [];
+
+			foreach ( $handlers as $name => $callback ) {
+				if ( ! is_callable( $callback ) ) {
+					continue;
+				}
+
+				$names[ $name ] = sprintf(
+					'%s-%s-%s-%s',
+					$this->prefix,
+					$flyout_id,
+					(string) ( $field['name'] ?? $key ),
+					(string) $name
+				);
+
+				$actions->register(
+					new CallbackAction(
+						$names[ $name ],
+						$callback,
+						(string) ( $field['action_capability'] ?? $field['capability'] ?? 'manage_options' )
+					)
+				);
+			}
+
+			if ( [] !== $names ) {
+				$fields[ $key ]['action_names'] = $names;
+			}
+		}
+
+		return $fields;
 	}
 
 	/**

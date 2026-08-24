@@ -645,6 +645,22 @@ class Components {
 			}
 		}
 
+		// 4. A public property.
+		//
+		// Which is what a plain object has, and what WP_Post and WP_Term have
+		// — post_title and name are properties, not getters. Without this a
+		// `load` callback returning one of them populated nothing at all and
+		// the flyout opened with every field empty, which is also what this
+		// library's own README example does:
+		//
+		//     'load' => fn( $id ) => get_post( $id )
+		//
+		// Checked with isset() rather than property_exists(), so a magic
+		// __isset/__get pair — WP_Post has both — answers for itself.
+		if ( is_object( $data ) && isset( $data->$key ) ) {
+			return $data->$key;
+		}
+
 		return null;
 	}
 

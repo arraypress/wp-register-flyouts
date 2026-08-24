@@ -10,7 +10,7 @@ declare( strict_types=1 );
 namespace ArrayPress\RegisterFlyouts\Tests;
 
 use ArrayPress\RegisterFlyouts\Components\FormField;
-use ArrayPress\RegisterFlyouts\Sanitizer;
+use ArrayPress\RegisterFlyouts\Manager;
 use PHPUnit\Framework\TestCase;
 
 /**
@@ -179,50 +179,75 @@ final class FormFieldTest extends TestCase {
 	 * Sanitizing goes through the same type that rendered.
 	 *
 	 * A separate sanitizer table drifts from the renderer — a value drawn one
-	 * way and cleaned another — which is what this had.
+	 * way and cleaned another — which is what this library had: seven hundred
+	 * lines deciding for a second time what a number or a checkbox is. It is
+	 * the field set's job now, so the coercion a field gets here is the one
+	 * the same field gets on a settings page.
 	 */
 	public function test_sanitizing_goes_through_the_kit(): void {
-		$this->assertSame(
-			10,
-			Sanitizer::sanitize_field(
-				'9999',
-				[
-					'type' => 'number',
-					'name' => 'count',
-					'max'  => 10,
-				]
-			)
-		);
+		$manager = new Manager( 'sanitize_test' );
 
-		// A select's options are its allow-list, which the old table had no
-		// way of knowing.
-		$this->assertSame(
-			'',
-			Sanitizer::sanitize_field(
-				'not an option',
-				[
+		$values = $manager->sanitize(
+			[
+				'count'  => [ 'type' => 'number', 'name' => 'count', 'max' => 10 ],
+				'choice' => [
 					'type'    => 'select',
 					'name'    => 'choice',
 					'options' => [ 'a' => 'A' ],
-				]
-			)
+				],
+			],
+			[
+				'count'  => '9999',
+				'choice' => 'not an option',
+			]
 		);
+
+		// Clamped by the field's own max.
+		$this->assertSame( 10, $values['count'] );
+
+		// A select's options are its allow-list, which a separate table had
+		// no way of knowing. Nothing survives it, so the field is reported as
+		// cleared rather than as holding an empty string.
+		$this->assertArrayHasKey( 'choice', $values );
+		$this->assertNull( $values['choice'] );
+	}
+
+	/**
+	 * A key the flyout does not declare is dropped.
+	 *
+	 * Which is what stops a crafted submission being more powerful than the
+	 * panel it pretends to come from.
+	 */
+	public function test_an_undeclared_key_is_dropped(): void {
+		$manager = new Manager( 'sanitize_test' );
+
+		$values = $manager->sanitize(
+			[ 'name' => [ 'type' => 'text', 'name' => 'name' ] ],
+			[ 'name' => 'Ada', 'role' => 'administrator' ]
+		);
+
+		$this->assertArrayHasKey( 'name', $values );
+		$this->assertArrayNotHasKey( 'role', $values );
 	}
 
 	/**
 	 * A custom sanitizer still wins.
 	 */
 	public function test_a_custom_sanitizer_still_wins(): void {
-		$this->assertSame(
-			'overridden',
-			Sanitizer::sanitize_field(
-				'anything',
-				[
+		$manager = new Manager( 'sanitize_test' );
+
+		$values = $manager->sanitize(
+			[
+				'count' => [
 					'type'              => 'number',
 					'name'              => 'count',
 					'sanitize_callback' => static fn() => 'overridden',
-				]
-			)
+				],
+			],
+			[ 'count' => 'anything' ]
 		);
+
+		$this->assertSame( 'overridden', $values['count'] );
 	}
+
 }

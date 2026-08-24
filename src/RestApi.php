@@ -340,9 +340,10 @@ class RestApi {
 		$item_id   = $request->get_param( 'item_id' );
 		$form_data = $request->get_param( 'form_data' );
 
-		// Normalize and sanitize the form data using the flyout's field configuration.
-		$normalized_fields = $manager->normalize_fields( $config['fields'] );
-		$sanitized         = Sanitizer::sanitize_form_data( $form_data, $normalized_fields );
+		// Sanitized by the field set, so every value is coerced by its own
+		// type — the same coercion the same field gets on a settings page or
+		// in a metabox — and a key the flyout does not declare is dropped.
+		$sanitized = $manager->sanitize( $config['fields'], (array) $form_data );
 
 		$sanitized = apply_filters( Runtime::hook( 'before_save' ), $sanitized, $config, $manager->get_prefix() );
 

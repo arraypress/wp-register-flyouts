@@ -16,6 +16,8 @@ declare( strict_types=1 );
 
 namespace ArrayPress\RegisterFlyouts;
 
+use ArrayPress\FieldKit\Context\ObjectContext;
+use ArrayPress\FieldKit\FieldSet;
 use ArrayPress\FieldKit\Assets as KitAssets;
 use ArrayPress\FieldKit\Registry as KitRegistry;
 use ArrayPress\RegisterFlyouts\Utils\Runtime;
@@ -304,8 +306,76 @@ class Manager {
 	 * @return string Generated HTML.
 	 * @since 1.0.0
 	 */
+	/**
+	 * Sanitize a submission against this flyout's own fields.
+	 *
+	 * Through the field set, which means each value is coerced by its own
+	 * type — the same coercion the same field gets on a settings page, a
+	 * metabox or a term screen. This library used to carry a Sanitizer of
+	 * its own, seven hundred lines deciding for a second time what a number
+	 * or a checkbox is, and the two had already drifted.
+	 *
+	 * A key the flyout does not declare is dropped rather than passed on,
+	 * which is what makes a submission from a crafted form no more powerful
+	 * than one from the panel.
+	 *
+	 * @param array<string, mixed> $fields Field configuration.
+	 * @param array<string, mixed> $input  Submitted values.
+	 *
+	 * @return array<string, mixed>
+	 */
+	public function sanitize( array $fields, array $input ): array {
+		[ $set, $context ] = $this->field_set( $fields, null );
+
+		// Re-slashed because the REST layer has already unslashed and the
+		// field set unslashes at its own boundary; without it every
+		// backslash someone typed is eaten by the save that stores it.
+		$set->save( wp_slash( $input ) );
+
+		return $context->values();
+	}
+
+	/**
+	 * A field set over whatever the load callback handed back.
+	 *
+	 * This is the change that makes a flyout the same thing as every other
+	 * surface in this codebase: a set of fields over a context. `load`
+	 * returning a record and `save` taking an array *is* a context — reading
+	 * and writing — so it is expressed as one, and the kit then does the
+	 * building, the value reading, the sanitizing and the accessibility that
+	 * this library used to do itself in four separate places.
+	 *
+	 * Components are left out of the set. They display rather than collect,
+	 * have no value to read and nothing to sanitize, and each is rendered in
+	 * its place by the walk that calls this.
+	 *
+	 * @param array<string, mixed> $fields Field configuration.
+	 * @param mixed                $data   Whatever `load` returned.
+	 *
+	 * @return array{0: FieldSet, 1: ObjectContext}
+	 */
+	private function field_set( array $fields, $data ): array {
+		$context = new ObjectContext( is_object( $data ) ? $data : null );
+		$configs = [];
+
+		foreach ( $this->normalize_fields( $fields ) as $key => $field ) {
+			if ( Components::is_component( (string) ( $field['type'] ?? 'text' ) ) ) {
+				continue;
+			}
+
+			// Keyed by the posted name where one is given: the field set
+			// derives input_name from the key, and the name is what the form
+			// actually submits.
+			$configs[ (string) ( $field['name'] ?? $key ) ] = FormField::to_kit( $field );
+		}
+
+		return [ new FieldSet( $configs, $context, '' ), $context ];
+	}
+
 	private function render_fields( array $fields, $data ): string {
 		$output = '';
+
+		[ $set ] = $this->field_set( $fields, $data );
 
 		$fields = apply_filters( Runtime::hook( 'before_render_fields' ), $fields, $data, $this->prefix );
 
@@ -342,12 +412,14 @@ class Manager {
 				$component    = Components::create( $type, $field );
 				$field_output = $component ? $component->render() : '';
 			} else {
-				if ( ! isset( $field['value'] ) && $data ) {
-					$field['value'] = Components::resolve_value( $data_key, $data );
-				}
+				// Through the set, which reads the value from the context and
+				// renders with the kit's labelling, descriptions, required
+				// state and conditional logic already correct.
+				$rendered = $set->field( $data_key );
 
-				$form_field   = new FormField( $field );
-				$field_output = $form_field->render();
+				$field_output = null === $rendered
+					? ''
+					: FormField::wrap( $field, $set->render_field( $rendered ) );
 			}
 
 			$output .= $field_output;

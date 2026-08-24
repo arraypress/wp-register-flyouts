@@ -80,6 +80,58 @@ class FormField implements Renderable {
 	 *
 	 * @return array<string, mixed>
 	 */
+	/**
+	 * Translate one flyout field configuration into the kit's.
+	 *
+	 * Public and static because the flyout renders through a field set now:
+	 * the set builds the Field and reads its value from a context, and this
+	 * is the only part that is still about the difference between the two
+	 * libraries' spellings.
+	 *
+	 * @param array<string, mixed> $config Flyout field configuration.
+	 *
+	 * @return array<string, mixed>
+	 */
+	public static function to_kit( array $config ): array {
+		$type = (string) ( $config['type'] ?? 'text' );
+
+		$config['type'] = self::TYPE_ALIASES[ $type ] ?? $type;
+
+		// A value resolved at render time. A field set reads from a context,
+		// so this is resolved here and handed over as the field's default —
+		// the context has nothing to read for it.
+		if ( isset( $config['data_callback'] ) && is_callable( $config['data_callback'] ) ) {
+			$config['default'] = call_user_func( $config['data_callback'] );
+			unset( $config['data_callback'] );
+		}
+
+		return $config;
+	}
+
+	/**
+	 * The flyout's own wrapper around a rendered control.
+	 *
+	 * The panel's stylesheet keys on this; the kit's wrapper sits inside it
+	 * and carries the field's conditions.
+	 *
+	 * @param array<string, mixed> $config Flyout field configuration.
+	 * @param string               $inner  The rendered control.
+	 *
+	 * @return string
+	 */
+	public static function wrap( array $config, string $inner ): string {
+		return sprintf(
+			'<div class="%s">%s</div>',
+			esc_attr(
+				trim(
+					'wp-flyout-field field-type-' . (string) ( $config['type'] ?? 'text' )
+					. ' ' . (string) ( $config['wrapper_class'] ?? '' )
+				)
+			),
+			$inner
+		);
+	}
+
 	private function normalize( array $config ): array {
 		$config = array_merge(
 			[

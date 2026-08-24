@@ -129,6 +129,93 @@
             "install-path": "../arraypress/wp-currencies"
         },
         {
+            "name": "arraypress/wp-field-kit",
+            "version": "dev-main",
+            "version_normalized": "dev-main",
+            "source": {
+                "type": "git",
+                "url": "git@github.com:arraypress/wp-field-kit.git",
+                "reference": "2bd65704deb2a587f225ea9e6b38ec257af7d74d"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/arraypress/wp-field-kit/zipball/2bd65704deb2a587f225ea9e6b38ec257af7d74d",
+                "reference": "2bd65704deb2a587f225ea9e6b38ec257af7d74d",
+                "shasum": ""
+            },
+            "require": {
+                "php": ">=8.3"
+            },
+            "require-dev": {
+                "phpcompatibility/phpcompatibility-wp": "^2.1",
+                "phpunit/phpunit": "^12.0",
+                "squizlabs/php_codesniffer": "^3.13.5",
+                "wp-coding-standards/wpcs": "^3.4"
+            },
+            "time": "2026-08-24T09:16:20+00:00",
+            "default-branch": true,
+            "type": "library",
+            "installation-source": "dist",
+            "autoload": {
+                "psr-4": {
+                    "ArrayPress\\FieldKit\\": "src/"
+                }
+            },
+            "autoload-dev": {
+                "psr-4": {
+                    "ArrayPress\\FieldKit\\Tests\\": "tests/"
+                },
+                "exclude-from-classmap": [
+                    "/tests/bootstrap.php"
+                ]
+            },
+            "scripts": {
+                "test": [
+                    "phpunit"
+                ],
+                "lint": [
+                    "phpcs"
+                ],
+                "format": [
+                    "phpcbf --standard=phpcs-format.xml.dist"
+                ],
+                "format:check": [
+                    "phpcs --standard=phpcs-format.xml.dist"
+                ],
+                "test:js": [
+                    "node tests/js/smoke.js"
+                ],
+                "test:all": [
+                    "@test",
+                    "@test:js"
+                ]
+            },
+            "license": [
+                "GPL-2.0-or-later"
+            ],
+            "authors": [
+                {
+                    "name": "David Sherlock",
+                    "homepage": "https://arraypress.com/"
+                }
+            ],
+            "description": "One field engine — type registry, accessible renderers, sanitizers, conditional logic and REST search — shared by the wp-register-*-fields libraries.",
+            "homepage": "https://github.com/arraypress/wp-field-kit/",
+            "keywords": [
+                "accessibility",
+                "fields",
+                "forms",
+                "meta",
+                "settings",
+                "wordpress"
+            ],
+            "support": {
+                "issues": "https://github.com/arraypress/wp-field-kit/issues",
+                "source": "https://github.com/arraypress/wp-field-kit"
+            },
+            "install-path": "../arraypress/wp-field-kit"
+        },
+        {
             "name": "dealerdirect/phpcodesniffer-composer-installer",
             "version": "v1.2.1",
             "version_normalized": "1.2.1.0",

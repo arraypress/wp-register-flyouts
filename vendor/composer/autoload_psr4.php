@@ -11,6 +11,7 @@ return array(
     'DeepCopy\\' => array($vendorDir . '/myclabs/deep-copy/src/DeepCopy'),
     'ArrayPress\\RegisterFlyouts\\Tests\\' => array($baseDir . '/tests'),
     'ArrayPress\\RegisterFlyouts\\' => array($baseDir . '/src'),
+    'ArrayPress\\FieldKit\\' => array($vendorDir . '/arraypress/wp-field-kit/src'),
     'ArrayPress\\Currencies\\' => array($vendorDir . '/arraypress/wp-currencies/src'),
     'ArrayPress\\ComposerAssets\\' => array($vendorDir . '/arraypress/wp-composer-assets/src'),
 );

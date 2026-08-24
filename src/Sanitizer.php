@@ -15,6 +15,9 @@ declare( strict_types=1 );
 
 namespace ArrayPress\RegisterFlyouts;
 
+use ArrayPress\FieldKit\Field;
+use ArrayPress\FieldKit\Registry;
+
 use ArrayPress\RegisterFlyouts\Utils\Runtime;
 
 use ArrayPress\Currencies\Currency;
@@ -125,12 +128,23 @@ class Sanitizer {
 			return call_user_func( $field_config['sanitize_callback'], $value );
 		}
 
-		$type = $field_config['type'] ?? 'text';
+		$type = (string) ( $field_config['type'] ?? 'text' );
 
 		// Apply per-type filter.
 		$value = apply_filters( "wp_flyout_sanitize_field_{$type}", $value, $field_config );
 
-		// Look up sanitizer in the unified registry.
+		// A type the kit knows sanitizes itself. That is the same code the
+		// rendering now goes through, so a value cannot be drawn one way and
+		// cleaned another — which is exactly what a separate sanitizer table
+		// drifts into, and had.
+		$sanitized = self::through_the_kit( $value, $type, $field_config );
+
+		if ( null !== $sanitized ) {
+			return $sanitized;
+		}
+
+		// A type of this library's own — a line-item list, a refund form —
+		// keeps its own sanitizer.
 		if ( isset( self::$sanitizers[ $type ] ) ) {
 			$sanitizer = apply_filters( "wp_flyout_sanitizer_{$type}", self::$sanitizers[ $type ] );
 
@@ -145,6 +159,41 @@ class Sanitizer {
 		$default_sanitizer = apply_filters( Runtime::hook( 'default_sanitizer' ), $default_sanitizer, $value, $field_config );
 
 		return call_user_func( $default_sanitizer, $value );
+	}
+
+	/**
+	 * Sanitize through the field kit, when the type is one it knows.
+	 *
+	 * @param mixed                $value        The value.
+	 * @param string               $type         The field type.
+	 * @param array<string, mixed> $field_config Field configuration.
+	 *
+	 * @return mixed Null when the kit has no such type.
+	 */
+	private static function through_the_kit( $value, string $type, array $field_config ) {
+		$aliases = [
+			'ajax_select' => 'ajax',
+			'card_choice' => 'radio',
+		];
+
+		$type     = $aliases[ $type ] ?? $type;
+		$registry = new Registry();
+
+		if ( ! $registry->has( $type ) ) {
+			return null;
+		}
+
+		$resolved = $registry->get( $type );
+
+		return $resolved->sanitize(
+			$value,
+			new Field(
+				(string) ( $field_config['name'] ?? 'field' ),
+				$resolved,
+				array_merge( $resolved->defaults(), $field_config ),
+				null
+			)
+		);
 	}
 
 	/**

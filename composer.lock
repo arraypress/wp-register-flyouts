@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "9af7ec7636251962a060a2deb62ce3c6",
+    "content-hash": "552fb663b93f85794598b4b88334f922",
     "packages": [
         {
             "name": "arraypress/wp-composer-assets",
@@ -127,6 +127,90 @@
                 "source": "https://github.com/arraypress/wp-currencies"
             },
             "time": "2026-08-23T18:15:03+00:00"
+        },
+        {
+            "name": "arraypress/wp-field-kit",
+            "version": "dev-main",
+            "source": {
+                "type": "git",
+                "url": "git@github.com:arraypress/wp-field-kit.git",
+                "reference": "2bd65704deb2a587f225ea9e6b38ec257af7d74d"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/arraypress/wp-field-kit/zipball/2bd65704deb2a587f225ea9e6b38ec257af7d74d",
+                "reference": "2bd65704deb2a587f225ea9e6b38ec257af7d74d",
+                "shasum": ""
+            },
+            "require": {
+                "php": ">=8.3"
+            },
+            "require-dev": {
+                "phpcompatibility/phpcompatibility-wp": "^2.1",
+                "phpunit/phpunit": "^12.0",
+                "squizlabs/php_codesniffer": "^3.13.5",
+                "wp-coding-standards/wpcs": "^3.4"
+            },
+            "default-branch": true,
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "ArrayPress\\FieldKit\\": "src/"
+                }
+            },
+            "autoload-dev": {
+                "psr-4": {
+                    "ArrayPress\\FieldKit\\Tests\\": "tests/"
+                },
+                "exclude-from-classmap": [
+                    "/tests/bootstrap.php"
+                ]
+            },
+            "scripts": {
+                "test": [
+                    "phpunit"
+                ],
+                "lint": [
+                    "phpcs"
+                ],
+                "format": [
+                    "phpcbf --standard=phpcs-format.xml.dist"
+                ],
+                "format:check": [
+                    "phpcs --standard=phpcs-format.xml.dist"
+                ],
+                "test:js": [
+                    "node tests/js/smoke.js"
+                ],
+                "test:all": [
+                    "@test",
+                    "@test:js"
+                ]
+            },
+            "license": [
+                "GPL-2.0-or-later"
+            ],
+            "authors": [
+                {
+                    "name": "David Sherlock",
+                    "homepage": "https://arraypress.com/"
+                }
+            ],
+            "description": "One field engine — type registry, accessible renderers, sanitizers, conditional logic and REST search — shared by the wp-register-*-fields libraries.",
+            "homepage": "https://github.com/arraypress/wp-field-kit/",
+            "keywords": [
+                "accessibility",
+                "fields",
+                "forms",
+                "meta",
+                "settings",
+                "wordpress"
+            ],
+            "support": {
+                "issues": "https://github.com/arraypress/wp-field-kit/issues",
+                "source": "https://github.com/arraypress/wp-field-kit"
+            },
+            "time": "2026-08-24T09:16:20+00:00"
         }
     ],
     "packages-dev": [
@@ -2445,7 +2529,8 @@
     "minimum-stability": "dev",
     "stability-flags": {
         "arraypress/wp-composer-assets": 20,
-        "arraypress/wp-currencies": 20
+        "arraypress/wp-currencies": 20,
+        "arraypress/wp-field-kit": 20
     },
     "prefer-stable": true,
     "prefer-lowest": false,

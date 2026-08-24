@@ -1,0 +1,1879 @@
+/**
+ * Field Kit
+ *
+ * Deliberately small. Everything WordPress already styles — inputs, buttons,
+ * descriptions, notices, spinners, tables — uses core's own classes, so
+ * fields match the rest of the admin, follow the user's colour scheme and
+ * survive core restyles without being restyled here.
+ *
+ * What remains is the handful of widgets core has no equivalent for.
+ */
+
+/* -----------------------------------------------------------------------
+ * Layout
+ * -------------------------------------------------------------------- */
+
+.field-kit__field {
+	margin-bottom: 1.25rem;
+}
+
+.field-kit__field:last-child {
+	margin-bottom: 0;
+}
+
+/* The field's heading. A self-labelling control's label is not one — core's
+   "Anyone can register" beside a checkbox is normal weight and sits on the
+   same line as the box, so it is excluded here rather than un-bolded after
+   the fact. */
+.field-kit__field > label:not(.field-kit__checkbox-label),
+.field-kit__legend {
+	display: block;
+	margin-bottom: .35rem;
+	font-weight: 600;
+}
+
+/* Core sets .form-field input[type="text"] to 95% at specificity 0,2,1, which
+   a bare class loses to — so on a term screen the input was narrower than the
+   control around it and the arrow, positioned against the control, floated
+   outside the box. The element is in the selector to match that specificity;
+   the kit's stylesheet loads after core's, so an equal one wins. */
+input.field-kit__combobox-input,
+.form-field input.field-kit__combobox-input {
+	width: 100%;
+}
+
+/* Core's .description carries the colour and size; only the spacing differs
+   inside a field wrapper. */
+.field-kit__field .description {
+	margin: .35rem 0 0;
+}
+
+.field-kit__fieldset {
+	margin: 0;
+	padding: 0;
+	border: 0;
+}
+
+.field-kit__required {
+	margin-left: .15rem;
+	color: #d63638;
+}
+
+.field-kit__separator {
+	margin: 1.5rem 0;
+	border: 0;
+	border-top: 1px solid #dcdcde;
+}
+
+/* Core's own shape for a settings-page subheading: h2.title on
+   options-general.php carries the weight and the spacing, and a rule below
+   the text is what breaks a long page into readable blocks. Restated here
+   because the kit's heading is not always an h2 — the level is configurable
+   so the document outline stays correct — and core scopes its rule to the
+   tag. */
+.field-kit__heading {
+	margin: 1.5rem 0 .5rem;
+	padding-bottom: .4rem;
+	border-bottom: 1px solid #dcdcde;
+	font-size: 1.3em;
+	font-weight: 600;
+	line-height: 1.4;
+	color: #1d2327;
+}
+
+/* A heading immediately after another needs no gap above it. */
+.field-kit__field--heading:first-child .field-kit__heading {
+	margin-top: 0;
+}
+
+/* -----------------------------------------------------------------------
+ * Toggle — the one control core does not provide
+ *
+ * Every selector here carries the element and attribute as well as the class.
+ * Core styles input[type="checkbox"] at specificity 0,1,1 and sets its width,
+ * height and padding — the last with !important — so a bare .field-kit__toggle
+ * at 0,1,0 loses every one of those and renders as a square checkbox with a
+ * circle escaping it. That is not a hypothetical: it is what shipped.
+ * -------------------------------------------------------------------- */
+
+input[type="checkbox"].field-kit__toggle {
+	position: relative;
+	box-sizing: border-box;
+	width: 2.5rem;
+	min-width: 2.5rem;
+	height: 1.4rem;
+	margin: 0 .5rem 0 0;
+	padding: 0 !important;
+	border: 1px solid transparent;
+	border-radius: 1rem;
+	background: #c3c4c7;
+	transition: background-color .15s ease-in-out;
+	cursor: pointer;
+	flex: none;
+}
+
+input[type="checkbox"].field-kit__toggle::before,
+input[type="checkbox"].field-kit__toggle:checked::before {
+	/* Core puts a tick SVG in ::before; the knob replaces it entirely. */
+	content: "";
+	position: absolute;
+	top: 50%;
+	left: .15rem;
+	width: 1.05rem;
+	height: 1.05rem;
+	margin: 0;
+	border-radius: 50%;
+	background: #fff;
+	transform: translateY(-50%);
+	transition: left .15s ease-in-out;
+	float: none;
+}
+
+input[type="checkbox"].field-kit__toggle:checked {
+	background: var(--wp-admin-theme-color, #2271b1);
+	border-color: transparent;
+}
+
+input[type="checkbox"].field-kit__toggle:checked::before {
+	left: calc(100% - 1.2rem);
+}
+
+input[type="checkbox"].field-kit__toggle:focus-visible {
+	outline: 2px solid var(--wp-admin-theme-color, #2271b1);
+	outline-offset: 2px;
+}
+
+/* State must not rest on colour alone. Forced-colours flattens the
+   background, so the knob's position is what carries it. */
+@media (forced-colors: active) {
+	input[type="checkbox"].field-kit__toggle {
+		border-color: CanvasText;
+	}
+
+	input[type="checkbox"].field-kit__toggle::before {
+		background: CanvasText;
+	}
+}
+
+/* Inline, like core's. The gap is core's own input[type="checkbox"]
+   margin-right, so the box and its text sit exactly as they do on
+   options-general.php. */
+.field-kit__checkbox-label {
+	display: inline-block;
+	margin: 0;
+	font-weight: 400;
+}
+
+/* -----------------------------------------------------------------------
+ * Choice groups
+ * -------------------------------------------------------------------- */
+
+/* One option: its label wraps its input, so the label is the row. */
+.field-kit__option {
+	display: flex;
+	align-items: center;
+	gap: .4rem;
+	margin: 0 0 .25rem;
+	font-weight: 400;
+}
+
+.field-kit__option:last-child {
+	margin-bottom: 0;
+}
+
+/* Options stack by default. Without this they run together on one line with
+   no separation at all — each label is an inline box and nothing puts a gap
+   between them. */
+.field-kit__radio-group,
+.field-kit__checkbox-group {
+	display: flex;
+	flex-direction: column;
+	gap: .1rem;
+}
+
+/* Laid out in a row only when asked for, and then with a real gap. */
+.field-kit__radio-group--inline,
+.field-kit__checkbox-group--inline {
+	flex-flow: row wrap;
+	gap: .25rem 1.25rem;
+}
+
+/* Core's .button-group styles the row; these bind the radios to it. */
+.field-kit__button-group {
+	display: inline-flex;
+	/* No font-size: 0 trick needed — flex has no whitespace to collapse,
+	   which is the whole reason core's version sets it and the reason
+	   borrowing that class made the labels render at zero size. */
+	vertical-align: middle;
+}
+
+.field-kit__button-group-option input {
+	position: absolute;
+	opacity: 0;
+	pointer-events: none;
+}
+
+.field-kit__button-group-option label {
+	display: inline-block;
+	padding: 0 .75rem;
+	border: 1px solid var(--wp-admin-theme-color, #2271b1);
+	border-right-width: 0;
+	line-height: 2.15384615;
+	color: var(--wp-admin-theme-color, #2271b1);
+	background: #f6f7f7;
+	cursor: pointer;
+}
+
+.field-kit__button-group-option:first-child label {
+	border-radius: 3px 0 0 3px;
+}
+
+.field-kit__button-group-option:last-child label {
+	border-right-width: 1px;
+	border-radius: 0 3px 3px 0;
+}
+
+.field-kit__button-group-option input:checked + label {
+	color: #fff;
+	background: var(--wp-admin-theme-color, #2271b1);
+}
+
+/* Focus lands on the hidden radio, so the ring has to be drawn on the label
+   it controls or the group is unnavigable by keyboard. */
+.field-kit__button-group-option input:focus-visible + label {
+	outline: 2px solid var(--wp-admin-theme-color, #2271b1);
+	outline-offset: -2px;
+}
+
+@media (forced-colors: active) {
+	.field-kit__button-group-option input:checked + label {
+		outline: 2px solid CanvasText;
+		outline-offset: -3px;
+	}
+}
+
+/* -----------------------------------------------------------------------
+ * Range
+ * -------------------------------------------------------------------- */
+
+.field-kit__range {
+	display: flex;
+	align-items: center;
+	gap: .75rem;
+	max-width: 25rem;
+}
+
+.field-kit__range input[type="range"] {
+	flex: 1;
+}
+
+.field-kit__range-output {
+	min-width: 3.5rem;
+	font-variant-numeric: tabular-nums;
+}
+
+/* -----------------------------------------------------------------------
+ * Composite inputs
+ * -------------------------------------------------------------------- */
+
+.field-kit__dimensions,
+.field-kit__range-pair,
+.field-kit__amount {
+	display: flex;
+	align-items: flex-end;
+	gap: .5rem;
+}
+
+.field-kit__dimensions-part,
+.field-kit__range-pair-part {
+	display: flex;
+	flex-direction: column;
+	align-items: flex-start;
+	gap: .2rem;
+}
+
+/* Without this a column flex stretches its children to the container's
+   width, which is what made every small-text box full width. */
+.field-kit__dimensions-part input,
+.field-kit__range-pair-part input,
+.field-kit__amount input[type="number"] {
+	width: auto;
+}
+
+.field-kit__sub-label {
+	font-size: 12px;
+	color: #646970;
+}
+
+.field-kit__dimensions-unit {
+	padding-bottom: .35rem;
+	color: #646970;
+}
+
+.field-kit__link-part {
+	margin: 0 0 .5rem;
+}
+
+.field-kit__link-part:last-child {
+	margin-bottom: 0;
+}
+
+/* Core's link dialog labels its inputs at the same size as the input's own
+   text and sits them tight above it. Ours were spaced like field headings,
+   which made three parts read as three fields. */
+.field-kit__link .field-kit__sub-label {
+	margin-bottom: .15rem;
+	font-size: 12px;
+	line-height: 1.4;
+	color: #50575e;
+}
+
+/* -----------------------------------------------------------------------
+ * Media, gallery, repeater, sortable
+ * -------------------------------------------------------------------- */
+
+.field-kit__media-preview img {
+	max-width: 150px;
+	height: auto;
+	display: block;
+}
+
+.field-kit__media-actions {
+	margin: .5rem 0 0;
+}
+
+.field-kit__gallery-items,
+.field-kit__repeater-rows,
+.field-kit__sortable {
+	margin: 0;
+	padding: 0;
+	list-style: none;
+	max-width: 30rem;
+}
+
+.field-kit__gallery-items {
+	display: flex;
+	flex-wrap: wrap;
+	gap: .5rem;
+}
+
+.field-kit__gallery-item {
+	position: relative;
+	width: 100px;
+	margin: 0;
+	border: 1px solid #dcdcde;
+	border-radius: 2px;
+	background: #fff;
+	overflow: hidden;
+	cursor: grab;
+}
+
+.field-kit__gallery-item:active {
+	cursor: grabbing;
+}
+
+.field-kit__gallery-item img {
+	display: block;
+	width: 100%;
+	height: 100px;
+	object-fit: cover;
+	pointer-events: none;
+}
+
+/* Controls stay out of the way until the tile is hovered or something
+   inside it takes focus.
+ *
+ * :focus-within is what keeps this usable. Dragging cannot be done from a
+ * keyboard at all, so the move buttons are the only way to reorder without
+ * a mouse — hiding them on hover alone would make the gallery unorderable
+ * for anyone tabbing through it, while looking perfectly fine to everyone
+ * else. */
+.field-kit__gallery-actions {
+	position: absolute;
+	right: 0;
+	bottom: 0;
+	left: 0;
+	display: flex;
+	justify-content: center;
+	gap: .1rem;
+	padding: .15rem 0;
+	background: rgba(255, 255, 255, .92);
+	opacity: 0;
+	transition: opacity .1s ease-in-out;
+}
+
+.field-kit__gallery-item:hover .field-kit__gallery-actions,
+.field-kit__gallery-item:focus-within .field-kit__gallery-actions {
+	opacity: 1;
+}
+
+.wp-core-ui .field-kit__gallery-remove {
+	position: absolute;
+	top: .2rem;
+	right: .2rem;
+	width: 1.5rem;
+	height: 1.5rem;
+	border-radius: 50%;
+	background: rgba(255, 255, 255, .92);
+	color: #b32d2e;
+	opacity: 0;
+	transition: opacity .1s ease-in-out;
+}
+
+.field-kit__gallery-item:hover .field-kit__gallery-remove,
+.field-kit__gallery-item:focus-within .field-kit__gallery-remove,
+.wp-core-ui .field-kit__gallery-remove:focus-visible {
+	opacity: 1;
+}
+
+.wp-core-ui .field-kit__gallery-remove:hover,
+.wp-core-ui .field-kit__gallery-remove:focus {
+	background: #b32d2e;
+	color: #fff;
+}
+
+/* Nothing may be revealed by hover alone where hovering is not possible. */
+@media (hover: none) {
+	.field-kit__gallery-actions,
+	.wp-core-ui .field-kit__gallery-remove {
+		opacity: 1;
+	}
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.field-kit__gallery-actions,
+	.wp-core-ui .field-kit__gallery-remove {
+		transition: none;
+	}
+}
+
+.field-kit__repeater-row {
+	display: flex;
+	align-items: flex-start;
+	gap: .75rem;
+	margin: 0 0 .5rem;
+	padding: .75rem;
+	border: 1px solid #dcdcde;
+	background: #fff;
+}
+
+/* A sortable row holds one checkbox and a label, so it wants the height of
+   a list item rather than the padding of a panel. */
+/* Padding matched to a list-table row rather than a form control: these are
+   rows to be dragged, and .3rem left them looking squeezed. */
+.field-kit__sortable-item {
+	display: flex;
+	align-items: center;
+	gap: .5rem;
+	margin: 0 0 -1px;
+	padding: .55rem .75rem;
+	border: 1px solid #dcdcde;
+	background: #fff;
+}
+
+.field-kit__sortable-item:first-child {
+	border-radius: 2px 2px 0 0;
+}
+
+.field-kit__sortable-item:last-child {
+	margin-bottom: 0;
+	border-radius: 0 0 2px 2px;
+}
+
+.field-kit__repeater-fields {
+	flex: 1;
+}
+
+.field-kit__repeater-actions,
+.field-kit__gallery-actions,
+.field-kit__sortable-item {
+	align-items: center;
+}
+
+/* The drag affordance is a hint, not the mechanism: every reorderable item
+   also carries move buttons, because a drag-only control cannot be operated
+   from a keyboard at all. */
+.field-kit__repeater-row,
+.field-kit__sortable-item {
+	cursor: grab;
+}
+
+.field-kit__repeater-row:active,
+.field-kit__sortable-item:active {
+	cursor: grabbing;
+}
+
+/* A control inside a draggable row keeps its own cursor, or every input
+   looks like something to drag. */
+.field-kit__repeater-row input,
+.field-kit__repeater-row select,
+.field-kit__repeater-row textarea,
+.field-kit__repeater-row button,
+.field-kit__sortable-item input,
+.field-kit__sortable-item button {
+	cursor: auto;
+}
+
+.field-kit__repeater-row button,
+.field-kit__sortable-item button {
+	cursor: pointer;
+}
+
+.field-kit__repeater-row.is-dragging,
+.field-kit__gallery-item.is-dragging {
+	opacity: .5;
+}
+
+.field-kit__repeater-row.is-drop-target,
+.field-kit__gallery-item.is-drop-target {
+	outline: 2px dashed var(--wp-admin-theme-color, #2271b1);
+	outline-offset: -2px;
+}
+
+/* -----------------------------------------------------------------------
+ * Badges
+ *
+ * A pill beside a label marking a field this install cannot use. The field
+ * still renders, so the feature is visible; the control is disabled, so
+ * nobody sets a value that will not be honoured.
+ * -------------------------------------------------------------------- */
+
+.field-kit__badge {
+	display: inline-flex;
+	align-items: center;
+	gap: .2rem;
+	margin-left: .4rem;
+	padding: .05rem .45rem;
+	border-radius: 9999px;
+	background: var(--wp-admin-theme-color, #2271b1);
+	color: #fff;
+	font-size: 10px;
+	font-weight: 600;
+	line-height: 1.7;
+	text-transform: uppercase;
+	letter-spacing: .02em;
+	text-decoration: none;
+	vertical-align: middle;
+}
+
+/* Core underlines a link inside a label at a specificity a bare class loses
+   to, so the prefix is what keeps the pill from carrying a line under it. */
+.wp-core-ui a.field-kit__badge,
+.wp-core-ui a.field-kit__badge:hover,
+.wp-core-ui a.field-kit__badge:focus {
+	color: #fff;
+	text-decoration: none;
+}
+
+.wp-core-ui a.field-kit__badge:hover,
+.wp-core-ui a.field-kit__badge:focus {
+	background: var(--wp-admin-theme-color-darker-10, #135e96);
+}
+
+.field-kit__badge .dashicons {
+	font-size: 12px;
+	width: 12px;
+	height: 12px;
+	line-height: 1;
+}
+
+/* A locked field is readable but plainly not editable. Core already greys a
+   disabled control; this dims the rest of the row so the state reads at a
+   glance rather than only on the input. */
+.field-kit__field--locked > label,
+.field-kit__field--locked .field-kit__legend {
+	opacity: 1;
+}
+
+.field-kit__field--locked .field-kit__combobox-input,
+.field-kit__field--locked input,
+.field-kit__field--locked select,
+.field-kit__field--locked textarea {
+	cursor: not-allowed;
+}
+
+/* -----------------------------------------------------------------------
+ * Relational combobox
+ * -------------------------------------------------------------------- */
+
+/* A positioning context and nothing else. It deliberately sets no width:
+   every previous round of this bug came from the wrapper and the input
+   disagreeing about how wide they were, and then something — the arrow, the
+   list — being aligned to the wrong one. The input's width is core's
+   business (.regular-text, .form-field, whatever the screen sets), and the
+   list is measured from the input in JS rather than inherited from here. */
+.field-kit__combobox {
+	position: relative;
+	display: block;
+}
+
+/* The arrow is painted on the input, exactly as core paints it on a <select>
+   — the same SVG, the same position, the same size, lifted from
+   forms.css. It used to be a separately positioned button inside the
+   wrapper, which meant it was aligned to the wrapper and not to the input:
+   any rule anywhere that changed the input's width left the arrow floating
+   out in the margin. On a term screen core does change it, so it did. As a
+   background it is part of the input and cannot come away from it. */
+.field-kit__combobox-input {
+	width: 100%;
+	/* Core caps its own <select> at the same figure. The cap is on the input
+	   rather than on the wrapper, because the wrapper deliberately has no
+	   width and everything else — the arrow, the list — is measured from the
+	   input. Without it the control ran the full width of the row while the
+	   plain select beside it did not. */
+	max-width: 25rem;
+	padding-right: 2rem;
+	cursor: pointer;
+	/* The SVG is arrow-down-alt2 from Dashicons. */
+	background: #fff url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20width%3D%2220%22%20height%3D%2220%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%3Cpath%20d%3D%22M5%206l5%205%205-5%202%201-7%207-7-7%202-1z%22%20fill%3D%22%231e1e1e%22%2F%3E%3C%2Fsvg%3E') no-repeat right 8px top 55%;
+	background-size: 16px 16px;
+}
+
+/* Open: the arrow points the other way. A background cannot be rotated, so
+   this is the same Dashicon mirrored — arrow-up-alt2 — rather than a
+   transform on an element that no longer exists. */
+.field-kit__combobox-input[aria-expanded="true"] {
+	background-image: url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20width%3D%2220%22%20height%3D%2220%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%3Cpath%20d%3D%22M15%2014l-5-5-5%205-2-1%207-7%207%207-2%201z%22%20fill%3D%22%231e1e1e%22%2F%3E%3C%2Fsvg%3E');
+}
+
+/* The chosen values of a multiple combobox, above the input so the input is
+   left free to keep searching rather than holding one of them. */
+.field-kit__combobox-chips {
+	display: flex;
+	flex-wrap: wrap;
+	gap: .25rem;
+	margin: 0 0 .35rem;
+	padding: 0;
+	list-style: none;
+}
+
+.field-kit__combobox-chips:empty {
+	display: none;
+	margin: 0;
+}
+
+.field-kit__combobox-chip {
+	display: inline-flex;
+	align-items: center;
+	gap: .15rem;
+	margin: 0;
+	padding: .1rem .2rem .1rem .5rem;
+	border: 1px solid #c3c4c7;
+	border-radius: 2px;
+	background: #f6f7f7;
+	font-size: 12px;
+	line-height: 1.8;
+}
+
+.field-kit__combobox-chip-remove {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	width: 20px;
+	height: 20px;
+	padding: 0;
+	border: 0;
+	background: none;
+	color: #50575e;
+	cursor: pointer;
+}
+
+.field-kit__combobox-chip-remove:hover,
+.field-kit__combobox-chip-remove:focus {
+	color: #b32d2e;
+}
+
+.field-kit__combobox-chip-remove .dashicons {
+	font-size: 14px;
+	width: 14px;
+	height: 14px;
+	line-height: 1;
+}
+
+/* Width and offset are set from the input's measured box on every open, so
+   the list is the width of the control it belongs to and not the width of
+   whatever happens to contain it. */
+.field-kit__combobox-list {
+	position: absolute;
+	z-index: 10;
+	left: 0;
+	max-height: 15rem;
+	margin: 0;
+	padding: 0;
+	overflow-y: auto;
+	list-style: none;
+	border: 1px solid #8c8f94;
+	border-top: 0;
+	background: #fff;
+	box-shadow: 0 2px 6px rgba(0, 0, 0, .1);
+}
+
+.field-kit__combobox-list[hidden] {
+	display: none;
+}
+
+.field-kit__combobox-option {
+	margin: 0;
+	padding: .4rem .6rem;
+}
+
+/* Only a real option is choosable. The "No results found." row shares the
+   class so it lines up with the rest of the list, and pointing at it as
+   though it could be picked is a small lie. */
+.field-kit__combobox-option[role="option"] {
+	cursor: pointer;
+}
+
+/* Hover is a lighter treatment than the keyboard highlight below, on
+   purpose: the two can be on different rows at the same time — the pointer
+   over one while aria-activedescendant is on another — and if they looked
+   alike there would be two rows claiming to be the selection. */
+.field-kit__combobox-option[role="option"]:hover {
+	background: #f0f0f1;
+}
+
+/* Active-descendant highlighting, which is not focus — the focus stays in
+   the text input, so this cannot rely on :hover or :focus. Restated with
+   :hover so the keyboard highlight is not repainted by a stray pointer. */
+.field-kit__combobox-option[aria-selected="true"],
+.field-kit__combobox-option[aria-selected="true"]:hover {
+	background: var(--wp-admin-theme-color, #2271b1);
+	color: #fff;
+}
+
+@media (forced-colors: active) {
+	.field-kit__combobox-option[aria-selected="true"] {
+		outline: 2px solid CanvasText;
+		outline-offset: -2px;
+	}
+}
+
+/* -----------------------------------------------------------------------
+ * Tags
+ * -------------------------------------------------------------------- */
+
+.field-kit__tags-list {
+	display: flex;
+	flex-wrap: wrap;
+	gap: .3rem;
+	margin-top: .4rem;
+}
+
+.field-kit__tag {
+	display: inline-flex;
+	align-items: center;
+	gap: .25rem;
+	padding: .1rem .5rem;
+	border-radius: 1rem;
+	background: #f0f0f1;
+}
+
+/* -----------------------------------------------------------------------
+ * Motion
+ * -------------------------------------------------------------------- */
+
+@media (prefers-reduced-motion: reduce) {
+	.field-kit__toggle,
+	.field-kit__toggle::before {
+		transition: none;
+	}
+}
+
+/* -----------------------------------------------------------------------
+ * Page header
+ *
+ * The header shell itself is core's — .privacy-settings-header is styled in
+ * wp-admin/css/edit.css, which the wp-admin bundle depends on, so it is
+ * present on every admin page and shared with Site Health.
+ *
+ * Only the tab strip is ours. Core's .privacy-settings-tabs-wrapper is
+ * grid-template-columns: 1fr 1fr — hardcoded to that screen's two tabs — and
+ * Site Health declares its own at four. Neither generalises to a page whose
+ * tab count is whatever the consumer configured.
+ * -------------------------------------------------------------------- */
+
+.field-kit__page-tabs {
+	display: flex;
+	flex-wrap: wrap;
+	justify-content: center;
+}
+
+/* .privacy-settings-tab supplies the padding, colour and transition; the
+   active state is core's own box-shadow, restated because the core rule is
+   scoped to .privacy-settings-tab.active inside its own wrapper. */
+.field-kit__page-tab.active {
+	box-shadow: inset 0 -3px var(--wp-admin-theme-color, #2271b1);
+	font-weight: 600;
+}
+
+/* -----------------------------------------------------------------------
+ * A screen using the page header
+ *
+ * Core does not make the header full width; it removes #wpcontent's left
+ * padding for the two screens that use one, keyed on a body class:
+ *
+ *   .privacy-settings #wpcontent,
+ *   .privacy-settings.auto-fold #wpcontent { padding-left: 0 }
+ *
+ * Both selectors are needed — .auto-fold raises the specificity for the
+ * collapsed-menu state — and the padding it removes has to be given back to
+ * whatever holds the page body, or the content ends up flush against the
+ * menu. Core has .privacy-settings-body for that; a settings page has .wrap.
+ * -------------------------------------------------------------------- */
+
+.field-kit__page-screen #wpcontent,
+.field-kit__page-screen.auto-fold #wpcontent {
+	padding-left: 0;
+}
+
+/* .wrap is margin: 10px 20px 0 2px, so with the padding gone it would sit
+   2px from the menu. 22px is the total core keeps, and the same figure it
+   uses for notices on these screens. */
+.field-kit__page-screen .wrap {
+	margin-left: 22px;
+}
+
+/* Admin notices land after the header, outside .wrap, so they need the inset
+   too. Core's own figures for these screens. */
+.field-kit__page-screen .notice,
+.field-kit__page-screen .update-nag {
+	margin: 25px 20px 15px 22px;
+}
+
+.field-kit__page-screen .notice ~ .notice {
+	margin-top: 5px;
+}
+
+@media screen and (max-width: 782px) {
+
+	.field-kit__page-screen .wrap {
+		margin-left: 12px;
+	}
+
+	.field-kit__page-screen .notice,
+	.field-kit__page-screen .update-nag {
+		margin: 5px 10px 15px;
+	}
+}
+
+/* -----------------------------------------------------------------------
+ * Screen Options tools
+ *
+ * A settings page's occasional controls — export, import, reset — live in
+ * the Screen Options panel rather than beside the page title. Emitted by
+ * wp-register-setting-fields; styled here because that library ships no
+ * stylesheet of its own.
+ * -------------------------------------------------------------------- */
+
+.field-kit__screen-tools {
+	display: grid;
+	grid-template-columns: repeat(auto-fit, minmax(17rem, 1fr));
+	gap: 1.5rem 2.5rem;
+	padding: .75rem 0 1rem;
+	border-top: 1px solid #dcdcde;
+	margin-top: .75rem;
+}
+
+.field-kit__screen-tool {
+	margin: 0;
+	padding: 0;
+	border: 0;
+	max-width: 26rem;
+}
+
+/* Core's own weight and spacing for a legend in this panel:
+   #screen-options-wrap legend { padding: 8px 0; font-size: 13px }. */
+.field-kit__screen-tool-title {
+	padding: 0 0 4px;
+	font-size: 13px;
+	font-weight: 600;
+}
+
+.field-kit__screen-tool .description {
+	margin: 0 0 .75rem;
+}
+
+.field-kit__screen-tool-controls form {
+	margin: 0;
+}
+
+/* core's .wp-upload-form, which ships no rules of its own — its spacing on
+   import.php comes from the paragraphs around the input. */
+.field-kit__screen-tool .wp-upload-form p {
+	margin: 0 0 .5rem;
+}
+
+.field-kit__screen-tool .wp-upload-form p.submit {
+	margin: 0;
+	padding: 0;
+}
+
+.field-kit__screen-tool .wp-upload-form label {
+	font-weight: 600;
+}
+
+.field-kit__screen-tool input[type="file"] {
+	max-width: 100%;
+}
+
+.field-kit__page-actions {
+	padding: 0 1rem 1rem;
+	text-align: center;
+}
+
+/* Each control in the header is its own form, because these change state and
+   a link that changes state can be followed by a prefetch. Inline-flex keeps
+   them on one row inside the centred header. */
+.field-kit__page-actions form {
+	display: inline-flex;
+	align-items: center;
+	gap: .35rem;
+	margin: 0 .25rem;
+	vertical-align: middle;
+}
+
+/* core's .privacy-settings-title-section is a centred flex row, so the logo
+   and badge need no positioning — only a size and something to sit beside. */
+.field-kit__page-logo {
+	max-height: 40px;
+	width: auto;
+	margin-right: .6rem;
+}
+
+.field-kit__page-badge {
+	align-self: center;
+	margin-left: .6rem;
+	padding: .1rem .5rem;
+	border: 1px solid #dcdcde;
+	border-radius: 9999px;
+	background: #f6f7f7;
+	color: #50575e;
+	font-size: 11px;
+	font-weight: 600;
+	line-height: 1.6;
+	text-transform: uppercase;
+	letter-spacing: .02em;
+}
+
+/* -----------------------------------------------------------------------
+ * Corrections against core's own rules
+ *
+ * Everything below exists because a core rule wins on specificity or
+ * because core styles an element the kit uses for a different purpose.
+ * Each one was found by looking at a rendered admin screen; none of them
+ * are visible from the markup alone, which is why the first pass shipped
+ * with all of them wrong.
+ * -------------------------------------------------------------------- */
+
+/* .button sets display:inline-block, which beats the hidden attribute's
+   display:none. A "Remove" button was showing beside every empty media
+   field because of it. */
+.field-kit__field [hidden] {
+	display: none !important;
+}
+
+/* Core defines .wp-core-ui .button-link at specificity 0,2,0 and underlines
+   it, so a bare class here loses and every chevron carries a line under it.
+   Matching the prefix is what makes these win. */
+.wp-core-ui .field-kit__gallery-move,
+.wp-core-ui .field-kit__gallery-remove,
+.wp-core-ui .field-kit__repeater-move-up,
+.wp-core-ui .field-kit__repeater-move-down,
+.wp-core-ui .field-kit__repeater-remove,
+.wp-core-ui .field-kit__sortable-move {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 1.75rem;
+	height: 1.75rem;
+	padding: 0;
+	text-decoration: none;
+	border-radius: 2px;
+}
+
+.wp-core-ui .field-kit__gallery-move:hover,
+.wp-core-ui .field-kit__repeater-move-up:hover,
+.wp-core-ui .field-kit__repeater-move-down:hover,
+.wp-core-ui .field-kit__sortable-move:hover {
+	background: #f0f0f1;
+	text-decoration: none;
+}
+
+.wp-core-ui .field-kit__gallery-move:disabled,
+.wp-core-ui .field-kit__repeater-move-up:disabled,
+.wp-core-ui .field-kit__repeater-move-down:disabled,
+.wp-core-ui .field-kit__sortable-move:disabled {
+	color: #c3c4c7;
+	cursor: default;
+	background: none;
+}
+
+.wp-core-ui .field-kit__gallery-remove,
+.wp-core-ui .field-kit__repeater-remove {
+	color: #b32d2e;
+}
+
+/* The dashicon is the button's whole content, so it should not carry the
+   line-height of surrounding text. */
+.field-kit__sortable-move .dashicons,
+.field-kit__gallery-move .dashicons,
+.field-kit__gallery-remove .dashicons,
+.field-kit__repeater-move-up .dashicons,
+.field-kit__repeater-move-down .dashicons,
+.field-kit__repeater-remove .dashicons {
+	width: 1rem;
+	height: 1rem;
+	font-size: 1rem;
+	line-height: 1;
+}
+
+/* Clipboard, media and amount all put a control beside their input; without
+   this the button drops onto the next line. */
+.field-kit__clipboard,
+.field-kit__media-actions,
+.field-kit__amount,
+.field-kit__license {
+	display: flex;
+	align-items: center;
+	flex-wrap: wrap;
+	gap: .5rem;
+}
+
+.field-kit__clipboard .field-kit__clipboard-value {
+	width: auto;
+	min-width: 18rem;
+}
+
+.field-kit__media-actions {
+	margin: .5rem 0 0;
+}
+
+/* An empty preview should take no room, or every media field reserves a
+   blank block above its buttons. */
+.field-kit__media-preview[data-empty="true"] {
+	display: none;
+}
+
+.field-kit__gallery-items[data-empty="true"] {
+	display: none;
+}
+
+/* A multiple select collapses to a few pixels tall without a row count. */
+select.field-kit__select[multiple] {
+	min-height: 7rem;
+	width: auto;
+	min-width: 15rem;
+}
+
+/* Sortable rows: the checkbox, its label and the move buttons on one line,
+   with the label taking the slack so the buttons sit at the right. */
+/* The label takes the slack so the move buttons sit together at the end of
+   the row rather than drifting apart with it. */
+.field-kit__sortable-item > label {
+	display: flex;
+	align-items: center;
+	gap: .4rem;
+	flex: 1;
+	margin: 0;
+	font-weight: 400;
+}
+
+/* Sub-labels inside composite fields are not field labels and should not
+   inherit the field label's weight. */
+.field-kit__dimensions-part .field-kit__sub-label,
+.field-kit__range-pair-part .field-kit__sub-label,
+.field-kit__link .field-kit__sub-label {
+	display: block;
+	font-weight: 400;
+}
+
+/* A nested field inside a group or repeater is not a top-level field and
+   should not carry the same vertical rhythm. */
+.field-kit__group .field-kit__field,
+.field-kit__repeater-fields .field-kit__field {
+	margin-bottom: .75rem;
+}
+
+.field-kit__group .field-kit__field:last-child,
+.field-kit__repeater-fields .field-kit__field:last-child {
+	margin-bottom: 0;
+}
+
+/* The term screens put fields in a table; without this every control is
+   pushed to the full width of a very wide cell. */
+.form-field .field-kit__field input[type="text"],
+.form-field .field-kit__field input[type="url"],
+.form-field .field-kit__field input[type="email"],
+.form-field .field-kit__field input[type="tel"],
+.form-field .field-kit__field input[type="password"] {
+	width: 95%;
+	max-width: 25rem;
+}
+
+.form-field .field-kit__field input.small-text,
+.form-field .field-kit__field input[type="number"] {
+	width: auto;
+}
+
+/* A row heading that is not a <label>, used where the control labels itself
+   or where a fieldset legend already names the group. */
+.field-kit__row-label {
+	display: block;
+	font-weight: 600;
+}
+
+/* Pushed to the far right, where a drag handle belongs — beside the label it
+   read as part of the text. */
+.field-kit__sortable-actions {
+	display: inline-flex;
+	align-items: center;
+	gap: .15rem;
+	flex: none;
+	margin-left: auto;
+}
+
+/* -----------------------------------------------------------------------
+ * Vertical rhythm inside composite fields
+ *
+ * Several field types stack a preview, a control and a row of buttons. Each
+ * part was spaced on its own and the parts ended up flush against each
+ * other — a "Choose file" button touching the input above it, an "Add
+ * images" button touching the gallery.
+ *
+ * Rather than chase each pair, every direct child of a media block gets the
+ * same gap and the last one loses it. Declared late so it settles the
+ * earlier per-part rules instead of competing with them.
+ * -------------------------------------------------------------------- */
+
+.field-kit__media,
+.field-kit__gallery,
+.field-kit__repeater,
+.field-kit__group,
+.field-kit__license,
+.field-kit__clipboard,
+.field-kit__oembed,
+.field-kit__tags {
+	display: flow-root;
+}
+
+.field-kit__media > *,
+.field-kit__gallery > *,
+.field-kit__oembed > * {
+	margin: 0 0 .6rem;
+}
+
+.field-kit__media > :last-child,
+.field-kit__gallery > :last-child,
+.field-kit__oembed > :last-child {
+	margin-bottom: 0;
+}
+
+/* The hidden input holding the value is not a visible part and must not
+   contribute a gap of its own. */
+.field-kit__media > input[type="hidden"],
+.field-kit__gallery > input[type="hidden"] {
+	margin: 0;
+}
+
+.field-kit__gallery-items {
+	margin: 0 0 .6rem;
+}
+
+.field-kit__media-preview {
+	margin: 0 0 .6rem;
+}
+
+/* The button row is the last thing in the block, so it only needs the gap
+   above it — which the rule above already supplies. */
+.field-kit__media-actions {
+	margin: 0;
+}
+
+/* An empty preview or empty list still had a bottom margin, leaving a gap
+   above the button with nothing in it. */
+.field-kit__media-preview[data-empty="true"],
+.field-kit__gallery-items[data-empty="true"] {
+	margin: 0;
+}
+
+/* A repeater's add button needs clearing from the rows above it. */
+.field-kit__repeater > p {
+	margin: .6rem 0 0;
+}
+
+.field-kit__repeater-empty {
+	margin: 0 0 .6rem;
+}
+
+/* Composite rows that put a control beside a button want the same gap as
+   everything else, not whatever the button's own margin happened to be. */
+.field-kit__clipboard,
+.field-kit__license,
+.field-kit__amount,
+.field-kit__dimensions,
+.field-kit__range-pair {
+	margin: 0;
+}
+
+/* Tag pills sit under their input rather than against it. */
+.field-kit__tags-list:not(:empty) {
+	margin-top: .5rem;
+}
+
+/* -----------------------------------------------------------------------
+ * Joined controls
+ *
+ * An amount and its unit are one value split across two controls, so they
+ * are drawn as one: no gap, shared border, rounded only on the outside.
+ * -------------------------------------------------------------------- */
+
+.field-kit__amount {
+	display: inline-flex;
+	align-items: stretch;
+	gap: 0;
+}
+
+.field-kit__amount input[type="number"].field-kit__amount-value {
+	width: 8rem;
+	margin: 0;
+	border-radius: 2px 0 0 2px;
+}
+
+.field-kit__amount select.field-kit__amount-unit {
+	margin: 0 0 0 -1px;
+	border-radius: 0 2px 2px 0;
+	min-height: 30px;
+}
+
+/* The two share a border, so whichever is focused has to come forward or
+   its focus ring is clipped by its neighbour. */
+.field-kit__amount input:focus,
+.field-kit__amount select:focus {
+	position: relative;
+	z-index: 1;
+}
+
+/* Same treatment wherever a control and its unit are one value. */
+.field-kit__dimensions {
+	align-items: flex-end;
+	gap: .4rem;
+}
+
+.field-kit__dimensions-unit {
+	padding-bottom: .4rem;
+	color: #646970;
+	white-space: nowrap;
+}
+
+/* -----------------------------------------------------------------------
+ * Action feedback
+ * -------------------------------------------------------------------- */
+
+.field-kit__clipboard-success {
+	color: #007017;
+	font-weight: 600;
+}
+
+/* core's .hidden is display:none, which is what the copy feedback toggles. */
+.field-kit__clipboard-success.hidden {
+	display: none;
+}
+
+.field-kit__action-status,
+.field-kit__email-status,
+.field-kit__license-status {
+	min-height: 1.2em;
+}
+
+.field-kit__status--success {
+	color: #007017;
+}
+
+.field-kit__status--error {
+	color: #b32d2e;
+}
+
+.field-kit__action-preview {
+	margin-top: .75rem;
+	padding: .75rem;
+	border: 1px solid #dcdcde;
+	background: #fff;
+}
+
+/* The spinner only occupies space once it is running, or every button row
+   carries a permanent gap beside it. */
+.field-kit__field .spinner {
+	float: none;
+	margin: 0;
+}
+
+.field-kit__field .spinner:not(.is-active) {
+	display: none;
+}
+
+/* -----------------------------------------------------------------------
+ * Nested fields
+ *
+ * A field inside a group or a repeater row is laid out by the kit, not by
+ * the surrounding screen's table, so its label needs putting back above its
+ * control — otherwise the label sits flush against the input, which is what
+ * "Street[input]" was.
+ * -------------------------------------------------------------------- */
+
+.field-kit__group .field-kit__field > label,
+.field-kit__repeater-fields .field-kit__field > label,
+.field-kit__email .field-kit__field > label {
+	display: block;
+	margin: 0 0 .25rem;
+	font-weight: 600;
+}
+
+/* A self-labelling control keeps its text beside the box, the same way it
+   does outside a nested field. */
+.field-kit__group .field-kit__field .field-kit__checkbox-label,
+.field-kit__repeater-fields .field-kit__field .field-kit__checkbox-label {
+	display: inline-block;
+	margin: 0;
+	font-weight: 400;
+}
+
+/* Inputs inside a nested field should not stretch to the row's full width
+   just because they can — except where the field asked for core's own
+   large-text or regular-text, which already say how wide they want to be. */
+.field-kit__group .field-kit__field input[type="text"]:not(.large-text):not(.regular-text),
+.field-kit__repeater-fields .field-kit__field input[type="text"]:not(.large-text):not(.regular-text),
+.field-kit__email .field-kit__field input[type="text"]:not(.large-text):not(.regular-text) {
+	width: 100%;
+	max-width: 25rem;
+}
+
+/* -----------------------------------------------------------------------
+ * Drag handles
+ *
+ * The visible affordance for reordering. The move buttons still exist and
+ * still work — they are the only way to reorder from a keyboard, since a
+ * drag cannot be performed without a pointer — but they are out of sight
+ * until focused, so a mouse user sees a handle and nothing else.
+ *
+ * This is the same shape as a skip link: present in the accessibility tree
+ * and the tab order the whole time, painted only when it has focus.
+ * -------------------------------------------------------------------- */
+
+.field-kit__drag-handle {
+	flex: none;
+	color: #a7aaad;
+	cursor: grab;
+}
+
+.field-kit__sortable-item:hover .field-kit__drag-handle,
+.field-kit__gallery-item:hover .field-kit__drag-handle {
+	color: #50575e;
+}
+
+.wp-core-ui .field-kit__sortable-move,
+.wp-core-ui .field-kit__gallery-move {
+	position: absolute;
+	width: 1px;
+	height: 1px;
+	margin: -1px;
+	padding: 0;
+	overflow: hidden;
+	clip-path: inset(50%);
+	white-space: nowrap;
+	border: 0;
+}
+
+/* Painted again the moment it takes focus, so a keyboard user can see what
+   they are operating. */
+.wp-core-ui .field-kit__sortable-move:focus-visible,
+.wp-core-ui .field-kit__gallery-move:focus-visible {
+	position: static;
+	width: 1.75rem;
+	height: 1.75rem;
+	margin: 0;
+	overflow: visible;
+	clip-path: none;
+	background: #f0f0f1;
+	outline: 2px solid var(--wp-admin-theme-color, #2271b1);
+	outline-offset: -2px;
+}
+
+/* Gallery: only the remove action shows on hover now. */
+.field-kit__gallery-actions {
+	position: static;
+	display: contents;
+	padding: 0;
+	background: none;
+	opacity: 1;
+}
+
+.field-kit__gallery-item .field-kit__drag-handle {
+	position: absolute;
+	top: .25rem;
+	left: .25rem;
+	padding: .1rem;
+	border-radius: 2px;
+	background: rgba(255, 255, 255, .92);
+	opacity: 0;
+	transition: opacity .1s ease-in-out;
+}
+
+.field-kit__gallery-item:hover .field-kit__drag-handle,
+.field-kit__gallery-item:focus-within .field-kit__drag-handle {
+	opacity: 1;
+}
+
+@media (hover: none) {
+	.field-kit__gallery-item .field-kit__drag-handle {
+		opacity: 1;
+	}
+}
+
+/* -----------------------------------------------------------------------
+ * Email panel
+ *
+ * core's .postbox, so the panel matches every metabox on every edit screen
+ * and follows the admin colour scheme. What is added here is only what core
+ * does not supply for a postbox living outside a metabox screen: the
+ * collapse (postboxes.js only runs where metaboxes do) and the tag list.
+ * -------------------------------------------------------------------- */
+
+.field-kit__email {
+	margin: 0;
+	max-width: 60rem;
+}
+
+/* core's postbox-header is not clickable on its own; on a metabox screen the
+   whole thing is a drag handle. Here it collapses the panel, so it should
+   look like it does something. */
+.field-kit__email .postbox-header .hndle {
+	cursor: pointer;
+}
+
+/* core hides .inside on .closed through .postbox.closed .inside, which is
+   part of the metabox stylesheet rather than the common one. */
+.field-kit__email.closed .inside {
+	display: none;
+}
+
+/* Core's .postbox .inside has no top padding — on a metabox screen the
+   first thing inside is a metabox that brings its own margin. A field does
+   not, so the first control sat against the header's border. */
+.field-kit__email .inside {
+	padding: 12px;
+	margin: 0;
+}
+
+/* The arrow glyph is core's, but core scopes it to .meta-box-sortables —
+   the sortable container an edit screen's metaboxes live in, which a panel
+   outside one is not inside. So the button rendered with nothing in it.
+   Restated, both states, from common.css. */
+.field-kit__email .toggle-indicator::before {
+	content: "\f142";
+	display: inline-block;
+	font: normal 20px/1 dashicons;
+	-webkit-font-smoothing: antialiased;
+	-moz-osx-font-smoothing: grayscale;
+	text-decoration: none;
+	width: 20px;
+	border-radius: 50%;
+	position: relative;
+	top: .05rem;
+	color: #787c82;
+}
+
+.field-kit__email.closed .toggle-indicator::before {
+	content: "\f140";
+}
+
+.field-kit__email .handlediv:hover .toggle-indicator::before,
+.field-kit__email .handlediv:focus .toggle-indicator::before {
+	color: #1d2327;
+}
+
+/* core sizes .handlediv on a metabox screen; ours needs it too or the
+   button collapses to the glyph with no target around it. */
+.field-kit__email .handlediv {
+	width: 44px;
+	height: 44px;
+	padding: 0;
+	border: 0;
+	background: none;
+	cursor: pointer;
+	color: #787c82;
+}
+
+.field-kit__email .field-kit__field {
+	margin-bottom: 1.25rem;
+}
+
+.field-kit__email-actions {
+	display: flex;
+	align-items: center;
+	flex-wrap: wrap;
+	gap: .5rem;
+	margin: 0;
+}
+
+/* core's spinner is visibility:hidden with a fixed size, so a hidden one
+   still holds its place and the buttons do not jump when it appears. */
+.field-kit__email-actions .spinner {
+	float: none;
+	margin: 0;
+}
+
+/* -----------------------------------------------------------------------
+ * Merge tag chooser
+ *
+ * Its own dialog rather than core's media modal. media-views.css is only on
+ * the page when something calls wp_enqueue_media(), so on a screen with an
+ * email but no media field the modal had no styling at all; and the media
+ * frame's geometry is built around a sidebar and a toolbar this does not
+ * have. A dialog for picking one item out of a list is forty lines.
+ * -------------------------------------------------------------------- */
+
+.field-kit__tag-modal[hidden],
+.field-kit__tag-backdrop[hidden] {
+	display: none;
+}
+
+.field-kit__tag-backdrop {
+	position: fixed;
+	inset: 0;
+	z-index: 100000;
+	background: rgba(0, 0, 0, .7);
+}
+
+/* Sized to its contents rather than to the viewport: this picks one row out
+   of a short list, and core's media modal — inset 30px on every side — is a
+   whole screen for it. */
+.field-kit__tag-modal {
+	position: fixed;
+	top: 50%;
+	left: 50%;
+	z-index: 100001;
+	display: flex;
+	flex-direction: column;
+	width: min(30rem, calc(100vw - 2rem));
+	max-height: min(28rem, calc(100vh - 4rem));
+	transform: translate(-50%, -50%);
+	background: #fff;
+	border-radius: 4px;
+	box-shadow: 0 5px 15px rgba(0, 0, 0, .3);
+}
+
+.field-kit__tag-modal-header {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: .5rem;
+	padding: .75rem 1rem;
+	border-bottom: 1px solid #dcdcde;
+}
+
+.field-kit__tag-modal-header h2 {
+	margin: 0;
+	font-size: 14px;
+	line-height: 1.4;
+}
+
+.field-kit__tag-close {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	width: 30px;
+	height: 30px;
+	padding: 0;
+	border: 0;
+	border-radius: 2px;
+	background: none;
+	color: #50575e;
+	cursor: pointer;
+}
+
+.field-kit__tag-close:hover,
+.field-kit__tag-close:focus {
+	background: #f0f0f1;
+	color: #1d2327;
+}
+
+.field-kit__tag-button .dashicons {
+	font-size: 18px;
+	width: 18px;
+	height: 18px;
+	line-height: 1.4;
+	vertical-align: text-bottom;
+}
+
+.field-kit__tag-frame {
+	padding: 1rem;
+	overflow-y: auto;
+}
+
+.field-kit__tag-search {
+	margin: 0 0 12px;
+}
+
+.field-kit__tag-search-input {
+	width: 100%;
+	max-width: 100%;
+}
+
+.field-kit__tag-items {
+	margin: 0;
+	list-style: none;
+	border: 1px solid #dcdcde;
+	border-radius: 2px;
+}
+
+.field-kit__tag-items li {
+	margin: 0;
+	border-top: 1px solid #dcdcde;
+}
+
+.field-kit__tag-items li:first-child {
+	border-top: 0;
+}
+
+.field-kit__tag-items li[hidden] {
+	display: none;
+}
+
+/* A whole row is the target, not a link inside it: a list of forty tags is
+   a lot of small targets otherwise. */
+.field-kit__tag-item {
+	display: flex;
+	align-items: baseline;
+	flex-wrap: wrap;
+	gap: .25rem .75rem;
+	width: 100%;
+	padding: .6rem .75rem;
+	border: 0;
+	background: none;
+	text-align: left;
+	cursor: pointer;
+}
+
+.field-kit__tag-item:hover,
+.field-kit__tag-item:focus {
+	background: #f0f0f1;
+}
+
+.field-kit__tag-item:focus {
+	outline: 2px solid var(--wp-admin-theme-color, #2271b1);
+	outline-offset: -2px;
+}
+
+.field-kit__tag-name {
+	font-weight: 600;
+}
+
+.field-kit__tag-code {
+	padding: .05rem .3rem;
+	font-size: 12px;
+}
+
+.field-kit__tag-item .description {
+	flex-basis: 100%;
+	margin: 0;
+}
+
+.field-kit__tag-empty {
+	margin: .75rem 0 0;
+	color: #50575e;
+}
+
+/* core scopes the metabox heading's padding to .metabox-holder, which a
+   panel outside a metabox screen is not inside — so the title sat flush
+   against the panel's own border. */
+.field-kit__email .postbox-header .hndle {
+	padding: 8px 12px;
+	margin: 0;
+	font-size: 14px;
+	line-height: 1.4;
+}
+
+/* -----------------------------------------------------------------------
+ * Table repeater
+ *
+ * A stack of rows is right when a row is a handful of fields with long
+ * labels. It is wrong when a row is three short columns repeated twenty
+ * times — a tax rate, a price tier, a redirect — where the labels belong
+ * once at the top and the rows want to line up under them.
+ *
+ * core's .wp-list-table does the frame, so this is only what a list table
+ * does not expect: form controls in its cells.
+ * -------------------------------------------------------------------- */
+
+.field-kit__repeater-table {
+	margin: 0 0 .75rem;
+}
+
+.field-kit__repeater-table th {
+	font-weight: 600;
+}
+
+.field-kit__repeater-table td {
+	vertical-align: middle;
+}
+
+/* A control in a cell fills it: the column header is the width, not the
+   control's own preference. */
+.field-kit__repeater-table td .field-kit__field {
+	margin: 0;
+}
+
+.field-kit__repeater-table td input[type="text"],
+.field-kit__repeater-table td input[type="number"],
+.field-kit__repeater-table td input[type="email"],
+.field-kit__repeater-table td input[type="url"],
+.field-kit__repeater-table td select,
+.field-kit__repeater-table td .field-kit__combobox,
+.field-kit__repeater-table td .field-kit__combobox-input {
+	width: 100%;
+	max-width: none;
+	margin: 0;
+}
+
+/* The actions column is as wide as its buttons and no wider. */
+.field-kit__repeater-table .field-kit__repeater-actions,
+.field-kit__repeater-table .field-kit__repeater-actions-head {
+	width: 1%;
+	white-space: nowrap;
+	text-align: right;
+}
+
+/* A row's description would be a second line inside a cell, which in a table
+   of twenty rows is twenty lines of the same sentence. */
+.field-kit__repeater-table td .field-kit__field .description {
+	display: none;
+}
+
+/* core stripes list-table rows; a cloned row has no stripe until the browser
+   recalculates, and :nth-child does that for free. */
+.field-kit__repeater-table tbody tr:nth-child(odd) {
+	background: #f6f7f7;
+}
+
+/* -----------------------------------------------------------------------
+ * Panel tabs
+ *
+ * A list of named sections down one side, one panel beside them. core has
+ * no component for this — the closest is the media modal's own menu — so
+ * this is written out, but every colour is core's: the selection follows
+ * --wp-admin-theme-color, so it changes with the user's admin scheme
+ * rather than being blue because blue is what core shipped with.
+ * -------------------------------------------------------------------- */
+
+.field-kit__panel-tabs {
+	display: flex;
+	align-items: stretch;
+	gap: 0;
+	border: 1px solid #dcdcde;
+	border-radius: 2px;
+	background: #fff;
+}
+
+.field-kit__panel-tablist {
+	display: flex;
+	flex-direction: column;
+	flex: 0 0 12rem;
+	border-right: 1px solid #dcdcde;
+	background: #f6f7f7;
+}
+
+.field-kit__panel-tab {
+	display: flex;
+	align-items: center;
+	gap: .5rem;
+	padding: .7rem 1rem;
+	border: 0;
+	border-bottom: 1px solid #dcdcde;
+	border-left: 3px solid transparent;
+	background: none;
+	color: #1d2327;
+	font-size: 13px;
+	text-align: left;
+	cursor: pointer;
+}
+
+.field-kit__panel-tab:last-child {
+	border-bottom: 0;
+}
+
+.field-kit__panel-tab:hover {
+	background: #f0f0f1;
+	color: var(--wp-admin-theme-color, #2271b1);
+}
+
+/* The bar on the left is the selection, the same idea as core's own active
+   admin-menu item — and aria-selected is what conveys it, not the colour. */
+.field-kit__panel-tab[aria-selected="true"] {
+	border-left-color: var(--wp-admin-theme-color, #2271b1);
+	background: #fff;
+	color: var(--wp-admin-theme-color, #2271b1);
+	font-weight: 600;
+}
+
+.field-kit__panel-tab:focus-visible {
+	outline: 2px solid var(--wp-admin-theme-color, #2271b1);
+	outline-offset: -2px;
+}
+
+.field-kit__panel-tab .dashicons {
+	font-size: 18px;
+	width: 18px;
+	height: 18px;
+	flex: none;
+}
+
+.field-kit__panel-bodies {
+	flex: 1;
+	min-width: 0;
+}
+
+.field-kit__panel-body {
+	padding: 1rem;
+}
+
+.field-kit__panel-body[hidden] {
+	display: none;
+}
+
+/* Focusable so leaving the tab list lands somewhere, but a focus ring on a
+   whole panel reads as an error — the outline is enough. */
+.field-kit__panel-body:focus {
+	outline: none;
+}
+
+.field-kit__panel-body:focus-visible {
+	outline: 2px solid var(--wp-admin-theme-color, #2271b1);
+	outline-offset: -2px;
+}
+
+/* Stacked on a narrow screen: a 12rem rail beside a panel is most of a
+   phone. */
+@media screen and (max-width: 782px) {
+
+	.field-kit__panel-tabs {
+		display: block;
+	}
+
+	.field-kit__panel-tablist {
+		flex-direction: row;
+		flex-wrap: wrap;
+		border-right: 0;
+		border-bottom: 1px solid #dcdcde;
+	}
+
+	.field-kit__panel-tab {
+		border-bottom: 0;
+		border-left: 0;
+		border-bottom: 3px solid transparent;
+	}
+
+	.field-kit__panel-tab[aria-selected="true"] {
+		border-left-color: transparent;
+		border-bottom-color: var(--wp-admin-theme-color, #2271b1);
+	}
+}

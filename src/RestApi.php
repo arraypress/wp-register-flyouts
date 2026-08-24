@@ -168,7 +168,7 @@ class RestApi {
 		 * @param string          $flyout_id      The flyout identifier.
 		 * @param WP_REST_Request $request        Full request object.
 		 */
-		$capability = apply_filters( Runtime::hook( 'rest_capability' ), $capability, $manager_prefix, $flyout_id, $request );
+		$capability = apply_filters( "wp_flyout_rest_capability_{$manager_prefix}", $capability, $flyout_id, $request );
 
 		if ( ! current_user_can( $capability ) ) {
 			return new WP_Error(
@@ -325,7 +325,7 @@ class RestApi {
 		// in a metabox — and a key the flyout does not declare is dropped.
 		$sanitized = $manager->sanitize( $config['fields'], (array) $form_data );
 
-		$sanitized = apply_filters( Runtime::hook( 'before_save' ), $sanitized, $config, $manager->get_prefix() );
+		$sanitized = apply_filters( 'wp_flyout_before_save_' . $manager->get_prefix(), $sanitized, $config );
 
 		// Run validation callback if provided.
 		if ( ! empty( $config['validate'] ) && is_callable( $config['validate'] ) ) {
@@ -349,7 +349,7 @@ class RestApi {
 
 		$result = self::run( $config['save'], 'save', $id, $sanitized );
 
-		do_action( Runtime::hook( 'after_save' ), $result, $id, $sanitized, $config, $manager->get_prefix() );
+		do_action( 'wp_flyout_after_save_' . $manager->get_prefix(), $result, $id, $sanitized, $config );
 
 		if ( is_wp_error( $result ) ) {
 			return $result;
@@ -397,11 +397,11 @@ class RestApi {
 
 		$item_id = $request->get_param( 'item_id' );
 
-		$item_id = apply_filters( Runtime::hook( 'before_delete' ), $item_id, $config, $manager->get_prefix() );
+		$item_id = apply_filters( 'wp_flyout_before_delete_' . $manager->get_prefix(), $item_id, $config );
 
 		$result = self::run( $config['delete'], 'delete', $item_id );
 
-		do_action( Runtime::hook( 'after_delete' ), $result, $item_id, $config, $manager->get_prefix() );
+		do_action( 'wp_flyout_after_delete_' . $manager->get_prefix(), $result, $item_id, $config );
 
 		if ( is_wp_error( $result ) ) {
 			return $result;

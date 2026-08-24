@@ -95,9 +95,14 @@ final class RuntimeTest extends TestCase {
 			'handle'         => [ 'chartjs' ],
 			'key'            => [ 'export' ],
 			'js_object'      => [],
-			'hook'           => [ 'after_save' ],
 		];
 
+		// Hooks are deliberately absent. They used to be derived here too,
+		// which meant a bundled copy fired `acme_wp_flyout_after_save` — safe
+		// from collision and impossible for anyone outside that copy to name,
+		// so the extension point existed only in theory. They are literal now
+		// and carry the manager's prefix, the flyout's id or the component's
+		// type instead, which is the consumer's own namespace.
 		foreach ( $methods as $method => $args ) {
 			$this->assertNotSame(
 				$a::$method( ...$args ),

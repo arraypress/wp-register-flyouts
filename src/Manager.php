@@ -154,7 +154,7 @@ class Manager {
 		$config = wp_parse_args( $config, $defaults );
 
 		// Apply filters for extensibility.
-		$config = apply_filters( Runtime::hook( 'register_config' ), $config, $id, $this->prefix );
+		$config = apply_filters( "wp_flyout_register_config_{$this->prefix}", $config, $id );
 		$config = apply_filters( "wp_flyout_{$this->prefix}_{$id}_config", $config );
 
 		// Auto-detect required components.
@@ -270,7 +270,7 @@ class Manager {
 		$flyout->set_subtitle( $config['subtitle'] );
 		$flyout->set_size( $config['size'] );
 
-		$flyout = apply_filters( Runtime::hook( 'build_flyout' ), $flyout, $config, $data, $this->prefix );
+		$flyout = apply_filters( "wp_flyout_build_flyout_{$this->prefix}", $flyout, $config, $data );
 
 		if ( ! empty( $config['tabs'] ) ) {
 			$this->build_tab_interface( $flyout, $config['tabs'], $config['fields'], $data );
@@ -559,7 +559,7 @@ class Manager {
 
 		[ $set ] = $this->field_set( $fields, $data );
 
-		$fields = apply_filters( Runtime::hook( 'before_render_fields' ), $fields, $data, $this->prefix );
+		$fields = apply_filters( "wp_flyout_before_render_fields_{$this->prefix}", $fields, $data );
 
 		$normalized_fields = $this->normalize_fields( $fields );
 
@@ -570,8 +570,8 @@ class Manager {
 			}
 
 			// Apply field-specific filters.
-			$field = apply_filters( Runtime::hook( 'render_field' ), $field, $field_key, $data, $this->prefix );
-			$field = apply_filters( "wp_flyout_render_field_{$field_key}", $field, $data, $this->prefix );
+			$field = apply_filters( "wp_flyout_render_field_{$this->prefix}", $field, $field_key, $data );
+			$field = apply_filters( "wp_flyout_render_field_{$this->prefix}_{$field_key}", $field, $data );
 
 			// Normalize AJAX fields (search URL, hydration).
 			$field = $this->normalize_ajax_fields( $field, $field_key, $data );
@@ -591,7 +591,7 @@ class Manager {
 					}
 				}
 
-				$component    = Components::create( $type, $field );
+				$component    = Components::create( $type, $field, $this->prefix );
 				$field_output = $component ? $component->render() : '';
 			} else {
 				// Through the set, which reads the value from the context and
@@ -607,7 +607,7 @@ class Manager {
 			$output .= $field_output;
 		}
 
-		return apply_filters( Runtime::hook( 'after_render_fields' ), $output, $fields, $data, $this->prefix );
+		return apply_filters( "wp_flyout_after_render_fields_{$this->prefix}", $output, $fields, $data );
 	}
 
 	/**
@@ -621,7 +621,7 @@ class Manager {
 	 * @since 1.0.0
 	 */
 	public function normalize_fields( array $fields ): array {
-		$fields = apply_filters( Runtime::hook( 'before_normalize_fields' ), $fields, $this->prefix );
+		$fields = apply_filters( "wp_flyout_before_normalize_fields_{$this->prefix}", $fields );
 
 		$normalized = [];
 
@@ -637,7 +637,7 @@ class Manager {
 			$normalized[ $field_key ] = $field;
 		}
 
-		return apply_filters( Runtime::hook( 'after_normalize_fields' ), $normalized, $this->prefix );
+		return apply_filters( "wp_flyout_after_normalize_fields_{$this->prefix}", $normalized );
 	}
 
 	/**

@@ -119,16 +119,6 @@ final class Runtime {
 		return $name . $suffix;
 	}
 
-	/**
-	 * Get a hook name for this build.
-	 *
-	 * @param string $suffix Hook suffix.
-	 *
-	 * @return string
-	 */
-	public static function hook( string $suffix ): string {
-		return self::key() . '_' . $suffix;
-	}
 
 	/**
 	 * Reduce a namespace segment to a lowercase slug.

@@ -17,6 +17,14 @@ use PHPUnit\Framework\TestCase;
  * it. This scans the source for the literal forms and requires them to go
  * through {@see \ArrayPress\RegisterFlyouts\Utils\Runtime} instead.
  *
+ * Hooks are the exception, and deliberately so. They used to be derived the
+ * same way, which meant a bundled copy fired `acme_wp_flyout_before_save` —
+ * safe from collision and impossible for anyone to name, so the extension
+ * point existed only in theory. They are literal now and carry a scope
+ * instead: the manager's prefix, the flyout's id, or the component's type.
+ * That is the consumer's own namespace, which is what a hook name should be
+ * built from.
+ *
  * It reads source rather than exercising behaviour on purpose: the failure it
  * guards against is invisible with one plugin installed and only appears on a
  * site running two, which no unit test of this library can set up.
@@ -167,10 +175,39 @@ final class NoSharedRuntimeKeysTest extends TestCase {
 	/**
 	 * Hooks fired by one copy would otherwise reach every copy's listeners.
 	 */
-	public function test_hook_names_are_not_literals(): void {
-		$this->assertNoLiteral(
-			"/(?:do_action|apply_filters)\(\s*'([^']+)'/",
-			'Hook names'
+	public function test_every_hook_carries_a_scope(): void {
+		$unscoped = [];
+
+		foreach ( $this->sources() as $path => $source ) {
+
+			// Both quotings: a name built by interpolation and one built by
+			// concatenation are the same thing to a reader and to WordPress.
+			preg_match_all(
+				'/(?:do_action|apply_filters)\(\s*(?:"([^"]+)"|\'([^\']+)\'\s*(\.?))/',
+				$source,
+				$matches,
+				PREG_SET_ORDER
+			);
+
+			foreach ( $matches as $match ) {
+				$interpolated = '' !== ( $match[1] ?? '' );
+				$name         = $interpolated ? $match[1] : ( $match[2] ?? '' );
+				$concatenated = ! $interpolated && '.' === ( $match[3] ?? '' );
+
+				// A hole in the name is the scope.
+				if ( str_contains( $name, '{$' ) || $concatenated ) {
+					continue;
+				}
+
+				$unscoped[] = sprintf( '%s: %s', $path, $name );
+			}
+		}
+
+		$this->assertSame(
+			[],
+			$unscoped,
+			"Every hook must carry a manager prefix, a flyout id or a component type:\n\n"
+			. implode( "\n", $unscoped )
 		);
 	}
 

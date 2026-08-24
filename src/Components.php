@@ -260,10 +260,11 @@ class Components {
 	 *
 	 * @param string $type   Component type.
 	 * @param array  $config Component configuration.
+	 * @param string $prefix The manager's prefix, which scopes the filter.
 	 *
 	 * @return object|null Null when the type is not a component.
 	 */
-	public static function create( string $type, array $config ) {
+	public static function create( string $type, array $config, string $prefix = '' ) {
 		$component = self::get( $type );
 
 		if ( null === $component ) {
@@ -272,8 +273,9 @@ class Components {
 
 		$class = $component['class'];
 
-		$config = apply_filters( Runtime::hook( 'component_config' ), $config, $type, $class );
-		$config = apply_filters( "wp_flyout_component_{$type}_config", $config );
+		// Scoped by the manager as well as the type, so two plugins bundling
+		// this library do not filter each other's components.
+		$config = apply_filters( "wp_flyout_component_{$prefix}_{$type}_config", $config, $class );
 
 		return new $class( $config );
 	}

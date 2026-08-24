@@ -240,19 +240,35 @@ Components::register( 'shipping_label', [
 
 ## Hooks
 
+Every one carries a scope: `{prefix}` is the string you passed to
+`register_flyouts()`, `{id}` is a flyout's, `{type}` is a component's. That
+scope is what keeps two plugins bundling this library from filtering each
+other — the names themselves are literal, so they survive Strauss prefixing
+and are actually reachable from outside the copy that fires them.
+
 | Hook | When |
 | --- | --- |
-| `wp_flyout_register_config` | A flyout is registered. Also `wp_flyout_{prefix}_{id}_config` for one in particular. |
-| `wp_flyout_render_field` | Each field, before it renders. Also `wp_flyout_render_field_{key}`. |
-| `wp_flyout_before_render_fields` | The whole field set, before any of it renders. |
-| `wp_flyout_build_flyout` | The panel object, before its content is added. |
-| `wp_flyout_before_save` / `wp_flyout_after_save` | Around `save`, with the sanitized values. |
-| `wp_flyout_before_delete` / `wp_flyout_after_delete` | Around `delete`. |
-| `wp_flyout_component_config` | A component's configuration. Also `wp_flyout_component_{type}_config`. |
-| `wp_flyout_rest_capability` | The capability a REST request is checked against. |
+| `wp_flyout_register_config_{prefix}` | A flyout is registered. Also `wp_flyout_{prefix}_{id}_config` for one in particular. |
+| `wp_flyout_before_normalize_fields_{prefix}` / `wp_flyout_after_normalize_fields_{prefix}` | Around the field configuration being normalized. |
+| `wp_flyout_before_render_fields_{prefix}` | The whole field set, before any of it renders. |
+| `wp_flyout_render_field_{prefix}` | Each field, before it renders. Also `wp_flyout_render_field_{prefix}_{key}`. |
+| `wp_flyout_after_render_fields_{prefix}` | The rendered markup. |
+| `wp_flyout_build_flyout_{prefix}` | The panel object, before its content is added. |
+| `wp_flyout_before_save_{prefix}` / `wp_flyout_after_save_{prefix}` | Around `save`, with the sanitized values. |
+| `wp_flyout_before_delete_{prefix}` / `wp_flyout_after_delete_{prefix}` | Around `delete`. |
+| `wp_flyout_component_{prefix}_{type}_config` | A component's configuration. |
+| `wp_flyout_rest_capability_{prefix}` | The capability a REST request is checked against. |
+| `wp_flyout_classes_{id}` | A panel's own classes. |
+| `wp_flyout_before_header_{id}` / `wp_flyout_after_header_{id}` | Around a panel's header. |
 
-The `wp_flyout_` prefix is derived from the namespace, so a Strauss-prefixed copy fires its own hooks rather than
-answering yours.
+Most of the time you will not need any of them: the field configuration is an
+array, so the extension point you probably want is your own filter over it.
+
+```php
+register_flyout( 'shop_edit_product', [
+    'fields' => apply_filters( 'my_plugin_product_fields', [ /* ... */ ] ),
+] );
+```
 
 ## License
 

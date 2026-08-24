@@ -408,7 +408,7 @@ class Flyout {
         ];
 
         // Allow filtering classes
-        $classes = apply_filters( Runtime::hook( 'classes' ), $classes, $this->id, $this->config );
+        $classes = apply_filters( "wp_flyout_classes_{$this->id}", $classes, $this->config );
 
         ob_start();
         ?>
@@ -416,11 +416,11 @@ class Flyout {
             class="<?php echo esc_attr( implode( ' ', array_filter( $classes ) ) ); ?>"
             data-flyout-id="<?php echo esc_attr( $this->id ); ?>">
 
-            <?php do_action( Runtime::hook( 'before_header' ), $this->id, $this->config ); ?>
+            <?php do_action( "wp_flyout_before_header_{$this->id}", $this->config ); ?>
 
             <?php $this->render_header(); ?>
 
-            <?php do_action( Runtime::hook( 'after_header' ), $this->id, $this->config ); ?>
+            <?php do_action( "wp_flyout_after_header_{$this->id}", $this->config ); ?>
 
             <?php if ( $this->has_tabs() ) : ?>
                 <?php $this->render_tabs(); ?>

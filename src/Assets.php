@@ -103,11 +103,6 @@ class Assets {
 			'style'  => 'css/components/accordion.css',
 			'deps'   => [],
 		],
-		'card-choice'    => [
-			'script' => '',
-			'style'  => 'css/components/card-choice.css',
-			'deps'   => [],
-		],
 		'timeline'       => [
 			'script' => '',
 			'style'  => 'css/components/timeline.css',

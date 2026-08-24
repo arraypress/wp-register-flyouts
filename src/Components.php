@@ -22,7 +22,6 @@ use ArrayPress\RegisterFlyouts\Components\ActionMenu;
 use ArrayPress\RegisterFlyouts\Components\Articles;
 use ArrayPress\RegisterFlyouts\Components\PaymentMethod;
 use ArrayPress\RegisterFlyouts\Components\PriceSummary;
-use ArrayPress\RegisterFlyouts\Components\CardChoice;
 use ArrayPress\RegisterFlyouts\Components\FormField;
 use ArrayPress\RegisterFlyouts\Components\Notes;
 use ArrayPress\RegisterFlyouts\Components\LineItems;
@@ -252,13 +251,6 @@ class Components {
 	 */
 	private static function register_form_components(): void {
 		// ---- Selection Components ----
-		self::register( 'card_choice', [
-			'class'       => CardChoice::class,
-			'data_fields' => [ 'options', 'value' ],
-			'asset'       => 'card-choice',
-			'category'    => 'form',
-			'description' => 'Card-style radio/checkbox selections',
-		] );
 
 		// ---- Media Components ----
 

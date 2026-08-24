@@ -60,7 +60,6 @@ class FormField implements Renderable {
 	 */
 	private const TYPE_ALIASES = [
 		'ajax_select' => 'ajax',
-		'card_choice' => 'radio',
 
 		// Three lists this library drew by hand — add, remove and reorder,
 		// three times over — which the kit now has as repeaters with their

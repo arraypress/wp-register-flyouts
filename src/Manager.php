@@ -660,7 +660,22 @@ class Manager {
 			return false;
 		}
 
-		return in_array( $hook_suffix, $this->admin_pages, true );
+		if ( in_array( $hook_suffix, $this->admin_pages, true ) ) {
+			return true;
+		}
+
+		// A page slug, which is what a consumer thinks they are giving. The
+		// hook suffix of a submenu page is built by WordPress out of the
+		// parent's slug and is not something anyone knows without printing
+		// it — 'apfd_demo_page_apfd-table' for a page registered as
+		// 'apfd-table' under a post type. Matching against the slug too means
+		// the obvious thing works, instead of failing silently: an unmatched
+		// page renders no flyout at all, so the trigger button is there and
+		// pressing it does nothing.
+		// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- identifying the screen, not acting.
+		$page = isset( $_GET['page'] ) ? sanitize_key( wp_unslash( $_GET['page'] ) ) : '';
+
+		return '' !== $page && in_array( $page, $this->admin_pages, true );
 	}
 
 	/**

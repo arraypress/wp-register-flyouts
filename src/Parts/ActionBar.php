@@ -14,11 +14,10 @@ declare( strict_types=1 );
 
 namespace ArrayPress\RegisterFlyouts\Parts;
 
+use ArrayPress\FieldKit\Support\Button;
 use ArrayPress\RegisterFlyouts\Interfaces\Renderable;
-use ArrayPress\RegisterFlyouts\Traits\HtmlAttributes;
 
 class ActionBar implements Renderable {
-    use HtmlAttributes;
 
     /**
      * Component configuration
@@ -108,34 +107,25 @@ class ActionBar implements Renderable {
      * @param array $action Action configuration
      */
     private function render_button( array $action ): void {
-        $type    = $action['type'];
-        $classes = [ 'button', 'button-' . $action['style'] ];
+        $attributes = (array) $action['attrs'];
 
-        if ( ! empty( $action['class'] ) ) {
-            $classes[] = $action['class'];
-        }
-
-        $attrs = [
-			'type'  => $type === 'submit' ? 'submit' : 'button',
-			'class' => implode( ' ', $classes ),
-        ];
-
-        // Add custom attributes
-        foreach ( $action['attrs'] as $key => $value ) {
-            $attrs[ $key ] = $value;
-        }
-
-        // Add onclick if specified
         if ( ! empty( $action['onclick'] ) ) {
-            $attrs['onclick'] = $action['onclick'];
+            $attributes['onclick'] = $action['onclick'];
         }
-        ?>
-        <button <?php echo $this->build_attributes( $attrs ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>>
-            <?php if ( ! empty( $action['icon'] ) ) : ?>
-                <span class="dashicons dashicons-<?php echo esc_attr( $action['icon'] ); ?>"></span>
-            <?php endif; ?>
-            <?php echo esc_html( $action['text'] ); ?>
-        </button>
-        <?php
+
+        $html = Button::render(
+            [
+                'label'      => $action['text'],
+                'variant'    => $action['style'],
+                'icon'       => $action['icon'],
+                'type'       => $action['type'],
+                'class'      => $action['class'],
+                'attributes' => $attributes,
+            ]
+        );
+
+        // The kit escapes the label and the attributes; the rest is its own
+        // markup.
+        echo $html; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
     }
 }

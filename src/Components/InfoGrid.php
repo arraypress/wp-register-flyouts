@@ -15,10 +15,9 @@ declare( strict_types=1 );
 namespace ArrayPress\RegisterFlyouts\Components;
 
 use ArrayPress\RegisterFlyouts\Interfaces\Renderable;
-use ArrayPress\RegisterFlyouts\Traits\Formatter;
+use ArrayPress\FieldKit\Support\Display;
 
 class InfoGrid implements Renderable {
-    use Formatter;
 
     /**
      * Component configuration
@@ -97,20 +96,18 @@ class InfoGrid implements Renderable {
             return;
         }
 
-        $value = $item['value'] ?? '';
-
-        if ( empty( $value ) ) {
-            $value = $this->format_value( $this->config['empty_value'] );
-        } else {
-            $value = esc_html( $value );
-        }
+        // Through the kit, which decides what "empty" is and escapes what it
+        // prints. Both were wrong here: `empty()` made a count of nought
+        // render as a dash, and escaping the result a second time printed the
+        // placeholder's own markup as visible tags.
+        $value = Display::text( $item['value'] ?? '', (string) $this->config['empty_value'] );
         ?>
         <div class="wp-flyout-info-item">
             <div class="wp-flyout-info-label">
                 <?php echo esc_html( $item['label'] ); ?>
             </div>
             <div class="wp-flyout-info-value">
-                <?php echo esc_attr( $value ); ?>
+                <?php echo $value; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
             </div>
         </div>
         <?php

@@ -70,7 +70,7 @@
 }
 
 .refund-summary-refunded {
-    color: #d63638;
+    color: var(--wp-flyout-error);
 }
 
 .refund-summary-sep {
@@ -88,7 +88,7 @@
     text-transform: uppercase;
     letter-spacing: 0.5px;
     background: #fce8e8;
-    color: #d63638;
+    color: var(--wp-flyout-error);
 }
 
 .wp-flyout-refund-form.is-fully-refunded {

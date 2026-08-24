@@ -147,15 +147,12 @@
          * Set button loading state
          */
         setButtonState: function ($button, loading) {
-            if (loading) {
-                $button.prop('disabled', true).addClass('loading');
-                $button.find('.button-text, .dashicons:not(.spin)').hide();
-                $button.find('.button-spinner').show();
-            } else {
-                $button.prop('disabled', false).removeClass('loading');
-                $button.find('.button-text, .dashicons:not(.spin)').show();
-                $button.find('.button-spinner').hide();
-            }
+            // Core's own convention: the spinner sits beside the label and is
+            // switched on with .is-active, the way Save Changes does it. The
+            // label used to be hidden and replaced by the spinner, which
+            // meant a button whose width changed the moment it was pressed.
+            $button.prop('disabled', loading).toggleClass('is-busy', loading);
+            $button.find('.spinner').toggleClass('is-active', loading);
         },
 
         /**

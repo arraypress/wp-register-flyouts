@@ -82,15 +82,15 @@
 
 /* Danger items */
 .action-menu-item.is-danger {
-    color: #d63638;
+    color: var(--wp-flyout-error);
 }
 
 .action-menu-item.is-danger:hover {
-    background: #fcf0f1;
+    background: var(--wp-flyout-error-bg);
 }
 
 .action-menu-item.is-danger .dashicons {
-    color: #d63638;
+    color: var(--wp-flyout-error);
 }
 
 /* Disabled items */

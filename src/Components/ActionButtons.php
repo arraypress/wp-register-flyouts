@@ -15,6 +15,7 @@ declare( strict_types=1 );
 
 namespace ArrayPress\RegisterFlyouts\Components;
 
+use ArrayPress\FieldKit\Support\Button;
 use ArrayPress\RegisterFlyouts\Interfaces\Renderable;
 
 class ActionButtons implements Renderable {
@@ -95,7 +96,7 @@ class ActionButtons implements Renderable {
         $defaults = [
 			'text'    => '',
 			'action'  => '',
-			'style'   => 'secondary', // primary, secondary, link, danger
+			'style'   => 'secondary', // primary, secondary, link, destructive
 			'icon'    => '',
 			'data'    => [],
 			'confirm' => '',
@@ -108,40 +109,37 @@ class ActionButtons implements Renderable {
             return;
         }
 
-        $classes = [
-			'button',
-			'button-' . $button['style'],
-			'wp-flyout-action-btn',
-        ];
-
-        // Build data attributes — no per-button nonce, REST nonce is global.
-        $data_attrs = [
-			'action' => $button['action'],
-        ];
+        // No per-button nonce: the REST one is global.
+        $data = [ 'action' => $button['action'] ];
 
         if ( ! empty( $button['confirm'] ) ) {
-            $data_attrs['confirm'] = $button['confirm'];
+            $data['confirm'] = $button['confirm'];
         }
 
-        // Add custom data attributes.
         foreach ( $button['data'] as $key => $value ) {
-            $data_attrs[ $key ] = $value;
+            $data[ $key ] = $value;
         }
-        ?>
-        <button type="button"
-                class="<?php echo esc_attr( implode( ' ', $classes ) ); ?>"
-                <?php foreach ( $data_attrs as $key => $value ) : ?>
-                    data-<?php echo esc_attr( $key ); ?>="<?php echo esc_attr( (string) $value ); ?>"
-                <?php endforeach; ?>
-                <?php echo ! $button['enabled'] ? 'disabled' : ''; ?>>
-            <?php if ( $button['icon'] ) : ?>
-                <span class="dashicons dashicons-<?php echo esc_attr( $button['icon'] ); ?>"></span>
-            <?php endif; ?>
-            <span class="button-text"><?php echo esc_html( $button['text'] ); ?></span>
-            <span class="button-spinner" style="display:none;">
-				<span class="dashicons dashicons-update spin"></span>
-			</span>
-        </button>
-        <?php
+
+        $attributes = [];
+
+        foreach ( $data as $key => $value ) {
+            $attributes[ 'data-' . $key ] = (string) $value;
+        }
+
+        $html = Button::render(
+            [
+                'label'      => $button['text'],
+                'variant'    => $button['style'],
+                'icon'       => $button['icon'],
+                'class'      => 'wp-flyout-action-btn',
+                'disabled'   => ! $button['enabled'],
+                'spinner'    => true,
+                'attributes' => $attributes,
+            ]
+        );
+
+        // The kit escapes the label and the attributes; the rest is its own
+        // markup.
+        echo $html; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
     }
 }

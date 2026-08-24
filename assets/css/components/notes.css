@@ -75,7 +75,7 @@
 }
 
 .note-header button[data-action="delete-note"]:hover {
-    color: var(--wp-flyout-danger);
+    color: var(--wp-flyout-error);
 }
 
 .note-header .dashicons {

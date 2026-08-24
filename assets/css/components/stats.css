@@ -83,11 +83,11 @@
 }
 
 .wp-flyout-stats .stat-change.trend-up {
-    color: #00a32a;
+    color: var(--wp-flyout-success);
 }
 
 .wp-flyout-stats .stat-change.trend-down {
-    color: #d63638;
+    color: var(--wp-flyout-error);
 }
 
 .wp-flyout-stats .stat-footer {

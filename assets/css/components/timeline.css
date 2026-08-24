@@ -69,8 +69,8 @@
 
 /* Status types */
 .timeline-item-success .timeline-badge {
-    border-color: #00a32a;
-    background: #00a32a;
+    border-color: var(--wp-flyout-success);
+    background: var(--wp-flyout-success);
 }
 
 .timeline-item-info .timeline-badge {
@@ -79,13 +79,13 @@
 }
 
 .timeline-item-warning .timeline-badge {
-    border-color: #dba617;
-    background: #dba617;
+    border-color: var(--wp-flyout-warning);
+    background: var(--wp-flyout-warning);
 }
 
 .timeline-item-error .timeline-badge {
-    border-color: #d63638;
-    background: #d63638;
+    border-color: var(--wp-flyout-error);
+    background: var(--wp-flyout-error);
 }
 
 .timeline-item-success .timeline-badge .dashicons,

@@ -15,10 +15,9 @@ declare( strict_types=1 );
 namespace ArrayPress\RegisterFlyouts\Components;
 
 use ArrayPress\RegisterFlyouts\Interfaces\Renderable;
-use ArrayPress\RegisterFlyouts\Traits\Formatter;
+use ArrayPress\FieldKit\Support\Display;
 
 class DataTable implements Renderable {
-    use Formatter;
 
     /**
      * Component configuration
@@ -145,16 +144,17 @@ class DataTable implements Renderable {
         $class    = is_array( $column ) ? ( $column['class'] ?? '' ) : '';
         $callback = is_array( $column ) ? ( $column['callback'] ?? null ) : null;
 
-        if ( is_callable( $callback ) ) {
-            $value = call_user_func( $callback, $value, $row );
-        } elseif ( empty( $value ) ) {
-            $value = $this->format_value( $this->config['empty_value'] );
-        } else {
-            $value = esc_html( $value );
-        }
+        // A callback returns markup of its own; anything else goes through
+        // the kit, which decides what "empty" is and escapes what it prints.
+        // Both were wrong here: `empty()` made a count of nought render as a
+        // dash, and esc_attr() on an already-escaped string printed the
+        // placeholder's own markup as visible tags.
+        $value = is_callable( $callback )
+            ? (string) call_user_func( $callback, $value, $row )
+            : Display::text( $value, (string) $this->config['empty_value'] );
         ?>
         <td <?php echo $class ? 'class="' . esc_attr( $class ) . '"' : ''; ?>>
-            <?php echo esc_attr( $value ); ?>
+            <?php echo $value; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
         </td>
         <?php
     }

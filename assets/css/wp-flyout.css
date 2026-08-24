@@ -45,9 +45,10 @@
     --wp-flyout-primary-active: var(--wp-admin-theme-color-darker-20, #0a4b78);
     --wp-flyout-focus-width: var(--wp-admin-border-width-focus, 2px);
     --wp-flyout-success: #00a32a;
+    --wp-flyout-success-dark: #008a20;
     --wp-flyout-warning: #dba617;
     --wp-flyout-error: #d63638;
-    --wp-flyout-danger: #d63638;
+    --wp-flyout-error-bg: #fcf0f1;
     --wp-flyout-info: #72aee6;
 }
 
@@ -695,7 +696,7 @@
 
 .entity-header-title .badge-success {
     background: #e6f5e8;
-    color: #008a20;
+    color: var(--wp-flyout-success-dark);
 }
 
 .entity-header-title .badge-info {
@@ -711,7 +712,7 @@
 .entity-header-title .badge-error,
 .entity-header-title .badge-danger {
     background: #fce8e8;
-    color: var(--wp-flyout-danger);
+    color: var(--wp-flyout-error);
 }
 
 .entity-header-title .badge-primary {
@@ -835,7 +836,7 @@
 }
 
 .image-picker .image-picker-remove:hover {
-    background: var(--wp-flyout-danger);
+    background: var(--wp-flyout-error);
     color: #fff;
 }
 
@@ -986,7 +987,7 @@
 }
 
 .wp-flyout-alert.alert-error {
-    border-color: var(--wp-flyout-danger);
+    border-color: var(--wp-flyout-error);
     background: #fef2f2;
 }
 

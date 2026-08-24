@@ -68,6 +68,6 @@
 
 /* Brief visual feedback on generate */
 .code-generate-btn.is-generated {
-    color: #00a32a;
+    color: var(--wp-flyout-success);
     background: #edfaef;
 }

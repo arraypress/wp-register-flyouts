@@ -266,7 +266,7 @@
 }
 
 .column-actions button[data-action="remove-item"]:hover {
-    color: #d63638;
+    color: var(--wp-flyout-error);
 }
 
 .column-actions button[data-action="remove-item"] .dashicons {

@@ -29,20 +29,6 @@ use ArrayPress\RegisterFlyouts\Utils\Runtime;
 class Assets {
 
 	/**
-	 * Handle for the bundled Select2 build.
-	 *
-	 * Deliberately *not* derived per build: registration is guarded, so the
-	 * first library to register wins and the rest reuse it. One copy of a
-	 * third-party dependency on the page is the goal, and it is the inverse of
-	 * the per-build derivation applied to everything this library owns.
-	 *
-	 * Namespaced rather than the bare "select2" so the sharing is limited to
-	 * our own libraries — inheriting whatever version an unrelated plugin
-	 * happened to register first is the failure this avoids.
-	 */
-	private const SELECT2_HANDLE = 'arraypress-select2';
-
-	/**
 	 * Core CSS file
 	 *
 	 * Single consolidated stylesheet covering flyout shell, layout,
@@ -91,12 +77,7 @@ class Assets {
 		'line-items'     => [
 			'script' => 'js/components/line-items.js',
 			'style'  => 'css/components/line-items.css',
-			'deps'   => [ 'wp-flyout-ajax-select' ],
-		],
-		'ajax-select'    => [
-			'script' => 'js/components/ajax-select.js',
-			'style'  => 'css/components/ajax-select.css',
-			'deps'   => [ self::SELECT2_HANDLE ],
+			'deps'   => [],
 		],
 		'accordion'      => [
 			'script' => 'js/components/accordion.js',
@@ -200,9 +181,6 @@ class Assets {
 		$base_file = __FILE__;
 		$version   = defined( 'WP_DEBUG' ) && WP_DEBUG ? (string) time() : '1.0.0';
 
-		// Register Select2 if not already registered
-		self::register_select2( $version );
-
 		// Register core CSS (single consolidated file)
 		wp_register_composer_style(
 			Runtime::handle(),
@@ -244,36 +222,6 @@ class Assets {
 	}
 
 	/**
-	 * Register Select2 assets if not already available
-	 *
-	 * @param string $version Version string for cache busting
-	 *
-	 * @return void
-	 * @since 2.0.0
-	 */
-	private static function register_select2( string $version ): void {
-		if ( ! wp_script_is( self::SELECT2_HANDLE, 'registered' ) ) {
-			wp_register_composer_script(
-				self::SELECT2_HANDLE,
-				__FILE__,
-				'js/libraries/select2.min.js',
-				[ 'jquery' ],
-				$version
-			);
-		}
-
-		if ( ! wp_style_is( self::SELECT2_HANDLE, 'registered' ) ) {
-			wp_register_composer_style(
-				self::SELECT2_HANDLE,
-				__FILE__,
-				'css/libraries/select2.min.css',
-				[],
-				$version
-			);
-		}
-	}
-
-	/**
 	 * Register component assets
 	 *
 	 * @param string $base_file Base file path for asset resolution
@@ -304,11 +252,6 @@ class Assets {
 			// Register component style if exists
 			if ( ! empty( $config['style'] ) ) {
 				$style_deps = [ self::$last_handles['style'] ];
-
-				// Add select2 CSS as dependency for ajax-select
-				if ( $name === 'ajax-select' ) {
-					$style_deps[] = self::SELECT2_HANDLE;
-				}
 
 				wp_register_composer_style(
 					$handle,
@@ -369,9 +312,9 @@ class Assets {
 						self::enqueue_component( $dep_component );
 					}
 				} else {
-					// Enqueue WordPress/external dependencies (includes select2)
+					// Enqueue WordPress and external dependencies
 					wp_enqueue_script( $dep );
-					// Also enqueue matching style if registered (e.g. select2 CSS)
+					// Also enqueue a matching style where one is registered
 					if ( wp_style_is( $dep, 'registered' ) ) {
 						wp_enqueue_style( $dep );
 					}

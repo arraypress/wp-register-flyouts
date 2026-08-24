@@ -96,30 +96,6 @@ class RestApi {
 			'args'                => self::get_common_args(),
 		] );
 
-		// Search for ajax_select fields.
-		register_rest_route( self::rest_namespace(), '/search', [
-			'methods'             => 'GET',
-			'callback'            => [ __CLASS__, 'handle_search' ],
-			'permission_callback' => [ __CLASS__, 'check_permission' ],
-			'args'                => array_merge( self::get_common_args(), [
-				'field_key' => [
-					'required'          => true,
-					'type'              => 'string',
-					'sanitize_callback' => 'sanitize_key',
-				],
-				'term'      => [
-					'required' => false,
-					'type'     => 'string',
-					'default'  => '',
-				],
-				'include'   => [
-					'required' => false,
-					'type'     => 'string',
-					'default'  => '',
-				],
-			] ),
-		] );
-
 		// Action button/menu callbacks.
 		register_rest_route( self::rest_namespace(), '/action', [
 			'methods'             => 'POST',
@@ -442,87 +418,6 @@ class RestApi {
 	}
 
 	/**
-	 * Handle ajax_select search request.
-	 *
-	 * Supports both search (user typing) and hydration (resolving saved IDs to labels).
-	 * Uses the unified callback pattern: callback( string $search, ?array $ids )
-	 *
-	 * @param WP_REST_Request $request Full request object.
-	 *
-	 * @return WP_REST_Response|WP_Error
-	 */
-	public static function handle_search( WP_REST_Request $request ) {
-		$manager = self::resolve_manager( $request );
-		if ( is_wp_error( $manager ) ) {
-			return $manager;
-		}
-
-		$config = self::resolve_flyout( $manager, $request );
-		if ( is_wp_error( $config ) ) {
-			return $config;
-		}
-
-		$field_key = $request->get_param( 'field_key' );
-		$term      = sanitize_text_field( $request->get_param( 'term' ) );
-		$include   = $request->get_param( 'include' );
-
-		// Find the field in the flat fields array.
-		$field = self::find_field( $config['fields'], $field_key );
-
-		if ( ! $field ) {
-			return new WP_Error(
-				'flyout_field_not_found',
-				/* translators: %s: field key */
-				sprintf( __( 'Field "%s" not found.', 'arraypress' ), $field_key ),
-				[ 'status' => 404 ]
-			);
-		}
-
-		// No derivative-type resolution here any more. `post`, `taxonomy` and
-		// `user` are the kit's types now and are searched through the kit's
-		// own endpoint; what still reaches this one is a component with a
-		// search of its own — line items — or a consumer's own callback.
-
-		if ( empty( $field['callback'] ) || ! is_callable( $field['callback'] ) ) {
-			return new WP_Error(
-				'flyout_search_no_callback',
-				/* translators: %s: field key */
-				sprintf( __( 'No search callback defined for field "%s".', 'arraypress' ), $field_key ),
-				[ 'status' => 500 ]
-			);
-		}
-
-		$ids = null;
-		if ( ! empty( $include ) ) {
-			$raw_ids = is_string( $include ) ? explode( ',', $include ) : (array) $include;
-			$ids     = array_map( 'absint', array_filter( $raw_ids ) );
-			$term    = '';
-		}
-
-		$result = call_user_func( $field['callback'], $term, $ids );
-
-		if ( is_wp_error( $result ) ) {
-			return $result;
-		}
-
-		// Normalize to Select2 format: [ { id, text }, ... ]
-		$formatted = [];
-		if ( is_array( $result ) ) {
-			foreach ( $result as $value => $label ) {
-				$formatted[] = [
-					'id'   => (string) $value,
-					'text' => (string) $label,
-				];
-			}
-		}
-
-		return new WP_REST_Response( [
-			'success' => true,
-			'results' => $formatted,
-		] );
-	}
-
-	/**
 	 * Handle action button/menu callback.
 	 *
 	 * @param WP_REST_Request $request Full request object.
@@ -583,30 +478,6 @@ class RestApi {
 
 
 	/**
-	 * Find a field configuration by key within the flat fields array.
-	 *
-	 * @param array  $fields    Flat fields array from flyout config.
-	 * @param string $field_key Field key to find.
-	 *
-	 * @return array|null Field config or null if not found.
-	 */
-	private static function find_field( array $fields, string $field_key ): ?array {
-		// Direct key match.
-		if ( isset( $fields[ $field_key ] ) ) {
-			return $fields[ $field_key ];
-		}
-
-		// Match by 'name' attribute (field key may differ from name).
-		foreach ( $fields as $key => $field ) {
-			if ( ( $field['name'] ?? $key ) === $field_key ) {
-				return $field;
-			}
-		}
-
-		return null;
-	}
-
-	/**
 	 * Find an action callback by action key within the fields array.
 	 *
 	 * Searches action_buttons, action_menu, and notes field types for matching action keys.
@@ -617,14 +488,21 @@ class RestApi {
 	 * @return callable|null Callback or null if not found.
 	 */
 	private static function find_action_callback( array $fields, string $action_key ): ?callable {
+		// An empty key matches nothing. `required` on the route argument only
+		// rejects a *missing* parameter, so an empty string arrives here — and
+		// used to match the first field declaring no action at all, whose
+		// `callback` on a searching field is a search rather than an action.
+		if ( '' === $action_key ) {
+			return null;
+		}
+
 		foreach ( $fields as $field ) {
 			$type = $field['type'] ?? '';
 
 			// Direct callback on field (e.g. refund_form with action + callback).
-			if ( ! empty( $field['callback'] ) && is_callable( $field['callback'] ) ) {
-				if ( ( $field['action'] ?? '' ) === $action_key ) {
-					return $field['callback'];
-				}
+			if ( ! empty( $field['action'] ) && ( $field['action'] ?? '' ) === $action_key
+				&& ! empty( $field['callback'] ) && is_callable( $field['callback'] ) ) {
+				return $field['callback'];
 			}
 
 			// Convention-based: {action_key}_callback (e.g. add_callback, delete_callback).

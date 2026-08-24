@@ -42,7 +42,7 @@
 | `number`                                          | Numeric input with min/max/step                        |
 | `textarea`                                        | Multi-line text                                        |
 | `select`                                          | Dropdown (single or multi)                             |
-| `ajax_select`                                     | Select2 searchable dropdown (single, multi, or tags)   |
+| `ajax_select`                                     | Searchable dropdown backed by a callback of your own   |
 | `post`                                            | Shortcut for ajax_select with post search callback     |
 | `taxonomy`                                        | Shortcut for ajax_select with taxonomy search callback |
 | `user`                                            | Shortcut for ajax_select with user search callback     |

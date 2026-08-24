@@ -57,6 +57,5 @@
   - [JavaScript Events](advanced/javascript-events.md)
   - [Assets](advanced/assets.md)
   - [Registry](advanced/registry.md)
-  - [Search Callbacks](advanced/search-callbacks.md)
   - [Custom Components](advanced/custom-components.md)
   - [Reference Summary](advanced/reference.md)

@@ -43,4 +43,34 @@ if ( ! function_exists( 'has_filter' ) ) {
 	}
 }
 
+/*
+ * The handful core provides that the kit's stubs have no reason to: the kit
+ * renders fields, and these are what the *components* around them call.
+ */
+if ( ! function_exists( 'wp_parse_args' ) ) {
+	function wp_parse_args( $args, $defaults = [] ) {
+		return array_merge( $defaults, (array) $args );
+	}
+}
+
+if ( ! function_exists( 'wp_generate_uuid4' ) ) {
+	function wp_generate_uuid4() {
+		// Not random — a test that renders twice wants the same markup twice,
+		// and nothing here depends on uniqueness across a process.
+		return '00000000-0000-4000-8000-000000000000';
+	}
+}
+
+if ( ! function_exists( 'esc_url' ) ) {
+	function esc_url( $url ) {
+		return esc_url_raw( $url );
+	}
+}
+
+if ( ! function_exists( 'esc_currency_e' ) ) {
+	function esc_currency_e( $amount, $currency = 'USD' ) {
+		echo esc_html( number_format_i18n( (int) $amount / 100, 2 ) );
+	}
+}
+
 require_once dirname( __DIR__ ) . '/vendor/autoload.php';

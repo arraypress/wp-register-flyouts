@@ -17,6 +17,8 @@ declare( strict_types=1 );
 namespace ArrayPress\RegisterFlyouts;
 
 use ArrayPress\FieldKit\Context\ObjectContext;
+use ArrayPress\FieldKit\Search\CallbackSource;
+use ArrayPress\FieldKit\Search\Sources;
 use ArrayPress\FieldKit\FieldSet;
 use ArrayPress\FieldKit\Assets as KitAssets;
 use ArrayPress\FieldKit\Registry as KitRegistry;
@@ -156,10 +158,84 @@ class Manager {
 			);
 		}
 
+		// Every field that searches, named and registered here rather than
+		// when the panel renders. The request that searches is not the
+		// request that rendered — a combobox asks the endpoint on its own —
+		// so a source registered while drawing the panel does not exist by
+		// the time anyone types into it.
+		$config['fields'] = $this->register_search_sources( $id, (array) $config['fields'] );
+
 		// Store flyout configuration.
 		$this->flyouts[ $id ] = $config;
 
 		return $this;
+	}
+
+	/**
+	 * Whether a field's `callback` is a search.
+	 *
+	 * It is not always: this library has spelled several things `callback`,
+	 * and an action field's is a handler that runs when a button is pressed.
+	 * Registering one as a search source would put it behind a GET endpoint
+	 * anyone with `edit_posts` could call with any term — so a bare
+	 * `callback` counts only on a field that searches by definition.
+	 *
+	 * @param array<string, mixed> $field Field configuration.
+	 *
+	 * @return bool
+	 */
+	private static function searches( array $field ): bool {
+		// Named for what it is, so any field type can have one.
+		if ( isset( $field['search_callback'] ) ) {
+			return true;
+		}
+
+		// An action's handler, which is not one.
+		if ( ! empty( $field['action'] ) ) {
+			return false;
+		}
+
+		// A component with a search embedded in it — line items and its
+		// product picker.
+		if ( ! empty( $field['search_key'] ) ) {
+			return true;
+		}
+
+		// And the field type whose whole purpose is a callback-backed search,
+		// under both spellings.
+		return in_array( (string) ( $field['type'] ?? '' ), [ 'ajax_select', 'ajax' ], true );
+	}
+
+	/**
+	 * Register a search source for every field that has one.
+	 *
+	 * The name is written back onto the field, which is what both halves
+	 * read: a component renders it into its own picker, and the field set
+	 * hands it to the kit rather than deriving a name of its own.
+	 *
+	 * @param string                              $flyout_id The flyout.
+	 * @param array<string, array<string, mixed>> $fields    Field configuration.
+	 *
+	 * @return array<string, array<string, mixed>>
+	 */
+	private function register_search_sources( string $flyout_id, array $fields ): array {
+		foreach ( $fields as $key => $field ) {
+			if ( ! is_array( $field ) ) {
+				continue;
+			}
+
+			$name = $this->register_search_source(
+				$flyout_id,
+				(string) ( $field['search_key'] ?? $field['name'] ?? $key ),
+				$field
+			);
+
+			if ( '' !== $name ) {
+				$fields[ $key ]['search_source'] = $name;
+			}
+		}
+
+		return $fields;
 	}
 
 	// =========================================================================
@@ -298,14 +374,45 @@ class Manager {
 	// =========================================================================
 
 	/**
-	 * Render fields from configuration.
+	 * Register a kit search source for a field that searches.
 	 *
-	 * @param array $fields Field configurations.
-	 * @param mixed $data   Data object or array for field population.
+	 * The name is the manager's, the flyout's and the field's. The field set
+	 * would otherwise derive one from the field key alone — this library
+	 * gives it no input prefix, because the prefix is also what the form
+	 * submits under — and two flyouts each with a `customer` field would name
+	 * the same source, the second registration answering the first's
+	 * searches.
 	 *
-	 * @return string Generated HTML.
-	 * @since 1.0.0
+	 * @param string               $flyout_id The flyout.
+	 * @param string               $field_key The field.
+	 * @param array<string, mixed> $field     Field configuration.
+	 *
+	 * @return string The source's name, or empty when it has no callback.
 	 */
+	public function register_search_source( string $flyout_id, string $field_key, array $field ): string {
+		if ( ! self::searches( $field ) ) {
+			return '';
+		}
+
+		$callback = $field['search_callback'] ?? $field['callback'] ?? null;
+
+		if ( ! is_callable( $callback ) ) {
+			return '';
+		}
+
+		$name = sprintf( '%s-%s-%s', $this->prefix, $flyout_id, $field_key );
+
+		Sources::shared()->register(
+			new CallbackSource(
+				$name,
+				$callback,
+				(string) ( $field['search_capability'] ?? 'edit_posts' )
+			)
+		);
+
+		return $name;
+	}
+
 	/**
 	 * Sanitize a submission against this flyout's own fields.
 	 *
@@ -482,8 +589,10 @@ class Manager {
 		// What is left here is the context two components cannot work out for
 		// themselves: which manager and which flyout they belong to.
 		if ( 'line_items' === ( $field['type'] ?? '' ) ) {
+			$flyout_id = $this->get_flyout_id_for_field( $field_key );
+
 			$field['manager'] = $this->prefix;
-			$field['flyout']  = $this->get_flyout_id_for_field( $field_key );
+			$field['flyout']  = $flyout_id;
 		}
 
 		return $field;

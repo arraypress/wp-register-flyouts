@@ -1,6 +1,8 @@
 # Line Items
 
-Add/remove line items with AJAX product search. Uses Select2 for the search dropdown with two separate callbacks: one for searching products and one for fetching full product details when selected.
+Add and remove line items, with a product search built in. Two callbacks: one searches, and one returns the full details of whatever was picked.
+
+The picker is the field kit's combobox, searching through the kit's endpoint — the same control as every other search in the admin.
 ```php
 'order_items' => [
     'type'            => 'line_items',

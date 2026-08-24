@@ -332,9 +332,12 @@
 }
 
 /*
- * Input styling — excludes Select2 internals.
- * Select2 creates input/textarea elements inside .select2-container
- * that must NOT inherit our field sizing/padding.
+ * Input styling, for the controls a flyout renders itself.
+ *
+ * The child combinator is what keeps it off the kit's: a combobox's own
+ * input sits inside a wrapper, styled by the kit. The select exclusion is
+ * for the one the kit leaves in place behind an enhanced control — styling
+ * it here would show through for the moment before the script runs.
  */
 .wp-flyout-field > input[type="text"],
 .wp-flyout-field > input[type="email"],
@@ -344,7 +347,7 @@
 .wp-flyout-field > input[type="date"],
 .wp-flyout-field > input[type="password"],
 .wp-flyout-field > textarea,
-.wp-flyout-field > select:not(.wp-flyout-ajax-select) {
+.wp-flyout-field > select:not(.field-kit__select--enhanced) {
     width: 100%;
     padding: 8px;
     border: 1px solid #8c8f94;
@@ -356,7 +359,7 @@
 
 .wp-flyout-field > input:focus,
 .wp-flyout-field > textarea:focus,
-.wp-flyout-field > select:not(.wp-flyout-ajax-select):focus {
+.wp-flyout-field > select:not(.field-kit__select--enhanced):focus {
     border-color: var(--wp-flyout-primary);
     box-shadow: 0 0 0 1px var(--wp-flyout-primary);
     outline: 2px solid transparent;
@@ -367,7 +370,7 @@
     min-height: 80px;
 }
 
-.wp-flyout-field > select:not(.wp-flyout-ajax-select) {
+.wp-flyout-field > select:not(.field-kit__select--enhanced) {
     max-width: none;
     appearance: none;
     background-image: url('data:image/svg+xml;charset=UTF-8,%3csvg xmlns="http://www.w3.org/2000/svg" width="14" height="8" viewBox="0 0 14 8"%3e%3cpath fill="%23646970" d="M7 8L0 0h14L7 8z"/%3e%3c/svg%3e');

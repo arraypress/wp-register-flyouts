@@ -80,13 +80,6 @@ class FormField implements Renderable {
 	}
 
 	/**
-	 * Normalize the configuration.
-	 *
-	 * @param array<string, mixed> $config Raw configuration.
-	 *
-	 * @return array<string, mixed>
-	 */
-	/**
 	 * Translate one flyout field configuration into the kit's.
 	 *
 	 * Public and static because the flyout renders through a field set now:
@@ -102,6 +95,15 @@ class FormField implements Renderable {
 		$type = (string) ( $config['type'] ?? 'text' );
 
 		$config['type'] = self::TYPE_ALIASES[ $type ] ?? $type;
+
+		// This library has always spelled a search callback `callback`, and
+		// the kit spells it `search_callback` — the name it registers a
+		// search source under. Without the translation an ajax field in a
+		// flyout rendered a combobox pointed at a source nothing had ever
+		// registered, and every search came back empty.
+		if ( isset( $config['callback'] ) && ! isset( $config['search_callback'] ) ) {
+			$config['search_callback'] = $config['callback'];
+		}
 
 		// These three carry their rows in configuration under `items`, where
 		// the kit reads a repeater's rows from the context. Handed over as
@@ -171,6 +173,13 @@ class FormField implements Renderable {
 		);
 	}
 
+	/**
+	 * Normalize the configuration.
+	 *
+	 * @param array<string, mixed> $config Raw configuration.
+	 *
+	 * @return array<string, mixed>
+	 */
 	private function normalize( array $config ): array {
 		$config = array_merge(
 			[

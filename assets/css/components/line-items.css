@@ -23,7 +23,7 @@
     border-bottom: 1px solid #e0e0e0;
 }
 
-.line-items-selector .select2-container {
+.line-items-selector .field-kit__combobox {
     flex: 1;
     min-width: 0;
 }
@@ -381,8 +381,8 @@
         padding: 12px 0;
     }
 
-    .line-items-selector .select2-container {
-        width: 100% !important;
+    .line-items-selector .field-kit__combobox {
+        width: 100%;
     }
 
     .line-items-selector button {

@@ -12,6 +12,8 @@ declare( strict_types=1 );
 
 namespace ArrayPress\RegisterFlyouts\Components;
 
+use ArrayPress\FieldKit\Utils\Runtime as KitRuntime;
+
 use ArrayPress\RegisterFlyouts\Interfaces\Renderable;
 use ArrayPress\RegisterFlyouts\RestApi;
 use ArrayPress\RegisterFlyouts\Traits\HtmlAttributes;
@@ -58,8 +60,9 @@ class LineItems implements Renderable {
 			'show_quantity' => true,
 			'search_key'    => '',       // Field key for the ajax_select search
 			'details_key'   => '',       // Action key for fetching product details
-			'manager'       => '',       // Manager prefix (set by normalize_ajax_fields)
-			'flyout'        => '',       // Flyout ID (set by normalize_ajax_fields)
+			'manager'       => '',       // Manager prefix, set when the field is normalized
+			'flyout'        => '',       // Flyout ID, set when the field is normalized
+			'search_source' => '',       // Kit search source, registered when the field is normalized
 			'placeholder'   => 'Search for products...',
 			'empty_text'    => 'No items added yet.',
 			'add_text'      => 'Add Item',
@@ -125,27 +128,29 @@ class LineItems implements Renderable {
     }
 
     /**
-     * Render product selector
+     * Render the product selector.
      *
-     * Uses REST /search endpoint via data-ajax-url and data-ajax-params.
+     * The kit's combobox, against the kit's search endpoint. It used to be
+     * select2 against a search endpoint of this library's own — two search
+     * controls and two endpoints in one codebase, and seventy-three kilobytes
+     * of script to serve the one picker that still needed the second.
+     *
+     * The source is registered by the manager when the field is normalized,
+     * and its name means nothing to anyone who has not registered it.
      */
     private function render_product_selector(): void {
-        $search_url = rest_url( RestApi::rest_namespace() . '/search' );
-
-        $ajax_params = wp_json_encode( [
-			'manager'   => $this->config['manager'],
-			'flyout'    => $this->config['flyout'],
-			'field_key' => $this->config['search_key'],
-        ] );
+        $source = (string) ( $this->config['search_source'] ?? '' );
         ?>
         <div class="line-items-selector">
-            <select class="wp-flyout-ajax-select product-ajax-select"
-                    data-ajax-url="<?php echo esc_url( $search_url ); ?>"
-                    data-ajax-params='<?php echo esc_attr( $ajax_params ); ?>'
+            <select class="field-kit__select field-kit__select--enhanced product-ajax-select"
+                    data-search-endpoint="<?php echo esc_url( rest_url( KitRuntime::rest_namespace() . '/search' ) ); ?>"
+                    data-search-source="<?php echo esc_attr( $source ); ?>"
+                    data-search-nonce="<?php echo esc_attr( wp_create_nonce( 'wp_rest' ) ); ?>"
                     data-placeholder="<?php echo esc_attr( $this->config['placeholder'] ); ?>">
+                <option value=""><?php echo esc_html( $this->config['placeholder'] ); ?></option>
             </select>
             <button type="button" class="button button-primary" data-action="add-item">
-                <span class="dashicons dashicons-plus-alt"></span>
+                <span class="dashicons dashicons-plus-alt" aria-hidden="true"></span>
                 <?php echo esc_html( $this->config['add_text'] ); ?>
             </button>
         </div>

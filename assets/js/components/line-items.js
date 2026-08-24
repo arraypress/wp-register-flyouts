@@ -1,7 +1,7 @@
 /**
  * Line Items Component JavaScript
  *
- * Uses Select2 (via WPFlyoutAjaxSelect) for product search via REST API.
+ * Product search is the kit's combobox against the kit's search endpoint.
  * Fetches product details via REST /action endpoint.
  *
  * @version 5.0.0
@@ -50,13 +50,9 @@
 
                 $component.data('lineItemsInitialized', true);
 
-                // Initialize Select2 on the product search select
-                var $select = $component.find('.product-ajax-select');
-                if ($select.length && !$select.data('select2')) {
-                    if (typeof WPFlyoutAjaxSelect !== 'undefined') {
-                        WPFlyoutAjaxSelect.initOne($select);
-                    }
-                }
+                // The kit's combobox upgrades the select; it is bound when
+                // the flyout opens, along with every other field in the
+                // panel, so there is nothing to initialise here.
 
                 self.recalculateTotals($component);
             });
@@ -282,10 +278,27 @@
             return $found ? $($found) : $();
         },
 
+        /**
+         * Put the product search back to holding nothing.
+         *
+         * The kit's combobox keeps the chosen label in an input of its own
+         * and the value on the select underneath, so emptying the select is
+         * only half of it — the previous product's name would stay in the box
+         * and read as though it were still chosen.
+         */
         clearSelect: function ($select) {
-            if ($select.data('select2')) {
-                $select.val(null).trigger('change');
+            var wrap = $select.closest('.field-kit__combobox')[0];
+            var clear = wrap && wrap.querySelector('.field-kit__combobox-clear');
+
+            if (clear) {
+                clear.click();
+
+                return;
             }
+
+            // No combobox — the script never reached it — so the plain
+            // select is all there is to clear.
+            $select.val('').trigger('change');
         },
 
         reindexItems: function ($component) {

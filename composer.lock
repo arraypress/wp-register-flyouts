@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "552fb663b93f85794598b4b88334f922",
+    "content-hash": "fa25d4ecccbb902c8b95d3b006856069",
     "packages": [
         {
             "name": "arraypress/wp-composer-assets",
@@ -12,12 +12,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/arraypress/wp-composer-assets.git",
-                "reference": "8236c96ba1fc8b952c4cdbe1e0408e998ec9050f"
+                "reference": "efb53f624b2bae98bfab797e217e6f7768ac4670"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/arraypress/wp-composer-assets/zipball/8236c96ba1fc8b952c4cdbe1e0408e998ec9050f",
-                "reference": "8236c96ba1fc8b952c4cdbe1e0408e998ec9050f",
+                "url": "https://api.github.com/repos/arraypress/wp-composer-assets/zipball/efb53f624b2bae98bfab797e217e6f7768ac4670",
+                "reference": "efb53f624b2bae98bfab797e217e6f7768ac4670",
                 "shasum": ""
             },
             "require": {
@@ -67,66 +67,7 @@
                 "issues": "https://github.com/arraypress/wp-composer-assets/issues",
                 "source": "https://github.com/arraypress/wp-composer-assets"
             },
-            "time": "2026-08-23T15:32:04+00:00"
-        },
-        {
-            "name": "arraypress/wp-currencies",
-            "version": "dev-main",
-            "source": {
-                "type": "git",
-                "url": "https://github.com/arraypress/wp-currencies.git",
-                "reference": "cda7405f94a2a41d347752702dc21f1b21f76826"
-            },
-            "dist": {
-                "type": "zip",
-                "url": "https://api.github.com/repos/arraypress/wp-currencies/zipball/cda7405f94a2a41d347752702dc21f1b21f76826",
-                "reference": "cda7405f94a2a41d347752702dc21f1b21f76826",
-                "shasum": ""
-            },
-            "require": {
-                "php": ">=8.2"
-            },
-            "default-branch": true,
-            "type": "library",
-            "autoload": {
-                "files": [
-                    "src/Functions.php"
-                ],
-                "psr-4": {
-                    "ArrayPress\\Currencies\\": "src/"
-                }
-            },
-            "notification-url": "https://packagist.org/downloads/",
-            "license": [
-                "GPL-2.0-or-later"
-            ],
-            "authors": [
-                {
-                    "name": "David Sherlock",
-                    "homepage": "https://arraypress.com/"
-                }
-            ],
-            "description": "A comprehensive WordPress library for Stripe currency formatting, conversion, and validation supporting all 135 Stripe currencies.",
-            "homepage": "https://github.com/arraypress/wp-currencies",
-            "keywords": [
-                "arraypress",
-                "currencies",
-                "currency",
-                "ecommerce",
-                "formatting",
-                "international",
-                "money",
-                "payment",
-                "stripe",
-                "wordpress",
-                "wp",
-                "zero-decimal"
-            ],
-            "support": {
-                "issues": "https://github.com/arraypress/wp-currencies/issues",
-                "source": "https://github.com/arraypress/wp-currencies"
-            },
-            "time": "2026-08-23T18:15:03+00:00"
+            "time": "2026-08-25T15:44:02+00:00"
         },
         {
             "name": "arraypress/wp-field-kit",
@@ -1026,23 +967,23 @@
         },
         {
             "name": "phpunit/php-file-iterator",
-            "version": "6.0.1",
+            "version": "6.0.2",
             "source": {
                 "type": "git",
                 "url": "https://github.com/sebastianbergmann/php-file-iterator.git",
-                "reference": "3d1cd096ef6bea4bf2762ba586e35dbd317cbfd5"
+                "reference": "a248d1640ab059b075f53a2ef0f9856e864e06b5"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/sebastianbergmann/php-file-iterator/zipball/3d1cd096ef6bea4bf2762ba586e35dbd317cbfd5",
-                "reference": "3d1cd096ef6bea4bf2762ba586e35dbd317cbfd5",
+                "url": "https://api.github.com/repos/sebastianbergmann/php-file-iterator/zipball/a248d1640ab059b075f53a2ef0f9856e864e06b5",
+                "reference": "a248d1640ab059b075f53a2ef0f9856e864e06b5",
                 "shasum": ""
             },
             "require": {
                 "php": ">=8.3"
             },
             "require-dev": {
-                "phpunit/phpunit": "^12.0"
+                "phpunit/phpunit": "^12.5.33"
             },
             "type": "library",
             "extra": {
@@ -1075,7 +1016,7 @@
             "support": {
                 "issues": "https://github.com/sebastianbergmann/php-file-iterator/issues",
                 "security": "https://github.com/sebastianbergmann/php-file-iterator/security/policy",
-                "source": "https://github.com/sebastianbergmann/php-file-iterator/tree/6.0.1"
+                "source": "https://github.com/sebastianbergmann/php-file-iterator/tree/6.0.2"
             },
             "funding": [
                 {
@@ -1095,7 +1036,7 @@
                     "type": "tidelift"
                 }
             ],
-            "time": "2026-02-02T14:04:18+00:00"
+            "time": "2026-08-25T14:40:53+00:00"
         },
         {
             "name": "phpunit/php-invoker",
@@ -1592,24 +1533,24 @@
         },
         {
             "name": "sebastian/diff",
-            "version": "7.0.0",
+            "version": "7.0.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/sebastianbergmann/diff.git",
-                "reference": "7ab1ea946c012266ca32390913653d844ecd085f"
+                "reference": "cd4cabe39f8a4e8ee6818ba99f10a05561ea4ad6"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/sebastianbergmann/diff/zipball/7ab1ea946c012266ca32390913653d844ecd085f",
-                "reference": "7ab1ea946c012266ca32390913653d844ecd085f",
+                "url": "https://api.github.com/repos/sebastianbergmann/diff/zipball/cd4cabe39f8a4e8ee6818ba99f10a05561ea4ad6",
+                "reference": "cd4cabe39f8a4e8ee6818ba99f10a05561ea4ad6",
                 "shasum": ""
             },
             "require": {
                 "php": ">=8.3"
             },
             "require-dev": {
-                "phpunit/phpunit": "^12.0",
-                "symfony/process": "^7.2"
+                "phpunit/phpunit": "^12.5.33",
+                "symfony/process": "^7.4.17"
             },
             "type": "library",
             "extra": {
@@ -1647,15 +1588,27 @@
             "support": {
                 "issues": "https://github.com/sebastianbergmann/diff/issues",
                 "security": "https://github.com/sebastianbergmann/diff/security/policy",
-                "source": "https://github.com/sebastianbergmann/diff/tree/7.0.0"
+                "source": "https://github.com/sebastianbergmann/diff/tree/7.0.1"
             },
             "funding": [
                 {
                     "url": "https://github.com/sebastianbergmann",
                     "type": "github"
+                },
+                {
+                    "url": "https://liberapay.com/sebastianbergmann",
+                    "type": "liberapay"
+                },
+                {
+                    "url": "https://thanks.dev/u/gh/sebastianbergmann",
+                    "type": "thanks_dev"
+                },
+                {
+                    "url": "https://tidelift.com/funding/github/packagist/sebastian/diff",
+                    "type": "tidelift"
                 }
             ],
-            "time": "2025-02-07T04:55:46+00:00"
+            "time": "2026-08-25T15:35:54+00:00"
         },
         {
             "name": "sebastian/environment",
@@ -2532,7 +2485,6 @@
     "minimum-stability": "dev",
     "stability-flags": {
         "arraypress/wp-composer-assets": 20,
-        "arraypress/wp-currencies": 20,
         "arraypress/wp-field-kit": 20
     },
     "prefer-stable": true,

@@ -13,7 +13,6 @@
   "require": {
     "php": ">=8.3",
     "arraypress/wp-composer-assets": "dev-main",
-    "arraypress/wp-currencies": "dev-main",
     "arraypress/wp-field-kit": "dev-main"
   },
   "autoload": {

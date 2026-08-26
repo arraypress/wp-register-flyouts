@@ -1024,7 +1024,6 @@ class Manager {
 
 		$text  = $args['text'] ?? __( 'Open', 'wp-flyout' );
 		$class = $args['class'] ?? 'button';
-		$icon  = $args['icon'] ?? '';
 
 		$attrs = $this->build_trigger_attributes( $flyout_id, $data, 'button ' . $class );
 
@@ -1034,13 +1033,9 @@ class Manager {
 		}
 		$html .= '>';
 
-		if ( $icon ) {
-			$html .= sprintf(
-				'<span class="dashicons dashicons-%s"></span> ',
-				esc_attr( $icon )
-			);
-		}
-
+		// No glyph. A trigger always has text -- it defaults to "Open" --
+		// and core puts no picture in front of its own button text anywhere
+		// in the admin.
 		$html .= esc_html( $text );
 		$html .= '</button>';
 

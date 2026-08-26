@@ -266,9 +266,17 @@ class Manager {
 		$flyout_instance_id = $config['id'] ?? uniqid() . '_' . ( $id ?: 'new' );
 		$flyout             = new Flyout( $flyout_instance_id );
 
-		$flyout->set_title( $config['title'] );
-		$flyout->set_subtitle( $config['subtitle'] );
-		$flyout->set_size( $config['size'] );
+		/*
+		 * Defaulted rather than read straight out. title and size are required
+		 * in practice but subtitle is not, and a flyout registered without one
+		 * passed null into a string-typed setter -- a TypeError inside a REST
+		 * handler, which reaches the browser as an HTML error page where the
+		 * script expects JSON. The message it produces there says nothing
+		 * about a missing subtitle.
+		 */
+		$flyout->set_title( (string) ( $config['title'] ?? '' ) );
+		$flyout->set_subtitle( (string) ( $config['subtitle'] ?? '' ) );
+		$flyout->set_size( (string) ( $config['size'] ?? 'medium' ) );
 
 		$flyout = apply_filters( "wp_flyout_build_flyout_{$this->prefix}", $flyout, $config, $data );
 

@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "fa25d4ecccbb902c8b95d3b006856069",
+    "content-hash": "6fae337705765e32fb96c0b5182152f3",
     "packages": [
         {
             "name": "arraypress/wp-composer-assets",
@@ -155,6 +155,65 @@
                 "source": "https://github.com/arraypress/wp-field-kit"
             },
             "time": "2026-08-25T15:44:59+00:00"
+        },
+        {
+            "name": "arraypress/wp-money",
+            "version": "v1.0.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/arraypress/wp-money.git",
+                "reference": "c25413d658cb5ae15a3d7d1cbf674e11ccaee080"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/arraypress/wp-money/zipball/c25413d658cb5ae15a3d7d1cbf674e11ccaee080",
+                "reference": "c25413d658cb5ae15a3d7d1cbf674e11ccaee080",
+                "shasum": ""
+            },
+            "require": {
+                "php": ">=8.3"
+            },
+            "require-dev": {
+                "phpcompatibility/phpcompatibility-wp": "^2.1",
+                "phpunit/phpunit": "^12.0",
+                "squizlabs/php_codesniffer": "^3.13.5",
+                "wp-coding-standards/wpcs": "^3.4"
+            },
+            "type": "library",
+            "autoload": {
+                "files": [
+                    "src/Functions.php"
+                ],
+                "psr-4": {
+                    "ArrayPress\\Money\\": "src/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "GPL-2.0-or-later"
+            ],
+            "authors": [
+                {
+                    "name": "David Sherlock",
+                    "homepage": "https://arraypress.com/"
+                }
+            ],
+            "description": "Integer-minor-unit money formatting and parsing for WordPress. 136 currencies with the correct decimal exponent, so the twenty that are not two decimal places are right.",
+            "homepage": "https://github.com/arraypress/wp-money/",
+            "keywords": [
+                "currency",
+                "ecommerce",
+                "formatting",
+                "iso-4217",
+                "minor-units",
+                "money",
+                "wordpress"
+            ],
+            "support": {
+                "issues": "https://github.com/arraypress/wp-money/issues",
+                "source": "https://github.com/arraypress/wp-money"
+            },
+            "time": "2026-08-25T19:28:29+00:00"
         }
     ],
     "packages-dev": [

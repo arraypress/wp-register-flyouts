@@ -17,7 +17,6 @@ use ArrayPress\FieldKit\Utils\Runtime as KitRuntime;
 use ArrayPress\RegisterFlyouts\Renderable;
 use ArrayPress\RegisterFlyouts\RestApi;
 use ArrayPress\FieldKit\Attributes;
-use function esc_currency_e;
 
 class LineItems implements Renderable {
 
@@ -290,7 +289,7 @@ class LineItems implements Renderable {
 
             <td class="column-price">
                 <span data-price="<?php echo esc_attr( (string) $price ); ?>">
-                    <?php esc_currency_e( self::minor_units( $price ), $this->config['currency'] ); ?>
+                    <?php echo esc_html( format_money( self::minor_units( $price ), [ 'currency' => $this->config['currency'] ] ) ); ?>
                 </span>
                 <input type="hidden"
                         name="<?php echo esc_attr( $this->config['name'] ); ?>[<?php echo esc_attr( $index ); ?>][price]"
@@ -299,7 +298,7 @@ class LineItems implements Renderable {
 
             <?php if ( $this->config['show_quantity'] ) : ?>
                 <td class="column-total">
-                    <span class="item-total"><?php esc_currency_e( self::minor_units( $total ), $this->config['currency'] ); ?></span>
+                    <span class="item-total"><?php echo esc_html( format_money( self::minor_units( $total ), [ 'currency' => $this->config['currency'] ] ) ); ?></span>
                 </td>
             <?php endif; ?>
 
@@ -321,7 +320,7 @@ class LineItems implements Renderable {
         <div class="line-items-total">
             <span class="total-label">Total:</span>
             <span class="total-amount" data-value="<?php echo esc_attr( (string) $total ); ?>">
-                <?php esc_currency_e( self::minor_units( $total ), $this->config['currency'] ); ?>
+                <?php echo esc_html( format_money( self::minor_units( $total ), [ 'currency' => $this->config['currency'] ] ) ); ?>
             </span>
         </div>
         <?php
@@ -388,7 +387,7 @@ class LineItems implements Renderable {
     /**
      * An amount in the smallest currency unit.
      *
-     * esc_currency_e() takes an int in minor units — cents, pence — and a
+     * format_money() takes an int in minor units — cents, pence — and a
      * float is a TypeError that takes the whole panel down with it. What
      * actually arrives is whatever the consumer had: 148.00 from a form,
      * "148.00" out of a database, 14800 from a payment processor.

@@ -16,6 +16,8 @@ declare( strict_types=1 );
 
 namespace ArrayPress\RegisterFlyouts\Components;
 
+use ArrayPress\Money\Money;
+
 use ArrayPress\RegisterFlyouts\Renderable;
 
 class RefundForm implements Renderable {
@@ -90,8 +92,8 @@ class RefundForm implements Renderable {
 
 		$currency = strtoupper( $this->config['currency'] );
 
-		if ( function_exists( 'format_currency' ) ) {
-			return format_currency( $amount, $currency );
+		if ( function_exists( 'format_money' ) ) {
+			return format_money( $amount, [ 'currency' => $currency ] );
 		}
 
 		return number_format( $amount / 100, 2, '.', ',' );
@@ -107,11 +109,12 @@ class RefundForm implements Renderable {
 	private function format_decimal( int $amount ): string {
 		$currency = strtoupper( $this->config['currency'] );
 
-		if ( function_exists( 'from_currency_cents' ) ) {
-			return number_format( from_currency_cents( $amount, $currency ), 2, '.', '' );
-		}
-
-		return number_format( $amount / 100, 2, '.', '' );
+		/*
+		 * Through Money rather than dividing by 100: yen has no minor unit at
+		 * all and Kuwaiti dinar has three, so the flat divide was wrong for
+		 * both -- it turned ¥5000 into 50.00.
+		 */
+		return number_format( Money::to_float( $amount, $currency ), 2, '.', '' );
 	}
 
 	/**

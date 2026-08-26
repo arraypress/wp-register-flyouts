@@ -15,7 +15,6 @@ declare( strict_types=1 );
 namespace ArrayPress\RegisterFlyouts\Components;
 
 use ArrayPress\RegisterFlyouts\Renderable;
-use function esc_currency_e;
 
 class PriceSummary implements Renderable {
 
@@ -94,20 +93,20 @@ class PriceSummary implements Renderable {
                     <tr class="price-summary-total">
                         <td class="label"><?php esc_html_e( 'Total', 'wp-flyout' ); ?></td>
                         <td class="amount">
-                            <?php esc_currency_e( self::minor_units( $this->config['total'] ), $this->config['currency'] ); ?>
+                            <?php echo esc_html( format_money( self::minor_units( $this->config['total'] ), [ 'currency' => $this->config['currency'] ] ) ); ?>
                         </td>
                     </tr>
                     <?php if ( $this->has_refund() ) : ?>
                         <tr class="price-summary-refunded">
                             <td class="label"><?php esc_html_e( 'Refunded', 'wp-flyout' ); ?></td>
                             <td class="amount negative">
-                                <?php esc_currency_e( - $this->config['refunded'], $this->config['currency'] ); ?>
+                                <?php echo esc_html( format_money( - $this->config['refunded'], [ 'currency' => $this->config['currency'] ] ) ); ?>
                             </td>
                         </tr>
                         <tr class="price-summary-net">
                             <td class="label"><?php esc_html_e( 'Net', 'wp-flyout' ); ?></td>
                             <td class="amount">
-                                <?php esc_currency_e( $this->config['total'] - $this->config['refunded'], $this->config['currency'] ); ?>
+                                <?php echo esc_html( format_money( $this->config['total'] - $this->config['refunded'], [ 'currency' => $this->config['currency'] ] ) ); ?>
                             </td>
                         </tr>
                     <?php endif; ?>
@@ -166,7 +165,7 @@ class PriceSummary implements Renderable {
                 <?php endif; ?>
             </td>
             <td class="item-amount">
-                <?php esc_currency_e( self::minor_units( $amount ), $this->config['currency'] ); ?>
+                <?php echo esc_html( format_money( self::minor_units( $amount ), [ 'currency' => $this->config['currency'] ] ) ); ?>
             </td>
         </tr>
         <?php
@@ -198,7 +197,7 @@ class PriceSummary implements Renderable {
             <tr class="price-summary-<?php echo esc_attr( $key ); ?>">
                 <td class="label"><?php echo esc_html( $label ); ?></td>
                 <td class="amount <?php echo $amount < 0 ? 'negative' : ''; ?>">
-                    <?php esc_currency_e( self::minor_units( $amount ), $this->config['currency'] ); ?>
+                    <?php echo esc_html( format_money( self::minor_units( $amount ), [ 'currency' => $this->config['currency'] ] ) ); ?>
                 </td>
             </tr>
             <?php
@@ -208,7 +207,7 @@ class PriceSummary implements Renderable {
     /**
      * An amount in the smallest currency unit.
      *
-     * esc_currency_e() takes an int in minor units — cents, pence — and a
+     * format_money() takes an int in minor units — cents, pence — and a
      * float is a TypeError that takes the whole panel down with it. What
      * actually arrives is whatever the consumer had: 148.00 from a form,
      * "148.00" out of a database, 14800 from a payment processor.

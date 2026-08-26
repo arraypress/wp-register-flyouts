@@ -16,9 +16,10 @@ declare( strict_types=1 );
 
 namespace ArrayPress\RegisterFlyouts\Components;
 
-use ArrayPress\Money\Money;
+use ArrayPress\Money\Currencies;
 
 use ArrayPress\RegisterFlyouts\Renderable;
+use ArrayPress\RegisterFlyouts\Utils\Amount;
 
 class RefundForm implements Renderable {
 
@@ -64,57 +65,53 @@ class RefundForm implements Renderable {
 	}
 
 	/**
-	 * Get the maximum refundable amount in cents
+	 * The maximum refundable amount, in minor units.
+	 *
+	 * Both amounts are converted before they are subtracted. Doing the
+	 * arithmetic in major units first and rounding after leaves the result
+	 * at the mercy of binary floating point: 159.84 - 0.0 is exact, but
+	 * 0.1 + 0.2 is not, and a refund cap is not a figure to leave to that.
 	 *
 	 * @return int
 	 */
 	private function get_refundable(): int {
-		// Cast, because what arrives is whatever the consumer had: a float
-		// from a form, a numeric string out of a database. max() returns the
-		// type it was given, so a float here was a TypeError against the int
-		// return — and a TypeError inside a component takes the whole panel
-		// down rather than just that component.
-		$paid     = (float) ( $this->config['amount_paid'] ?? 0 );
-		$refunded = (float) ( $this->config['amount_refunded'] ?? 0 );
+		$currency = strtoupper( (string) $this->config['currency'] );
 
-		return (int) round( max( 0, $paid - $refunded ) );
+		$paid     = Amount::minor( $this->config['amount_paid'] ?? 0, $currency );
+		$refunded = Amount::minor( $this->config['amount_refunded'] ?? 0, $currency );
+
+		return max( 0, $paid - $refunded );
 	}
 
 	/**
-	 * Format cents to display amount
+	 * Format a major-unit amount for display.
 	 *
-	 * @param int|float|string $amount Amount in cents, as whatever the consumer had.
+	 * @param int|float|string $amount Amount in major units.
 	 *
 	 * @return string
 	 */
 	private function format_amount( $amount ): string {
-		$amount = (int) round( (float) $amount );
+		$currency = strtoupper( (string) $this->config['currency'] );
 
-		$currency = strtoupper( $this->config['currency'] );
-
-		if ( function_exists( 'format_money' ) ) {
-			return format_money( $amount, [ 'currency' => $currency ] );
-		}
-
-		return number_format( $amount / 100, 2, '.', ',' );
+		return format_money( Amount::minor( $amount, $currency ), [ 'currency' => $currency ] );
 	}
 
 	/**
-	 * Format cents to decimal for input value
+	 * Format a minor-unit amount for an input's value.
 	 *
-	 * @param int|float|string $amount Amount in cents, as whatever the consumer had.
+	 * The number of decimal places comes from the currency rather than
+	 * being fixed at two: a yen field wants 5000, not 5000.00, and a
+	 * three-decimal dinar field wants all three.
+	 *
+	 * @param int $amount Amount in minor units.
 	 *
 	 * @return string
 	 */
 	private function format_decimal( int $amount ): string {
-		$currency = strtoupper( $this->config['currency'] );
+		$currency = strtoupper( (string) $this->config['currency'] );
+		$decimals = Currencies::decimals( $currency );
 
-		/*
-		 * Through Money rather than dividing by 100: yen has no minor unit at
-		 * all and Kuwaiti dinar has three, so the flat divide was wrong for
-		 * both -- it turned ¥5000 into 50.00.
-		 */
-		return number_format( Money::to_float( $amount, $currency ), 2, '.', '' );
+		return number_format( $amount / ( 10 ** $decimals ), $decimals, '.', '' );
 	}
 
 	/**
@@ -133,9 +130,10 @@ class RefundForm implements Renderable {
 		$id              = esc_attr( $this->config['id'] );
 		$name            = esc_attr( $this->config['name'] );
 		$action          = esc_attr( $this->config['action'] );
-		$currency        = strtoupper( $this->config['currency'] );
+		$currency        = strtoupper( (string) $this->config['currency'] );
 		$amount_paid     = $this->config['amount_paid'];
 		$amount_refunded = $this->config['amount_refunded'];
+		$decimals        = Currencies::decimals( $currency );
 
 		$classes = 'wp-flyout-refund-form';
 		if ( ! empty( $this->config['class'] ) ) {
@@ -148,13 +146,17 @@ class RefundForm implements Renderable {
 			class="<?php echo esc_attr( $classes ); ?>"
 			data-action="<?php echo esc_attr( $action ); ?>"
 			data-currency="<?php echo esc_attr( $currency ); ?>"
-			data-paid="<?php echo esc_attr( (string) $amount_paid ); ?>"
-			data-refunded="<?php echo esc_attr( (string) $amount_refunded ); ?>"
-			data-refundable="<?php echo esc_attr( (string) $refundable ); ?>">
+			data-locale="<?php echo esc_attr( get_bloginfo( 'language' ) ); ?>"
+			<?php // Minor units, all three, so the script never has to guess which. ?>
+			data-decimals="<?php echo esc_attr( (string) $decimals ); ?>"
+			data-paid="<?php echo esc_attr( (string) Amount::minor( $amount_paid, $currency ) ); ?>"
+			data-refunded="<?php echo esc_attr( (string) Amount::minor( $amount_refunded, $currency ) ); ?>"
+			data-refundable="<?php echo esc_attr( (string) $refundable ); ?>"
+			data-error-empty="<?php esc_attr_e( 'Enter a refund amount.', 'wp-flyout' ); ?>"
+			data-error-exceeds="<?php esc_attr_e( 'Amount exceeds the refundable balance.', 'wp-flyout' ); ?>">
 
 			<?php // ---- Trigger Button ---- ?>
 			<button type="button" class="button button-secondary refund-trigger">
-				<span class="dashicons dashicons-undo"></span>
 				<span class="button-text"><?php echo esc_html( $this->config['label'] ); ?></span>
 			</button>
 
@@ -191,7 +193,7 @@ class RefundForm implements Renderable {
 								name="<?php echo esc_attr( $name ); ?>[amount]"
 								class="refund-amount-input"
 								value="<?php echo esc_attr( $this->format_decimal( $refundable ) ); ?>"
-								placeholder="0.00"
+								placeholder="<?php echo esc_attr( number_format( 0, $decimals, '.', '' ) ); ?>"
 								inputmode="decimal"
 								autocomplete="off">
 					</div>

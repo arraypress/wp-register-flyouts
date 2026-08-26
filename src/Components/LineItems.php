@@ -16,6 +16,7 @@ use ArrayPress\FieldKit\Utils\Runtime as KitRuntime;
 
 use ArrayPress\RegisterFlyouts\Renderable;
 use ArrayPress\RegisterFlyouts\RestApi;
+use ArrayPress\RegisterFlyouts\Utils\Amount;
 use ArrayPress\FieldKit\Attributes;
 
 class LineItems implements Renderable {
@@ -143,6 +144,8 @@ class LineItems implements Renderable {
                 'manager'       => $this->config['manager'],
                 'flyout'        => $this->config['flyout'],
                 'details-key'   => $this->config['details_key'],
+                'locale'        => get_bloginfo( 'language' ),
+                'empty-text'    => $this->config['empty_text'],
             ] as $key => $value
         ) {
             $attributes->set_if( '' !== (string) $value, 'data-' . $key, (string) $value );
@@ -190,7 +193,6 @@ class LineItems implements Renderable {
                 <option value=""><?php echo esc_html( $this->config['placeholder'] ); ?></option>
             </select>
             <button type="button" class="button button-primary" data-action="add-item">
-                <span class="dashicons dashicons-plus-alt" aria-hidden="true"></span>
                 <?php echo esc_html( $this->config['add_text'] ); ?>
             </button>
         </div>
@@ -214,13 +216,13 @@ class LineItems implements Renderable {
         <table>
             <thead>
             <tr>
-                <th class="column-item">Item</th>
+                <th class="column-item"><?php esc_html_e( 'Item', 'wp-flyout' ); ?></th>
                 <?php if ( $this->config['show_quantity'] ) : ?>
-                    <th class="column-quantity">Qty</th>
+                    <th class="column-quantity"><?php esc_html_e( 'Qty', 'wp-flyout' ); ?></th>
                 <?php endif; ?>
-                <th class="column-price">Price</th>
+                <th class="column-price"><?php esc_html_e( 'Price', 'wp-flyout' ); ?></th>
                 <?php if ( $this->config['show_quantity'] ) : ?>
-                    <th class="column-total">Total</th>
+                    <th class="column-total"><?php esc_html_e( 'Total', 'wp-flyout' ); ?></th>
                 <?php endif; ?>
                 <th class="column-actions"></th>
             </tr>
@@ -241,8 +243,8 @@ class LineItems implements Renderable {
      * @param int   $index Item index
      */
     private function render_item_row( array $item, int $index ): void {
-        $price    = (int) ( $item['price'] ?? 0 );
-        $quantity = (int) ( $item['quantity'] ?? 1 );
+        $price    = (float) ( $item['price'] ?? 0 );
+        $quantity = max( 1, (int) ( $item['quantity'] ?? 1 ) );
         $total    = $price * $quantity;
         ?>
         <tr class="line-item" data-index="<?php echo esc_attr( $index ); ?>"
@@ -289,7 +291,7 @@ class LineItems implements Renderable {
 
             <td class="column-price">
                 <span data-price="<?php echo esc_attr( (string) $price ); ?>">
-                    <?php echo esc_html( format_money( self::minor_units( $price ), [ 'currency' => $this->config['currency'] ] ) ); ?>
+                    <?php echo esc_html( $this->money( $price ) ); ?>
                 </span>
                 <input type="hidden"
                         name="<?php echo esc_attr( $this->config['name'] ); ?>[<?php echo esc_attr( $index ); ?>][price]"
@@ -298,13 +300,14 @@ class LineItems implements Renderable {
 
             <?php if ( $this->config['show_quantity'] ) : ?>
                 <td class="column-total">
-                    <span class="item-total"><?php echo esc_html( format_money( self::minor_units( $total ), [ 'currency' => $this->config['currency'] ] ) ); ?></span>
+                    <span class="item-total"><?php echo esc_html( $this->money( $total ) ); ?></span>
                 </td>
             <?php endif; ?>
 
             <td class="column-actions">
-                <button type="button" class="button-link" data-action="remove-item">
-                    <span class="dashicons dashicons-trash"></span>
+                <button type="button" class="button-link" data-action="remove-item"
+                        aria-label="<?php esc_attr_e( 'Remove item', 'wp-flyout' ); ?>">
+                    <span class="dashicons dashicons-trash" aria-hidden="true"></span>
                 </button>
             </td>
         </tr>
@@ -318,9 +321,9 @@ class LineItems implements Renderable {
         $total = $this->calculate_total();
         ?>
         <div class="line-items-total">
-            <span class="total-label">Total:</span>
+            <span class="total-label"><?php esc_html_e( 'Total:', 'wp-flyout' ); ?></span>
             <span class="total-amount" data-value="<?php echo esc_attr( (string) $total ); ?>">
-                <?php echo esc_html( format_money( self::minor_units( $total ), [ 'currency' => $this->config['currency'] ] ) ); ?>
+                <?php echo esc_html( $this->money( $total ) ); ?>
             </span>
         </div>
         <?php
@@ -375,8 +378,9 @@ class LineItems implements Renderable {
                 <?php endif; ?>
 
                 <td class="column-actions">
-                    <button type="button" class="button-link" data-action="remove-item">
-                        <span class="dashicons dashicons-trash"></span>
+                    <button type="button" class="button-link" data-action="remove-item"
+                            aria-label="<?php esc_attr_e( 'Remove item', 'wp-flyout' ); ?>">
+                        <span class="dashicons dashicons-trash" aria-hidden="true"></span>
                     </button>
                 </td>
             </tr>
@@ -385,25 +389,19 @@ class LineItems implements Renderable {
     }
 
     /**
-     * An amount in the smallest currency unit.
+     * Format an amount for display.
      *
-     * format_money() takes an int in minor units — cents, pence — and a
-     * float is a TypeError that takes the whole panel down with it. What
-     * actually arrives is whatever the consumer had: 148.00 from a form,
-     * "148.00" out of a database, 14800 from a payment processor.
+     * Amounts arrive in major units — see Utils\Amount for why that is a
+     * stated contract rather than something inferred per value.
      *
-     * A value with a fractional part is read as a major-unit amount and
-     * converted; a whole number is taken as already being minor units, which
-     * is what the currency library documents. Rounded rather than cast, so
-     * 14.999 does not become 1499.
+     * @param mixed $amount Amount in major units.
      *
-     * @param mixed $amount The amount.
-     *
-     * @return int
+     * @return string
      */
-    private static function minor_units( $amount ): int {
-        $amount = is_numeric( $amount ) ? (float) $amount : 0.0;
-
-        return (int) round( fmod( $amount, 1.0 ) !== 0.0 ? $amount * 100 : $amount );
+    private function money( $amount ): string {
+        return format_money(
+            Amount::minor( $amount, $this->config['currency'] ),
+            [ 'currency' => $this->config['currency'] ]
+        );
     }
 }

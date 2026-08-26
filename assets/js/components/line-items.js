@@ -160,26 +160,26 @@
             }
 
             var index = $tbody.find('.line-item').length;
-            var price = parseInt(product.price) || 0;
-            var currency = $component.data('currency') || 'USD';
-            var formatter = new Intl.NumberFormat('en-US', {
-                style: 'currency',
-                currency: currency
-            });
+            var money = this.formatterFor($component);
+
+            // Major units, the same thing the search endpoint returns and
+            // the same thing data-price holds on a server-rendered row.
+            var price = parseFloat(product.price) || 0;
+            var minor = Math.round(price * money.factor);
 
             var thumbnailHtml = product.thumbnail ?
                 '<img src="' + this.escapeHtml(product.thumbnail) + '" alt="' +
                 this.escapeHtml(product.name) + '" class="item-thumbnail">' :
                 '<div class="item-thumbnail-placeholder">' +
-                '<span class="dashicons dashicons-format-image"></span></div>';
+                '<span class="dashicons dashicons-format-image" aria-hidden="true"></span></div>';
 
             var html = template
                 .replace(/{{index}}/g, index)
                 .replace(/{{item_id}}/g, product.id || '')
                 .replace(/{{name}}/g, this.escapeHtml(product.name || ''))
                 .replace(/{{price}}/g, price)
-                .replace(/{{price_formatted}}/g, formatter.format(price / 100))
-                .replace(/{{total_formatted}}/g, formatter.format(price / 100))
+                .replace(/{{price_formatted}}/g, money.format.format(minor / money.factor))
+                .replace(/{{total_formatted}}/g, money.format.format(minor / money.factor))
                 .replace(/{{thumbnail}}/g, this.escapeHtml(product.thumbnail || ''))
                 .replace(/{{thumbnail_html}}/g, thumbnailHtml);
 
@@ -207,10 +207,11 @@
                 self.reindexItems($component);
 
                 if ($tbody.find('.line-item').length === 0) {
-                    var emptyHtml = '<div class="line-items-empty">' +
-                        '<span class="dashicons dashicons-cart"></span>' +
-                        '<p>No items added yet.</p></div>';
-                    $component.find('.line-items-table').html(emptyHtml);
+                    var emptyText = $component.data('empty-text') || '';
+                    var emptyHtml = $('<div class="line-items-empty">')
+                        .append('<span class="dashicons dashicons-cart" aria-hidden="true"></span>')
+                        .append($('<p>').text(emptyText));
+                    $component.find('.line-items-table').empty().append(emptyHtml);
                 }
 
                 self.recalculateTotals($component);
@@ -229,40 +230,72 @@
             this.recalculateTotals($component);
         },
 
-        updateRowTotal: function ($row) {
-            var price = parseInt($row.find('[data-price]').data('price')) || 0;
-            var quantity = parseInt($row.find('.quantity-input').val()) || 1;
-            var total = price * quantity;
-
-            var $component = $row.closest('.wp-flyout-line-items');
+        /**
+         * A currency formatter for a component, plus the factor that turns
+         * its major units into whole minor ones.
+         *
+         * The locale comes from the page rather than being hard-coded to
+         * en-US, and the number of decimal places comes from the currency
+         * rather than being assumed to be two -- yen has none, Kuwaiti
+         * dinar has three.
+         */
+        formatterFor: function ($component) {
             var currency = $component.data('currency') || 'USD';
-            var formatter = new Intl.NumberFormat('en-US', {
-                style: 'currency',
-                currency: currency
-            });
+            var locale = $component.data('locale') || undefined;
+            var formatter;
 
-            $row.find('.item-total').text(formatter.format(total / 100));
+            try {
+                formatter = new Intl.NumberFormat(locale, {
+                    style: 'currency',
+                    currency: currency
+                });
+            } catch (e) {
+                // An unknown currency code throws rather than degrading, and
+                // it would take the whole panel's scripting with it.
+                formatter = new Intl.NumberFormat(locale);
+            }
+
+            return {
+                format: formatter,
+                factor: Math.pow(10, formatter.resolvedOptions().maximumFractionDigits || 0)
+            };
+        },
+
+        /**
+         * One row's price, in whole minor units.
+         *
+         * data-price holds major units -- 99.99, the same thing PHP renders
+         * from -- so this parses it as a float and scales it. It used to be
+         * read with parseInt and then divided by 100, which truncated every
+         * fractional price and divided every whole one by a hundred: a $99
+         * line became $0.99 the moment its quantity changed.
+         */
+        rowMinorUnits: function ($row, factor) {
+            var price = parseFloat($row.find('[data-price]').data('price')) || 0;
+            var quantity = parseInt($row.find('.quantity-input').val(), 10) || 1;
+
+            return Math.round(price * factor) * quantity;
+        },
+
+        updateRowTotal: function ($row) {
+            var money = this.formatterFor($row.closest('.wp-flyout-line-items'));
+            var total = this.rowMinorUnits($row, money.factor);
+
+            $row.find('.item-total').text(money.format.format(total / money.factor));
         },
 
         recalculateTotals: function ($component) {
+            var self = this;
+            var money = this.formatterFor($component);
             var total = 0;
 
             $component.find('.line-item').each(function () {
-                var $row = $(this);
-                var price = parseInt($row.find('[data-price]').data('price')) || 0;
-                var quantity = parseInt($row.find('.quantity-input').val()) || 1;
-                total += price * quantity;
-            });
-
-            var currency = $component.data('currency') || 'USD';
-            var formatter = new Intl.NumberFormat('en-US', {
-                style: 'currency',
-                currency: currency
+                total += self.rowMinorUnits($(this), money.factor);
             });
 
             $component.find('.total-amount')
-                .text(formatter.format(total / 100))
-                .attr('data-value', total);
+                .text(money.format.format(total / money.factor))
+                .attr('data-value', total / money.factor);
         },
 
         findExistingItem: function ($component, itemId) {

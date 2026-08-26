@@ -67,9 +67,39 @@ if ( ! function_exists( 'esc_url' ) ) {
 	}
 }
 
-if ( ! function_exists( 'esc_currency_e' ) ) {
-	function esc_currency_e( $amount, $currency = 'USD' ) {
-		echo esc_html( number_format_i18n( (int) $amount / 100, 2 ) );
+/*
+ * wp-composer-assets turns an on-disk asset path into a URL relative to the
+ * content directory, so it needs both of these to exist. PaymentMethod asks
+ * it for a card brand image while rendering.
+ */
+if ( ! defined( 'WP_CONTENT_DIR' ) ) {
+	define( 'WP_CONTENT_DIR', dirname( __DIR__, 3 ) );
+}
+
+if ( ! function_exists( 'content_url' ) ) {
+	function content_url( $path = '' ) {
+		return 'https://example.test/wp-content' . ( '' === $path ? '' : '/' . ltrim( (string) $path, '/' ) );
+	}
+}
+
+/*
+ * wp-composer-assets resolves an asset's URL through this. PaymentMethod
+ * asks it for a card brand image while rendering, so without it that
+ * component is fatal here -- and it was, unnoticed, until a test finally
+ * rendered it.
+ */
+if ( ! function_exists( 'wp_normalize_path' ) ) {
+	function wp_normalize_path( $path ) {
+		$path = str_replace( '\\', '/', (string) $path );
+		$path = preg_replace( '|(?<=.)/+|', '/', $path );
+
+		return ':' === substr( $path, 1, 1 ) ? ucfirst( $path ) : $path;
+	}
+}
+
+if ( ! function_exists( 'get_bloginfo' ) ) {
+	function get_bloginfo( $show = '', $filter = 'raw' ) {
+		return 'language' === $show ? 'en-US' : '';
 	}
 }
 

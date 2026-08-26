@@ -24,6 +24,34 @@
         },
 
         /**
+         * How many minor units make one major unit of this form's currency.
+         *
+         * Emitted by PHP from the currency's own ISO-4217 exponent, so this
+         * is 100 for dollars, 1 for yen and 1000 for Kuwaiti dinar.
+         */
+        factor: function ($form) {
+            return Math.pow(10, parseInt($form.data('decimals'), 10) || 0);
+        },
+
+        /**
+         * Format a major-unit amount in the page's locale.
+         */
+        money: function ($form, amount) {
+            var currency = $form.data('currency') || 'USD';
+            var locale = $form.data('locale') || undefined;
+
+            try {
+                return new Intl.NumberFormat(locale, {
+                    style: 'currency',
+                    currency: currency
+                }).format(amount);
+            } catch (e) {
+                // An unrecognised currency code throws rather than degrading.
+                return currency + ' ' + amount.toFixed(parseInt($form.data('decimals'), 10) || 0);
+            }
+        },
+
+        /**
          * Toggle the refund panel
          */
         togglePanel: function () {
@@ -53,10 +81,8 @@
             var $submit = $form.find('.refund-submit');
             var template = $submit.data('template');
             var amount = parseFloat($(this).val()) || 0;
-            var currency = $form.data('currency') || 'USD';
 
-            var formatted = amount.toFixed(2);
-            $submit.find('.button-text').text(template.replace('%s', currency + ' ' + formatted));
+            $submit.find('.button-text').text(template.replace('%s', RefundForm.money($form, amount)));
         },
 
         /**
@@ -85,22 +111,23 @@
             var $flyout = $form.closest('.wp-flyout');
             var config = $flyout.data() || {};
 
-            var refundable = parseFloat($form.data('refundable')) || 0;
-            var amountInput = parseFloat($form.find('.refund-amount-input').val()) || 0;
             var currency = $form.data('currency') || 'USD';
+            var amountInput = parseFloat($form.find('.refund-amount-input').val()) || 0;
 
-            // Convert display amount to cents
-            var amountCents = Math.round(amountInput * 100);
-            var refundableCents = parseInt($form.data('refundable'), 10) || 0;
+            // The input is in major units and the endpoint takes minor ones.
+            // The scale comes from the currency rather than being a hard 100:
+            // yen has no minor unit, so multiplying by a hundred there asked
+            // for a refund a hundred times the size of the payment.
+            var amountMinor = Math.round(amountInput * RefundForm.factor($form));
+            var refundableMinor = parseInt($form.data('refundable'), 10) || 0;
 
-            // Validate amount
-            if (amountCents <= 0) {
-                this.showAlert($flyout, 'Please enter a refund amount.', 'error');
+            if (amountMinor <= 0) {
+                this.showAlert($flyout, $form.data('error-empty'), 'error');
                 return;
             }
 
-            if (amountCents > refundableCents) {
-                this.showAlert($flyout, 'Amount exceeds the refundable balance.', 'error');
+            if (amountMinor > refundableMinor) {
+                this.showAlert($flyout, $form.data('error-exceeds'), 'error');
                 return;
             }
 
@@ -133,7 +160,7 @@
                     flyout: config.flyout,
                     action_key: $form.data('action'),
                     item_id: itemId,
-                    amount: amountCents,
+                    amount: amountMinor,
                     currency: currency,
                     reason: reason,
                     custom_reason: customReason

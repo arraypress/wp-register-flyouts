@@ -75,12 +75,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/arraypress/wp-field-kit.git",
-                "reference": "c55c5d968f216bebfe1eff86f8e7b1b93fe7104f"
+                "reference": "5c82982160ec39e9b461da52d06f2994955d1aea"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/arraypress/wp-field-kit/zipball/c55c5d968f216bebfe1eff86f8e7b1b93fe7104f",
-                "reference": "c55c5d968f216bebfe1eff86f8e7b1b93fe7104f",
+                "url": "https://api.github.com/repos/arraypress/wp-field-kit/zipball/5c82982160ec39e9b461da52d06f2994955d1aea",
+                "reference": "5c82982160ec39e9b461da52d06f2994955d1aea",
                 "shasum": ""
             },
             "require": {
@@ -154,7 +154,7 @@
                 "issues": "https://github.com/arraypress/wp-field-kit/issues",
                 "source": "https://github.com/arraypress/wp-field-kit"
             },
-            "time": "2026-08-26T14:14:46+00:00"
+            "time": "2026-08-26T14:59:46+00:00"
         },
         {
             "name": "arraypress/wp-money",

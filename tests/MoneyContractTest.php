@@ -148,6 +148,64 @@ final class MoneyContractTest extends TestCase {
 	}
 
 	/**
+	 * Every figure on the panel is the same amount of money.
+	 *
+	 * The refundable balance is computed in minor units so the subtraction
+	 * is exact, and the amounts around it arrive in major units. Handing the
+	 * computed one to the major-unit formatter converted it a second time,
+	 * and a $159.84 payment offered a refund of $15,984.00 — on the button,
+	 * in the summary, and nowhere in the data attributes, which is why
+	 * asserting those alone did not catch it.
+	 */
+	public function test_every_figure_on_a_refund_panel_agrees(): void {
+		$markup = ( new RefundForm( [
+			'amount_paid'     => 159.84,
+			'amount_refunded' => 0,
+			'currency'        => 'USD',
+		] ) )->render();
+
+		$this->assertStringNotContainsString( '$15,984.00', $markup );
+
+		// Paid, available, and the button all say the same thing.
+		preg_match_all( '/\$[\d,]+\.\d\d/', $markup, $found );
+
+		$this->assertNotEmpty( $found[0] );
+		$this->assertSame( [ '$159.84' ], array_values( array_unique( $found[0] ) ) );
+
+		// And the input is pre-filled with the same figure, undecorated.
+		$this->assertStringContainsString( 'value="159.84"', $markup );
+	}
+
+	/**
+	 * A partial refund leaves the difference available.
+	 */
+	public function test_a_partial_refund_leaves_the_difference(): void {
+		$markup = ( new RefundForm( [
+			'amount_paid'     => 159.84,
+			'amount_refunded' => 59.84,
+			'currency'        => 'USD',
+		] ) )->render();
+
+		$this->assertStringContainsString( '$159.84', $markup );
+		$this->assertStringContainsString( '$59.84', $markup );
+		$this->assertStringContainsString( '$100.00', $markup );
+		$this->assertStringContainsString( 'value="100.00"', $markup );
+	}
+
+	/**
+	 * A zero-decimal currency is not given decimals it does not have.
+	 */
+	public function test_a_yen_panel_asks_for_whole_yen(): void {
+		$markup = ( new RefundForm( [
+			'amount_paid' => 5000,
+			'currency'    => 'JPY',
+		] ) )->render();
+
+		$this->assertStringContainsString( 'value="5000"', $markup );
+		$this->assertStringNotContainsString( 'value="5000.00"', $markup );
+	}
+
+	/**
 	 * A refund of everything paid leaves nothing refundable.
 	 */
 	public function test_a_fully_refunded_payment_has_nothing_left(): void {

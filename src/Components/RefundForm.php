@@ -97,6 +97,25 @@ class RefundForm implements Renderable {
 	}
 
 	/**
+	 * Format an amount that is already in minor units.
+	 *
+	 * The refundable balance is computed here rather than configured, and it
+	 * is computed in minor units so the subtraction is exact. Passing it to
+	 * format_amount() -- which takes major units -- multiplied it by the
+	 * currency's exponent a second time, and a $159.84 payment offered a
+	 * refund of $15,984.00.
+	 *
+	 * @param int $amount Amount in minor units.
+	 *
+	 * @return string
+	 */
+	private function format_minor( int $amount ): string {
+		$currency = strtoupper( (string) $this->config['currency'] );
+
+		return format_money( $amount, [ 'currency' => $currency ] );
+	}
+
+	/**
 	 * Format a minor-unit amount for an input's value.
 	 *
 	 * The number of decimal places comes from the currency rather than
@@ -179,7 +198,7 @@ class RefundForm implements Renderable {
 					<span class="refund-summary-sep">&middot;</span>
 					<span class="refund-summary-item">
 						<span class="refund-summary-label"><?php esc_html_e( 'Available', 'wp-flyout' ); ?></span>
-						<span class="refund-summary-value refund-summary-available"><?php echo esc_html( $this->format_amount( $refundable ) ); ?></span>
+						<span class="refund-summary-value refund-summary-available"><?php echo esc_html( $this->format_minor( $refundable ) ); ?></span>
 					</span>
 				</div>
 
@@ -235,7 +254,7 @@ class RefundForm implements Renderable {
 					        class="button button-primary refund-submit"
 					        data-template="<?php /* translators: %s: formatted refund amount */ esc_attr_e( 'Refund %s', 'wp-flyout' ); ?>">
 						<span class="button-text">
-							<?php /* translators: %s: formatted refund amount */ printf( esc_html__( 'Refund %s', 'wp-flyout' ), esc_html( $this->format_amount( $refundable ) ) ); ?>
+							<?php /* translators: %s: formatted refund amount */ printf( esc_html__( 'Refund %s', 'wp-flyout' ), esc_html( $this->format_minor( $refundable ) ) ); ?>
 						</span>
 						<span class="button-spinner" style="display: none;">
 							<span class="dashicons dashicons-update spin"></span>

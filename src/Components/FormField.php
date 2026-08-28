@@ -447,7 +447,19 @@ class FormField implements Renderable {
 			$resolved,
 			array_merge(
 				$resolved->defaults(),
-				$this->config,
+
+				// Without the keys this library owns. `name` and `id` are
+				// what the kit is about to be handed as input_name and
+				// input_id, `value` is resolved above because the kit reads
+				// from a context instead, and the other two never leave here
+				// -- so passing them on is handing the kit configuration
+				// nothing reads, which it reports under WP_DEBUG once per
+				// field per render. A panel of a dozen fields buried every
+				// real warning on the screen under its own noise.
+				array_diff_key(
+					$this->config,
+					array_flip( [ 'name', 'id', 'value', 'wrapper_class', 'data_callback' ] )
+				),
 				[
 					'input_name' => (string) $this->config['name'],
 					'input_id'   => (string) $this->config['id'],

@@ -286,6 +286,40 @@ final class FormFieldTest extends TestCase {
 	 * a group stores its children under one key, which is what the component
 	 * already did.
 	 */
+	/**
+	 * The kit is handed what it reads and nothing else.
+	 *
+	 * It reports configuration nothing consumes under WP_DEBUG, once per
+	 * field per render -- so a key this library owns and forgets to keep to
+	 * itself is a notice on every panel, and enough of them bury the real
+	 * one.
+	 */
+	public function test_a_field_does_not_hand_the_kit_its_own_keys(): void {
+		$component = new FormField(
+			[
+				'type'          => 'text',
+				'name'          => 'title',
+				'label'         => 'Title',
+				'value'         => 'Kit',
+				'wrapper_class' => 'mine',
+			]
+		);
+
+		// Asked of the kit field itself rather than of a _doing_it_wrong
+		// stub: the warning only fires under WP_DEBUG, so a test that watched
+		// for the notice would pass whether or not the keys were stripped.
+		$field = ( new \ReflectionMethod( FormField::class, 'field' ) )->invoke( $component );
+
+		$this->assertNotNull( $field );
+		$this->assertSame( [], $field->unknown_keys() );
+
+		// And the two that were translated rather than dropped still arrive.
+		$html = $component->render();
+
+		$this->assertStringContainsString( 'name="title"', $html );
+		$this->assertStringContainsString( 'value="Kit"', $html );
+	}
+
 	public function test_a_price_configuration_becomes_a_group(): void {
 		$kit = FormField::to_kit(
 			[

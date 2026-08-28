@@ -351,6 +351,42 @@ final class FormFieldTest extends TestCase {
 		$this->assertSame( [], array_values( array_unique( $unknown ) ) );
 	}
 
+	/**
+	 * A trigger given a class wears that class, not that class plus `button`.
+	 *
+	 * core's .page-title-action is a complete button style -- its own
+	 * padding, min-height, line-height and a -3px offset to sit on the
+	 * heading's line. Carrying `button` as well, the Add New trigger got two
+	 * sets of box metrics and came out half again too tall.
+	 *
+	 * @return void
+	 */
+	public function test_a_trigger_wears_only_the_class_it_was_given(): void {
+		$manager = new Manager( 'button_test' );
+		$manager->register_flyout( 'thing', [ 'title' => 'Thing', 'fields' => [] ] );
+
+		$html = $manager->get_button( 'thing', [], [ 'text' => 'Add New', 'class' => 'page-title-action' ] );
+
+		$this->assertStringContainsString( 'page-title-action', $html );
+		$this->assertStringContainsString( 'wp-flyout-trigger', $html );
+		$this->assertDoesNotMatchRegularExpression( '/class="[^"]*\bbutton\b/', $html );
+	}
+
+	/**
+	 * And one given nothing is an ordinary admin button, as before.
+	 *
+	 * @return void
+	 */
+	public function test_a_trigger_given_no_class_is_an_admin_button(): void {
+		$manager = new Manager( 'button_test_default' );
+		$manager->register_flyout( 'thing', [ 'title' => 'Thing', 'fields' => [] ] );
+
+		$this->assertMatchesRegularExpression(
+			'/class="[^"]*\bbutton\b/',
+			$manager->get_button( 'thing', [], [ 'text' => 'Open' ] )
+		);
+	}
+
 	public function test_a_price_configuration_becomes_a_group(): void {
 		$kit = FormField::to_kit(
 			[

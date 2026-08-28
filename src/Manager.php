@@ -1032,10 +1032,21 @@ class Manager {
 			return '';
 		}
 
-		$text  = $args['text'] ?? __( 'Open', 'wp-flyout' );
+		$text = $args['text'] ?? __( 'Open', 'wp-flyout' );
+
+		/*
+		 * The caller's class stands on its own rather than being added to
+		 * `button`. core's `.page-title-action` is a complete button style --
+		 * its own padding, min-height, line-height and a -3px offset -- so a
+		 * trigger carrying both got two sets of box metrics and came out half
+		 * again too tall beside the heading.
+		 *
+		 * `button` is still the default, because a trigger anywhere else on a
+		 * screen is an ordinary admin button.
+		 */
 		$class = $args['class'] ?? 'button';
 
-		$attrs = $this->build_trigger_attributes( $flyout_id, $data, 'button ' . $class );
+		$attrs = $this->build_trigger_attributes( $flyout_id, $data, $class );
 
 		$html = '<button type="button"';
 		foreach ( $attrs as $key => $value ) {

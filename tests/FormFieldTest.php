@@ -320,6 +320,37 @@ final class FormFieldTest extends TestCase {
 		$this->assertStringContainsString( 'value="Kit"', $html );
 	}
 
+	/**
+	 * And the panel path, which is the one a flyout actually renders through.
+	 *
+	 * FormField::field() is the older component path; a registered flyout
+	 * goes through field_set(), and the first version of this fix only
+	 * covered the former -- so the product panel went on emitting a hundred
+	 * and fifty-eight notices while the suite stayed green.
+	 */
+	public function test_a_panel_does_not_hand_the_kit_its_own_keys(): void {
+		$manager = new Manager( 'unknown_keys_test' );
+
+		$method = new \ReflectionMethod( Manager::class, 'field_set' );
+
+		[ $set ] = $method->invoke(
+			$manager,
+			[
+				'title'  => [ 'type' => 'text', 'label' => 'Title', 'tab' => 'details' ],
+				'amount' => [ 'type' => 'number', 'label' => 'Amount', 'tab' => 'pricing' ],
+			],
+			(object) [ 'title' => 'Kit', 'amount' => 10 ]
+		);
+
+		$unknown = [];
+
+		foreach ( $set->fields() as $field ) {
+			$unknown = array_merge( $unknown, $field->unknown_keys() );
+		}
+
+		$this->assertSame( [], array_values( array_unique( $unknown ) ) );
+	}
+
 	public function test_a_price_configuration_becomes_a_group(): void {
 		$kit = FormField::to_kit(
 			[

@@ -556,7 +556,17 @@ class Manager {
 			// Keyed by the posted name where one is given: the field set
 			// derives input_name from the key, and the name is what the form
 			// actually submits.
-			$configs[ (string) ( $field['name'] ?? $key ) ] = FormField::to_kit( $field );
+			$config = FormField::to_kit( $field );
+
+			// Which leaves nothing for `name` to say -- it is the key now --
+			// and `tab` was spent grouping the fields before this ran. The
+			// kit reads neither, and reports configuration nothing reads
+			// under WP_DEBUG once per field per render: a product panel
+			// emitted a hundred and fifty-eight notices, which is enough to
+			// bury any that meant something.
+			unset( $config['name'], $config['tab'] );
+
+			$configs[ (string) ( $field['name'] ?? $key ) ] = $config;
 		}
 
 		return [ new FieldSet( $configs, $context, '' ), $context ];

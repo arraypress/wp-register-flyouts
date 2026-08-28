@@ -40,6 +40,45 @@ class DataTable implements Renderable {
     }
 
     /**
+     * Say so when the rows were handed over under the wrong name.
+     *
+     * They go in `data`. Given `items` or `rows` -- both of which the other
+     * components here use for exactly this -- the table draws its own empty
+     * state, and "No data found." reads as an order with nothing on it rather
+     * than as a key spelled wrong. That is a worse failure than an error,
+     * because it looks like an answer.
+     *
+     * @return void
+     */
+    private function warn_about_the_rows_key(): void {
+        if ( ! defined( 'WP_DEBUG' ) || ! WP_DEBUG || ! function_exists( '_doing_it_wrong' ) ) {
+            return;
+        }
+
+        if ( ! empty( $this->config['data'] ) ) {
+            return;
+        }
+
+        foreach ( [ 'items', 'rows' ] as $wrong ) {
+            if ( empty( $this->config[ $wrong ] ) ) {
+                continue;
+            }
+
+            _doing_it_wrong(
+                __METHOD__,
+                sprintf(
+                    /* translators: %s: the key the rows were given under */
+                    esc_html__( 'A data table was given its rows as "%s". The key is "data"; the table will render as empty.', 'wp-flyout' ),
+                    esc_html( $wrong )
+                ),
+                '1.0.0'
+            );
+
+            return;
+        }
+    }
+
+    /**
      * Get default configuration
      *
      * @return array
@@ -61,6 +100,8 @@ class DataTable implements Renderable {
      * @return string
      */
     public function render(): string {
+        $this->warn_about_the_rows_key();
+
         if ( empty( $this->config['columns'] ) ) {
             return '';
         }

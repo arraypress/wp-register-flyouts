@@ -575,25 +575,40 @@ class Manager {
 	private function render_fields( array $fields, $data ): string {
 		$output = '';
 
-		[ $set ] = $this->field_set( $fields, $data );
-
 		$fields = apply_filters( "wp_flyout_before_render_fields_{$this->prefix}", $fields, $data );
 
+		/*
+		 * Everything that can change a field, before the set is built from
+		 * them.
+		 *
+		 * The set used to be built first, from the untouched configuration,
+		 * and the filters ran inside the render loop below. Since the control
+		 * itself comes out of the set and only its label and description come
+		 * from `$field`, every one of these filters could restyle the chrome
+		 * around a field and not the field -- so a filter adding, say, search
+		 * arguments to a picker changed nothing at all, silently, and looked
+		 * right in any test that inspected the filtered array rather than the
+		 * rendered page.
+		 */
 		$normalized_fields = $this->normalize_fields( $fields );
 
 		foreach ( $normalized_fields as $field_key => $field ) {
-			// Process conditional dependencies.
 			if ( isset( $field['depends'] ) ) {
 				$field = $this->process_field_dependencies( $field, $field_key );
 			}
 
-			// Apply field-specific filters.
 			$field = apply_filters( "wp_flyout_render_field_{$this->prefix}", $field, $field_key, $data );
 			$field = apply_filters( "wp_flyout_render_field_{$this->prefix}_{$field_key}", $field, $data );
 
 			// Normalize AJAX fields (search URL, hydration).
 			$field = $this->normalize_ajax_fields( $field, $field_key, $data );
 
+			$normalized_fields[ $field_key ] = $field;
+		}
+
+		[ $set ] = $this->field_set( $normalized_fields, $data );
+
+		foreach ( $normalized_fields as $field_key => $field ) {
 			$type = $field['type'] ?? 'text';
 
 			// Use field name for data lookup (field name may differ from field key).

@@ -20,6 +20,18 @@
          */
         init: function () {
             $(document).on('click', '.wp-flyout-trigger', this.handleTrigger.bind(this));
+
+            // A trigger marked data-flyout-auto opens itself once the page is
+            // ready. It is how a panel opens after a round trip through the
+            // server -- a bulk action that redirects back with a selection,
+            // for instance, where there is nothing for the reader to click
+            // that they have not already clicked.
+            //
+            // Only the first, and only once: two panels opening over each
+            // other is not a thing anybody asked for.
+            $(function () {
+                $('.wp-flyout-trigger[data-flyout-auto]').first().trigger('click');
+            });
         },
 
         /**

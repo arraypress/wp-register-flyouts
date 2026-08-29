@@ -50,11 +50,12 @@ class LineItems implements Renderable {
     /**
      * Complain, under WP_DEBUG, about a row with no name.
      *
-     * A row is `name` and `price`, and a price is in minor units. Get either
-     * wrong and nothing breaks: the row renders with a blank label and a
-     * total of zero, which reads as a data problem rather than a spelling
-     * one. It cost an afternoon in this library's own demo, where the rows
-     * said `title` and `amount`.
+     * A row is `name` and `price`, and a price is in major units like every
+     * other amount here -- see Utils\Amount. Get either wrong and nothing
+     * breaks: the wrong key renders a blank label and a total of zero, and
+     * the wrong unit renders a hundred times too large. It cost an afternoon
+     * in this library's own demo, where the rows said `title` and `amount`,
+     * and another in a consumer passing minor units.
      *
      * @return void
      */
@@ -72,7 +73,7 @@ class LineItems implements Renderable {
                 __METHOD__,
                 sprintf(
                     /* translators: 1: row index, 2: comma-separated list of the keys the row does have */
-                    esc_html__( 'Line item %1$s has no "name". It has: %2$s. A row is name and price, and the price is in minor units.', 'arraypress' ),
+                    esc_html__( 'Line item %1$s has no "name". It has: %2$s. A row is name and price, and the price is in major units.', 'arraypress' ),
                     esc_html( (string) $index ),
                     esc_html( implode( ', ', array_keys( $item ) ) )
                 ),
@@ -108,7 +109,7 @@ class LineItems implements Renderable {
     /**
      * Calculate total
      *
-     * @return int Total in cents
+     * @return int Total in major units.
      */
     private function calculate_total(): int {
         $total = 0;

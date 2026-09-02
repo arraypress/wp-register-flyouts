@@ -156,8 +156,14 @@ class RestApi {
 	 * @return int|string
 	 */
 	public static function sanitize_item_id( $value ) {
-		if ( is_int( $value ) ) {
-			return $value;
+		// A string of digits is an integer id that travelled as text, which
+		// is what every id in a query string is. Passed on as text it fails
+		// a `int $id` parameter under strict types -- and that is the shape
+		// of every load callback a consumer writes. Core's own coercion for
+		// the integer|string schema made it an int before this sanitizer
+		// existed, so this keeps that.
+		if ( is_int( $value ) || ( is_string( $value ) && '' !== $value && ctype_digit( $value ) ) ) {
+			return (int) $value;
 		}
 
 		return is_scalar( $value ) ? sanitize_text_field( (string) $value ) : '';

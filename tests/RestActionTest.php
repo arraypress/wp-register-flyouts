@@ -262,4 +262,17 @@ final class RestActionTest extends TestCase {
 		$this->assertStringNotContainsString( '<', (string) RestApi::sanitize_item_id( '<script>alert(1)</script>' ) );
 		$this->assertSame( '', RestApi::sanitize_item_id( [ 'id' => 1 ] ) );
 	}
+
+	/**
+	 * An id that arrives as digits is an integer, as core's coercion made it.
+	 *
+	 * Every load callback takes `int $id` under strict types, so a "1" that
+	 * stayed a string was a TypeError the moment a product was clicked.
+	 */
+	public function test_a_digit_string_item_id_is_an_integer(): void {
+		$this->assertSame( 1, RestApi::sanitize_item_id( '1' ) );
+		$this->assertSame( 42, RestApi::sanitize_item_id( 42 ) );
+		$this->assertSame( 'sku-42', RestApi::sanitize_item_id( 'sku-42' ) );
+		$this->assertSame( '', RestApi::sanitize_item_id( [ 1 ] ) );
+	}
 }

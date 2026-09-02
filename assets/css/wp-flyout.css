@@ -377,10 +377,11 @@
  * A select on a settings screen keeps core's width so it does not run the
  * width of a desktop. A flyout is already as narrow as a form gets, and a
  * short select beside full-width text inputs reads as a mistake rather
- * than a choice -- so inside the panel every select, combobox and region
- * takes the line.
+ * than a choice -- so inside the panel every select, combobox, region and
+ * price takes the line.
  */
 .wp-flyout-body .field-kit__field select,
+.wp-flyout-body .field-kit__field .field-kit__money,
 .wp-flyout-body .field-kit__field .field-kit__combobox,
 .wp-flyout-body .field-kit__field .field-kit__combobox-input,
 .wp-flyout-body .field-kit__field .field-kit__region,

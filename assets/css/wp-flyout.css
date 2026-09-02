@@ -371,6 +371,25 @@
     min-height: 80px;
 }
 
+/*
+ * The kit's own selects stretch to the panel.
+ *
+ * A select on a settings screen keeps core's width so it does not run the
+ * width of a desktop. A flyout is already as narrow as a form gets, and a
+ * short select beside full-width text inputs reads as a mistake rather
+ * than a choice -- so inside the panel every select, combobox and region
+ * takes the line.
+ */
+.wp-flyout-body .field-kit__field select,
+.wp-flyout-body .field-kit__field .field-kit__combobox,
+.wp-flyout-body .field-kit__field .field-kit__combobox-input,
+.wp-flyout-body .field-kit__field .field-kit__region,
+.wp-flyout-body .field-kit__field .field-kit__region-select,
+.wp-flyout-body .field-kit__field .field-kit__region-text {
+    width: 100%;
+    max-width: none;
+}
+
 .wp-flyout-field > select:not(.field-kit__select--enhanced) {
     max-width: none;
     appearance: none;

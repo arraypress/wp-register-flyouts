@@ -275,4 +275,32 @@ final class RestActionTest extends TestCase {
 		$this->assertSame( 'sku-42', RestApi::sanitize_item_id( 'sku-42' ) );
 		$this->assertSame( '', RestApi::sanitize_item_id( [ 1 ] ) );
 	}
+
+	/**
+	 * A refund form's action finds the handler under action_callback.
+	 *
+	 * That is the key the form is documented with and the one every shop
+	 * uses; the declaration-only lookup paired `action` with `callback`
+	 * alone, and every refund button stopped resolving.
+	 */
+	public function test_a_refund_forms_action_resolves_to_its_action_callback(): void {
+		$config = [
+			'capability' => 'manage_options',
+			'fields'     => [
+				'refund' => [
+					'type'            => 'refund_form',
+					'action'          => 'issue_refund',
+					'action_callback' => static fn( int $id, array $data ): array => [ 'id' => $id ],
+				],
+			],
+		];
+
+		$find = new \ReflectionMethod( RestApi::class, 'find_action' );
+
+		$found = $find->invoke( null, $config, 'issue_refund' );
+
+		$this->assertNotNull( $found );
+		$this->assertIsCallable( $found['callback'] );
+		$this->assertSame( 'manage_options', $found['capability'] );
+	}
 }

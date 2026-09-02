@@ -631,9 +631,11 @@ class RestApi {
 		$type    = (string) ( $field['type'] ?? '' );
 		$actions = [];
 
-		// One action with one handler: the refund form.
+		// One action with one handler: the refund form. Its handler is the
+		// field's action_callback -- the same key a plain action button uses
+		// -- with `callback` accepted for the older spelling.
 		if ( ! empty( $field['action'] ) ) {
-			$actions[ (string) $field['action'] ] = $field['callback'] ?? null;
+			$actions[ (string) $field['action'] ] = $field['action_callback'] ?? $field['callback'] ?? null;
 		}
 
 		// Components that name their action keys and carry each handler

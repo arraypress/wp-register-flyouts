@@ -12,11 +12,6 @@ declare( strict_types=1 );
 
 namespace ArrayPress\RegisterFlyouts\Components;
 
-use ArrayPress\FieldKit\Field;
-use ArrayPress\FieldKit\Registry;
-use ArrayPress\FieldKit\Renderer;
-use ArrayPress\RegisterFlyouts\Renderable;
-
 /**
  * One form control inside a flyout.
  *
@@ -32,26 +27,18 @@ use ArrayPress\RegisterFlyouts\Renderable;
  * one arrives with its labelling, its description association, its required
  * state and its conditional logic already correct.
  *
+ * Static throughout. It used to be a component as well -- constructed with
+ * one field and rendering it through the kit on its own -- but a registered
+ * flyout renders through a field set, and nothing but the tests ever built
+ * one of these. The second path had already drifted from the first: it
+ * carried `wrapper_attrs` the panel path never wrote out.
+ *
  * Two things in the old configuration have no equivalent and are translated
  * rather than dropped: `ajax_select` is the kit's `ajax`, and `data_callback`
  * is a value resolved at render time, which the kit has no notion of because
  * a field set reads its values from a context.
  */
-class FormField implements Renderable {
-
-	/**
-	 * Field configuration, in this library's shape.
-	 *
-	 * @var array<string, mixed>
-	 */
-	private array $config;
-
-	/**
-	 * The type registry.
-	 *
-	 * @var Registry
-	 */
-	private Registry $registry;
+class FormField {
 
 	/**
 	 * Spellings this library used that the kit names differently.
@@ -73,16 +60,6 @@ class FormField implements Renderable {
 		'key_value_list' => 'key_value',
 		'file_manager'   => 'files',
 	];
-
-	/**
-	 * Construct.
-	 *
-	 * @param array<string, mixed> $config Field configuration.
-	 */
-	public function __construct( array $config ) {
-		$this->registry = new Registry();
-		$this->config   = $this->normalize( $config );
-	}
 
 	/**
 	 * Translate one flyout field configuration into the kit's.
@@ -349,167 +326,6 @@ class FormField implements Renderable {
 				)
 			),
 			$inner
-		);
-	}
-
-	/**
-	 * Normalize the configuration.
-	 *
-	 * @param array<string, mixed> $config Raw configuration.
-	 *
-	 * @return array<string, mixed>
-	 */
-	private function normalize( array $config ): array {
-		$config = array_merge(
-			[
-				'type'          => 'text',
-				'name'          => '',
-				'id'            => '',
-				'label'         => '',
-				'value'         => '',
-				'description'   => '',
-				'placeholder'   => '',
-				'required'      => false,
-				'disabled'      => false,
-				'readonly'      => false,
-				'class'         => '',
-				'wrapper_class' => '',
-				'data_callback' => null,
-			],
-			$config
-		);
-
-		$type = (string) $config['type'];
-
-		$config['type'] = self::TYPE_ALIASES[ $type ] ?? $type;
-
-		if ( '' === (string) $config['id'] && '' !== (string) $config['name'] ) {
-			$config['id'] = sanitize_key( (string) $config['name'] );
-		}
-
-		// A value resolved at render time. The kit has no notion of one — a
-		// field set reads from a context — so it is resolved here, before the
-		// field is built.
-		if ( is_callable( $config['data_callback'] ) ) {
-			$config['value'] = call_user_func( $config['data_callback'] );
-		}
-
-		return $config;
-	}
-
-	/**
-	 * Render the field.
-	 *
-	 * @return string
-	 */
-	public function render(): string {
-		$field = $this->field();
-
-		if ( null === $field ) {
-			return '';
-		}
-
-		$inner = ( new Renderer() )->render( $field );
-
-		// The flyout's own wrapper, which its stylesheet and its conditional
-		// script both key on. The kit's wrapper is inside it and carries the
-		// conditions; this one carries the panel's layout.
-		return sprintf(
-			'<div class="%s"%s>%s</div>',
-			esc_attr(
-				trim(
-					'wp-flyout-field field-type-' . (string) $this->config['type']
-					. ' ' . (string) $this->config['wrapper_class']
-				)
-			),
-			$this->wrapper_attributes(),
-			$inner
-		);
-	}
-
-	/**
-	 * The kit field this configuration describes.
-	 *
-	 * @return Field|null
-	 */
-	private function field(): ?Field {
-		$type = (string) $this->config['type'];
-
-		if ( ! $this->registry->has( $type ) ) {
-			return null;
-		}
-
-		$resolved = $this->registry->get( $type );
-		$key      = (string) ( $this->config['name'] ?: $this->config['id'] );
-
-		return new Field(
-			$key,
-			$resolved,
-			array_merge(
-				$resolved->defaults(),
-
-				// Without the keys this library owns. `name` and `id` are
-				// what the kit is about to be handed as input_name and
-				// input_id, `value` is resolved above because the kit reads
-				// from a context instead, and the other two never leave here
-				// -- so passing them on is handing the kit configuration
-				// nothing reads, which it reports under WP_DEBUG once per
-				// field per render. A panel of a dozen fields buried every
-				// real warning on the screen under its own noise.
-				array_diff_key(
-					$this->config,
-					array_flip( [ 'name', 'id', 'value', 'wrapper_class', 'data_callback' ] )
-				),
-				[
-					'input_name' => (string) $this->config['name'],
-					'input_id'   => (string) $this->config['id'],
-				]
-			),
-			$this->config['value']
-		);
-	}
-
-	/**
-	 * Attributes the flyout puts on the wrapper.
-	 *
-	 * `data-depends` carries JSON and is written with single quotes, which is
-	 * why it is not simply escaped alongside the rest.
-	 *
-	 * @return string
-	 */
-	private function wrapper_attributes(): string {
-		$attributes = (array) ( $this->config['wrapper_attrs'] ?? [] );
-		$markup     = '';
-
-		foreach ( $attributes as $name => $value ) {
-			if ( 'class' === $name ) {
-				continue;
-			}
-
-			$markup .= 'data-depends' === $name
-				? sprintf( " %s='%s'", esc_attr( (string) $name ), esc_attr( (string) $value ) )
-				: sprintf( ' %s="%s"', esc_attr( (string) $name ), esc_attr( (string) $value ) );
-		}
-
-		return $markup;
-	}
-
-	/**
-	 * The types this component can render.
-	 *
-	 * Every type the kit knows, plus the spellings this library used for two
-	 * of them. Read rather than listed, so it cannot fall behind the kit.
-	 *
-	 * @return string[]
-	 */
-	public static function types(): array {
-		return array_values(
-			array_unique(
-				array_merge(
-					( new Registry() )->accepted_ids(),
-					array_keys( self::TYPE_ALIASES )
-				)
-			)
 		);
 	}
 }

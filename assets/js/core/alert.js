@@ -81,7 +81,7 @@
                             <span class="dashicons dashicons-${icon}"></span>
                         </div>
                         <div class="alert-content">
-                            <div class="alert-message">${message}</div>
+                            <div class="alert-message"></div>
                         </div>
                         ${dismissible ? `
                             <button type="button" class="alert-dismiss" data-action="dismiss-alert">
@@ -91,6 +91,11 @@
                     </div>
                 </div>
             `);
+
+            // As text, not markup. The message is whatever the server sent
+            // back -- a save's confirmation, a callback's error -- and an
+            // error message that quotes what somebody typed must not run it.
+            $alert.find('.alert-message').text(message == null ? '' : String(message));
 
             // Append to target or default location
             const $target = options.target ? $(options.target) : $('.wp-flyout-body');

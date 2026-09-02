@@ -97,7 +97,6 @@ class ActionButtons implements Renderable {
 			'text'    => '',
 			'action'  => '',
 			'style'   => 'secondary', // primary, secondary, link, destructive
-			'icon'    => '',
 			'data'    => [],
 			'confirm' => '',
 			'enabled' => true,
@@ -126,11 +125,13 @@ class ActionButtons implements Renderable {
             $attributes[ 'data-' . $key ] = (string) $value;
         }
 
+        // No icon. Every button here has text -- one without is skipped
+        // above -- and the kit draws no glyph beside a label, for the same
+        // reason core does not: the label already says it.
         $html = Button::render(
             [
                 'label'      => $button['text'],
                 'variant'    => $button['style'],
-                'icon'       => $button['icon'],
                 'class'      => 'wp-flyout-action-btn',
                 'disabled'   => ! $button['enabled'],
                 'spinner'    => true,

@@ -116,14 +116,6 @@
                 item_id: config.data.id || 0
             };
 
-            // Pass through title/subtitle overrides
-            if (config.data.title) {
-                requestData.title = config.data.title;
-            }
-            if (config.data.subtitle) {
-                requestData.subtitle = config.data.subtitle;
-            }
-
             this.api('/load', requestData)
                 .then(function (response) {
                     if (response.success) {

@@ -9,9 +9,9 @@ Editing one field on one row should not cost a page load, a form, and a
 redirect that loses your place in the table. A flyout keeps the list on
 screen and puts the record beside it.
 
-Building one means a panel, a REST endpoint, loading, saving, validation and
-a way to refresh the row underneath. This is that, from a description of the
-fields — the same field types the rest of the admin uses.
+Building one means a panel, a REST endpoint, loading, saving and validation.
+This is that, from a description of the fields — the same field types the
+rest of the admin uses.
 
 ## Features
 
@@ -21,7 +21,7 @@ fields — the same field types the rest of the admin uses.
 * Add components a record screen needs — line items, notes, a refund form
 * Split a long panel into tabs
 * Open one from a button, a row action or a link
-* Refresh the row underneath after a save, so the table stays true
+* Reload the page after a save, so the table underneath stays true
 
 ## Installation
 
@@ -54,6 +54,18 @@ render_flyout_button( 'shop_edit_product', [
 	'text' => __( 'Edit', 'my-plugin' ),
 ] );
 ```
+
+## Who may edit what
+
+A flyout's `capability` decides who may open it, save it and press its
+buttons; a button may ask for more with `action_capability`. What it does
+not decide is *which* record: the `item_id` a request carries reaches your
+`load`, `save`, `delete` and action callbacks as sent, and this library
+never sees the object it names. Whether the current user may touch that
+particular record is your check — in the callbacks, or through the
+`wp_flyout_rest_capability_{prefix}` filter, which receives the capability,
+the flyout id and the request and can return a different capability for a
+different record.
 
 ## Amounts are major units
 

@@ -26,14 +26,23 @@ use PHPUnit\Framework\TestCase;
 final class FormFieldTest extends TestCase {
 
 	/**
-	 * Render one field.
+	 * Render one field, the way a panel does.
+	 *
+	 * Through the manager's own render path rather than a component of its
+	 * own: FormField used to be constructible and renderable on its own, and
+	 * that second path had drifted from the one a registered flyout takes.
+	 * What is asserted here is what a panel actually shows.
 	 *
 	 * @param array<string, mixed> $config Field configuration.
 	 *
 	 * @return string
 	 */
 	private function render( array $config ): string {
-		return ( new FormField( $config ) )->render();
+		$manager = new Manager( 'form_field_test' );
+		$method  = new \ReflectionMethod( $manager, 'render_fields' );
+		$key     = (string) ( $config['name'] ?? 'thing' );
+
+		return (string) $method->invoke( $manager, [ $key => $config ], null );
 	}
 
 	/**
@@ -54,28 +63,6 @@ final class FormFieldTest extends TestCase {
 
 		$this->assertStringContainsString( 'class="wp-flyout-field field-type-text is-wide"', $html );
 		$this->assertStringContainsString( 'field-kit__field', $html );
-	}
-
-	/**
-	 * A wrapper attribute is carried through.
-	 *
-	 * data-depends holds JSON and is written with single quotes, which is why
-	 * it is not simply escaped alongside the rest.
-	 */
-	public function test_wrapper_attributes_are_carried(): void {
-		$html = $this->render(
-			[
-				'type'          => 'text',
-				'name'          => 'colour',
-				'wrapper_attrs' => [
-					'id'           => 'colour-wrap',
-					'data-depends' => '{"other":1}',
-				],
-			]
-		);
-
-		$this->assertStringContainsString( 'id="colour-wrap"', $html );
-		$this->assertStringContainsString( "data-depends='", $html );
 	}
 
 	/**
@@ -154,25 +141,6 @@ final class FormFieldTest extends TestCase {
 	 */
 	public function test_an_unknown_type_renders_nothing(): void {
 		$this->assertSame( '', $this->render( [ 'type' => 'not_a_type' ] ) );
-	}
-
-	/**
-	 * Every type the kit knows is available, not seventeen.
-	 */
-	public function test_every_kit_type_is_available(): void {
-		$types = FormField::types();
-
-		$this->assertGreaterThan( 50, count( $types ) );
-
-		// The ones the old renderer had, still there.
-		foreach ( [ 'text', 'select', 'toggle', 'radio', 'tags', 'color', 'group', 'separator', 'ajax_select' ] as $type ) {
-			$this->assertContains( $type, $types );
-		}
-
-		// And the ones it did not.
-		foreach ( [ 'repeater', 'gallery', 'email_editor', 'select2', 'user' ] as $type ) {
-			$this->assertContains( $type, $types );
-		}
 	}
 
 	/**
@@ -292,41 +260,11 @@ final class FormFieldTest extends TestCase {
 	 * It reports configuration nothing consumes under WP_DEBUG, once per
 	 * field per render -- so a key this library owns and forgets to keep to
 	 * itself is a notice on every panel, and enough of them bury the real
-	 * one.
-	 */
-	public function test_a_field_does_not_hand_the_kit_its_own_keys(): void {
-		$component = new FormField(
-			[
-				'type'          => 'text',
-				'name'          => 'title',
-				'label'         => 'Title',
-				'value'         => 'Kit',
-				'wrapper_class' => 'mine',
-			]
-		);
-
-		// Asked of the kit field itself rather than of a _doing_it_wrong
-		// stub: the warning only fires under WP_DEBUG, so a test that watched
-		// for the notice would pass whether or not the keys were stripped.
-		$field = ( new \ReflectionMethod( FormField::class, 'field' ) )->invoke( $component );
-
-		$this->assertNotNull( $field );
-		$this->assertSame( [], $field->unknown_keys() );
-
-		// And the two that were translated rather than dropped still arrive.
-		$html = $component->render();
-
-		$this->assertStringContainsString( 'name="title"', $html );
-		$this->assertStringContainsString( 'value="Kit"', $html );
-	}
-
-	/**
-	 * And the panel path, which is the one a flyout actually renders through.
+	 * one. The product panel emitted a hundred and fifty-eight.
 	 *
-	 * FormField::field() is the older component path; a registered flyout
-	 * goes through field_set(), and the first version of this fix only
-	 * covered the former -- so the product panel went on emitting a hundred
-	 * and fifty-eight notices while the suite stayed green.
+	 * Asked of the kit fields themselves rather than of a _doing_it_wrong
+	 * stub: the warning only fires under WP_DEBUG, so a test that watched
+	 * for the notice would pass whether or not the keys were stripped.
 	 */
 	public function test_a_panel_does_not_hand_the_kit_its_own_keys(): void {
 		$manager = new Manager( 'unknown_keys_test' );

@@ -93,11 +93,10 @@
                 })
                 .then(function (response) {
                     if (response.success && response.note) {
-                        var noteHtml = Notes.createNoteHtml(response.note);
                         var $list = $component.find('.notes-list');
 
                         $list.find('.no-notes').remove();
-                        $list.prepend(noteHtml);
+                        $list.prepend(Notes.createNote(response.note));
                         $textarea.val('').focus();
                     } else {
                         alert(response.message || 'Failed to add note');
@@ -181,37 +180,46 @@
         },
 
         /**
-         * Create note HTML
+         * Build one note's element.
+         *
+         * Elements rather than a string of markup. Everything in a note --
+         * its id, its author, its content -- came back from the server, and
+         * writing those into an attribute by concatenation left the quotes
+         * unescaped: the escaper below only ever handled text.
+         *
+         * @param {Object} note The note the server returned
+         * @return {jQuery} The note, ready to prepend
          */
-        createNoteHtml: function (note) {
-            var escapeHtml = function (text) {
-                var div = document.createElement('div');
-                div.textContent = text || '';
-                return div.innerHTML;
-            };
-
-            var html = '<div class="note-item" data-note-id="' + note.id + '">';
-            html += '<div class="note-header">';
+        createNote: function (note) {
+            var $note = $('<div class="note-item">').attr('data-note-id', note.id == null ? '' : String(note.id));
+            var $header = $('<div class="note-header">');
+            var $content = $('<div class="note-content">');
 
             if (note.author) {
-                html += '<span class="note-author">' + escapeHtml(note.author) + '</span>';
+                $header.append($('<span class="note-author">').text(note.author));
             }
 
             if (note.formatted_date) {
-                html += '<span class="note-date">' + escapeHtml(note.formatted_date) + '</span>';
+                $header.append($('<span class="note-date">').text(note.formatted_date));
             }
 
             if (note.can_delete) {
-                html += '<button type="button" class="button-link" data-action="delete-note">';
-                html += '<span class="dashicons dashicons-trash"></span>';
-                html += '</button>';
+                $header.append(
+                    '<button type="button" class="button-link" data-action="delete-note">' +
+                    '<span class="dashicons dashicons-trash"></span></button>'
+                );
             }
 
-            html += '</div>';
-            html += '<div class="note-content">' + escapeHtml(note.content).replace(/\n/g, '<br>') + '</div>';
-            html += '</div>';
+            // Line breaks kept, the way PHP's nl2br() keeps them on first render.
+            String(note.content || '').split('\n').forEach(function (line, index) {
+                if (index > 0) {
+                    $content.append('<br>');
+                }
 
-            return html;
+                $content.append(document.createTextNode(line));
+            });
+
+            return $note.append($header, $content);
         }
     };
 

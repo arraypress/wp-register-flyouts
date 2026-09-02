@@ -173,15 +173,28 @@
                 '<div class="item-thumbnail-placeholder">' +
                 '<span class="dashicons dashicons-format-image" aria-hidden="true"></span></div>';
 
-            var html = template
-                .replace(/{{index}}/g, index)
-                .replace(/{{item_id}}/g, product.id || '')
-                .replace(/{{name}}/g, this.escapeHtml(product.name || ''))
-                .replace(/{{price}}/g, price)
-                .replace(/{{price_formatted}}/g, money.format.format(minor / money.factor))
-                .replace(/{{total_formatted}}/g, money.format.format(minor / money.factor))
-                .replace(/{{thumbnail}}/g, this.escapeHtml(product.thumbnail || ''))
-                .replace(/{{thumbnail_html}}/g, thumbnailHtml);
+            // Every value the server sent, escaped for the attribute or the
+            // text it lands in. The one exception is the thumbnail markup,
+            // which is built above from escaped parts.
+            var values = {
+                index: String(index),
+                item_id: this.escapeHtml(product.id == null ? '' : product.id),
+                name: this.escapeHtml(product.name || ''),
+                price: this.escapeHtml(price),
+                price_formatted: this.escapeHtml(money.format.format(minor / money.factor)),
+                total_formatted: this.escapeHtml(money.format.format(minor / money.factor)),
+                thumbnail: this.escapeHtml(product.thumbnail || ''),
+                thumbnail_html: thumbnailHtml
+            };
+
+            // One pass with a function, not a chain of string replacements.
+            // A string given to String.replace is read for $-patterns, so a
+            // product named "$& Co" or a price of "$1" came out corrupted --
+            // and a value containing a later placeholder would have been
+            // replaced twice.
+            var html = template.replace(/{{(\w+)}}/g, function (match, key) {
+                return Object.prototype.hasOwnProperty.call(values, key) ? values[key] : match;
+            });
 
             var $newRow = $(html);
             $tbody.append($newRow);
@@ -347,10 +360,19 @@
             });
         },
 
+        /**
+         * Escape a value for HTML, attributes included.
+         *
+         * Not the textContent-to-innerHTML trick, which leaves quotes alone
+         * because a text node has no reason to escape them -- and every
+         * placeholder in the row template but two sits inside an attribute.
+         */
         escapeHtml: function (text) {
-            var div = document.createElement('div');
-            div.textContent = text || '';
-            return div.innerHTML;
+            var map = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' };
+
+            return String(text == null ? '' : text).replace(/[&<>"']/g, function (character) {
+                return map[character];
+            });
         }
     };
 

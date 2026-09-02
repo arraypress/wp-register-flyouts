@@ -195,10 +195,36 @@ final class ComponentSearchTest extends TestCase {
 	}
 
 	/**
-	 * A capability can be demanded, and defaults to one.
+	 * A source asks for what its flyout asks for.
 	 *
 	 * A search source is a REST endpoint returning rows from somebody's
-	 * database. Defaulting to open would be the wrong default to get wrong.
+	 * database. It defaulted to `edit_posts` whatever the panel demanded, so
+	 * a flyout only a shop manager could open had a product search any
+	 * author could query. The flyout's capability is the one thing already
+	 * known to be right for it.
+	 */
+	public function test_a_source_defaults_to_the_flyouts_capability(): void {
+		$manager = new Manager( 'shop_caps' );
+
+		$manager->register_flyout(
+			'order',
+			[
+				'title'      => 'Order',
+				'capability' => 'manage_woocommerce',
+				'fields'     => [
+					'product' => [ 'type' => 'ajax_select', 'callback' => [ self::class, 'catalogue' ] ],
+				],
+			]
+		);
+
+		$this->assertSame( 'manage_woocommerce', Sources::shared()->get( 'shop_caps-order-product' )->capability() );
+	}
+
+	/**
+	 * A capability can still be demanded of the source alone.
+	 *
+	 * And one registered for a flyout nobody has described yet asks for the
+	 * library's own default rather than for nothing.
 	 */
 	public function test_a_source_is_capability_gated(): void {
 		$manager = new Manager( 'shop' );
@@ -208,7 +234,7 @@ final class ComponentSearchTest extends TestCase {
 			'default',
 			[ 'type' => 'ajax_select', 'callback' => [ self::class, 'catalogue' ] ]
 		);
-		$this->assertSame( 'edit_posts', Sources::shared()->get( 'shop-order-default' )->capability() );
+		$this->assertSame( 'manage_options', Sources::shared()->get( 'shop-order-default' )->capability() );
 
 		$manager->register_search_source(
 			'order',

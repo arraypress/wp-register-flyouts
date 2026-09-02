@@ -85,13 +85,6 @@ class Manager {
 	 */
 	private bool $assets_enqueued = false;
 
-	/**
-	 * Types that resolve to ajax_select at render time.
-	 *
-	 * @var array<string>
-	 */
-	private static array $ajax_select_types = [ 'post', 'taxonomy', 'user' ];
-
 	// =========================================================================
 	// CONSTRUCTOR & INITIALIZATION
 	// =========================================================================
@@ -172,7 +165,7 @@ class Manager {
 		// request that rendered — a combobox asks the endpoint on its own —
 		// so a source registered while drawing the panel does not exist by
 		// the time anyone types into it.
-		$config['fields'] = $this->register_search_sources( $id, (array) $config['fields'] );
+		$config['fields'] = $this->register_search_sources( $id, (array) $config['fields'], (string) $config['capability'] );
 		$config['fields'] = $this->register_field_actions( $id, (array) $config['fields'] );
 
 		// Store flyout configuration.
@@ -223,12 +216,13 @@ class Manager {
 	 * read: a component renders it into its own picker, and the field set
 	 * hands it to the kit rather than deriving a name of its own.
 	 *
-	 * @param string                              $flyout_id The flyout.
-	 * @param array<string, array<string, mixed>> $fields    Field configuration.
+	 * @param string                              $flyout_id  The flyout.
+	 * @param array<string, array<string, mixed>> $fields     Field configuration.
+	 * @param string                              $capability The flyout's capability.
 	 *
 	 * @return array<string, array<string, mixed>>
 	 */
-	private function register_search_sources( string $flyout_id, array $fields ): array {
+	private function register_search_sources( string $flyout_id, array $fields, string $capability ): array {
 		foreach ( $fields as $key => $field ) {
 			if ( ! is_array( $field ) ) {
 				continue;
@@ -237,7 +231,8 @@ class Manager {
 			$name = $this->register_search_source(
 				$flyout_id,
 				(string) ( $field['search_key'] ?? $field['name'] ?? $key ),
-				$field
+				$field,
+				$capability
 			);
 
 			if ( '' !== $name ) {
@@ -401,13 +396,20 @@ class Manager {
 	 * the same source, the second registration answering the first's
 	 * searches.
 	 *
-	 * @param string               $flyout_id The flyout.
-	 * @param string               $field_key The field.
-	 * @param array<string, mixed> $field     Field configuration.
+	 * The capability defaults to the flyout's own. It was a fixed
+	 * `edit_posts`, which meant a panel only a shop manager could open had a
+	 * product search any author could query — the source is a GET endpoint
+	 * returning rows from somebody's database, and the panel's capability
+	 * is the one thing already known to be right for it.
+	 *
+	 * @param string               $flyout_id  The flyout.
+	 * @param string               $field_key  The field.
+	 * @param array<string, mixed> $field      Field configuration.
+	 * @param string               $capability The flyout's capability, when it is not yet registered.
 	 *
 	 * @return string The source's name, or empty when it has no callback.
 	 */
-	public function register_search_source( string $flyout_id, string $field_key, array $field ): string {
+	public function register_search_source( string $flyout_id, string $field_key, array $field, string $capability = '' ): string {
 		if ( ! self::searches( $field ) ) {
 			return '';
 		}
@@ -418,13 +420,17 @@ class Manager {
 			return '';
 		}
 
+		if ( '' === $capability ) {
+			$capability = (string) ( $this->flyouts[ $flyout_id ]['capability'] ?? 'manage_options' );
+		}
+
 		$name = sprintf( '%s-%s-%s', $this->prefix, $flyout_id, $field_key );
 
 		Sources::shared()->register(
 			new CallbackSource(
 				$name,
 				$callback,
-				(string) ( $field['search_capability'] ?? 'edit_posts' )
+				(string) ( $field['search_capability'] ?? $capability )
 			)
 		);
 
@@ -593,10 +599,6 @@ class Manager {
 		$normalized_fields = $this->normalize_fields( $fields );
 
 		foreach ( $normalized_fields as $field_key => $field ) {
-			if ( isset( $field['depends'] ) ) {
-				$field = $this->process_field_dependencies( $field, $field_key );
-			}
-
 			$field = apply_filters( "wp_flyout_render_field_{$this->prefix}", $field, $field_key, $data );
 			$field = apply_filters( "wp_flyout_render_field_{$this->prefix}_{$field_key}", $field, $data );
 
@@ -706,142 +708,6 @@ class Manager {
 		return $field;
 	}
 
-	/**
-	 * Process field dependencies for conditional display.
-	 *
-	 * Normalizes the 'depends' configuration to the same data-conditions
-	 * format used by the settings library, ensuring interchangeable syntax.
-	 *
-	 * Supported formats:
-	 * - String: 'depends' => 'field_name' (truthy/not_empty check)
-	 * - Simple key => value: 'depends' => ['enable_feature' => 1]
-	 * - Single condition: 'depends' => ['field' => 'x', 'value' => 'y', 'operator' => '=']
-	 * - Multiple conditions (AND): 'depends' => [['field' => 'a', ...], ['field' => 'b', ...]]
-	 *
-	 * @param array  $field     Field configuration.
-	 * @param string $field_key Field identifier.
-	 *
-	 * @return array Modified field configuration with data-conditions attribute.
-	 * @since 1.0.0
-	 */
-	private function process_field_dependencies( array $field, string $field_key ): array {
-		if ( ! isset( $field['depends'] ) ) {
-			return $field;
-		}
-
-		$depends    = $field['depends'];
-		$conditions = $this->normalize_depends( $depends );
-
-		if ( empty( $conditions ) ) {
-			return $field;
-		}
-
-		if ( ! isset( $field['wrapper_attrs'] ) ) {
-			$field['wrapper_attrs'] = [];
-		}
-
-		$field['wrapper_attrs']['data-conditions'] = esc_attr( wp_json_encode( $conditions ) );
-
-		if ( empty( $field['wrapper_attrs']['id'] ) ) {
-			$field['wrapper_attrs']['id'] = 'field-' . sanitize_key( $field_key );
-		}
-
-		$field['wrapper_attrs']['style'] = 'display: none;';
-
-		if ( ! empty( $field['wrapper_attrs']['class'] ) ) {
-			$field['wrapper_attrs']['class'] .= ' has-dependency';
-		} else {
-			$field['wrapper_attrs']['class'] = 'has-dependency';
-		}
-
-		return $field;
-	}
-
-	/**
-	 * Normalize a depends configuration to a conditions array.
-	 *
-	 * Produces the same format as the settings library's ConditionalLogic trait:
-	 * [['field' => '...', 'value' => '...', 'operator' => '...'], ...]
-	 *
-	 * @param string|array $depends Raw depends configuration.
-	 *
-	 * @return array Normalized conditions array.
-	 * @since 4.0.0
-	 */
-	private function normalize_depends( $depends ): array {
-		// String format: 'field_name' → not_empty check
-		if ( is_string( $depends ) ) {
-			return [
-				[
-					'field'    => $depends,
-					'value'    => '',
-					'operator' => 'not_empty',
-				],
-			];
-		}
-
-		if ( ! is_array( $depends ) || empty( $depends ) ) {
-			return [];
-		}
-
-		$first_key = array_key_first( $depends );
-
-		// Simple key => value format: ['enable_feature' => 1, 'mode' => 'advanced']
-		if ( is_string( $first_key ) && ! in_array( $first_key, [ 'field', 'value', 'operator' ], true ) ) {
-			$conditions = [];
-			foreach ( $depends as $field => $value ) {
-				$conditions[] = [
-					'field'    => $field,
-					'value'    => $value,
-					'operator' => is_array( $value ) ? 'in' : '=',
-				];
-			}
-
-			return $conditions;
-		}
-
-		// Single condition: ['field' => 'x', 'value' => 'y']
-		if ( isset( $depends['field'] ) ) {
-			return [ $this->normalize_single_condition( $depends ) ];
-		}
-
-		// Array of conditions: [['field' => 'a', ...], ['field' => 'b', ...]]
-		if ( is_int( $first_key ) ) {
-			return array_map( [ $this, 'normalize_single_condition' ], $depends );
-		}
-
-		return [];
-	}
-
-	/**
-	 * Normalize a single condition array.
-	 *
-	 * Handles legacy 'contains' key and ensures operator is always set.
-	 *
-	 * @param array $condition Single condition array.
-	 *
-	 * @return array Normalized condition.
-	 * @since 4.0.0
-	 */
-	private function normalize_single_condition( array $condition ): array {
-		// Handle legacy 'contains' key
-		if ( isset( $condition['contains'] ) && ! isset( $condition['operator'] ) ) {
-			return [
-				'field'    => $condition['field'] ?? '',
-				'value'    => $condition['contains'],
-				'operator' => 'contains',
-			];
-		}
-
-		$default_operator = is_array( $condition['value'] ?? '' ) ? 'in' : '=';
-
-		return [
-			'field'    => $condition['field'] ?? '',
-			'value'    => $condition['value'] ?? '',
-			'operator' => $condition['operator'] ?? $default_operator,
-		];
-	}
-
 	// =========================================================================
 	// COMPONENT DETECTION
 	// =========================================================================
@@ -856,14 +722,7 @@ class Manager {
 	 */
 	private function detect_components( array $config ): void {
 		foreach ( $config['fields'] as $field ) {
-			$type = $field['type'] ?? 'text';
-
-			// Derivative types resolve to ajax_select at render time.
-			if ( in_array( $type, self::$ajax_select_types, true ) ) {
-				$type = 'ajax_select';
-			}
-
-			$asset = Components::get_asset( $type, $field );
+			$asset = Components::get_asset( $field['type'] ?? 'text', $field );
 
 			if ( $asset ) {
 				$this->components[] = $asset;
@@ -1120,10 +979,13 @@ class Manager {
 	 * @since 1.0.0
 	 */
 	private function build_trigger_attributes( string $flyout_id, array $data, string $class_name = '' ): array {
+		// Escaped here, because get_button() and link() write these straight
+		// into the tag. The data attributes below already were; the class and
+		// the flyout id were not, and both come from the caller.
 		$attrs = [
-			'class'               => trim( 'wp-flyout-trigger ' . $class_name ),
-			'data-flyout-manager' => $this->prefix,
-			'data-flyout'         => $flyout_id,
+			'class'               => esc_attr( trim( 'wp-flyout-trigger ' . $class_name ) ),
+			'data-flyout-manager' => esc_attr( $this->prefix ),
+			'data-flyout'         => esc_attr( $flyout_id ),
 		];
 
 		foreach ( $data as $key => $value ) {

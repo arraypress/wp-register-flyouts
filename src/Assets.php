@@ -52,7 +52,6 @@ class Assets {
 	// already use.
 	private static array $core_scripts = [
 		'js/wp-flyout.js',
-		'js/core/forms.js',
 		'js/core/manager.js',
 		'js/core/alert.js',
 	];
@@ -126,18 +125,6 @@ class Assets {
 		'style'  => '',
 		'script' => '',
 	];
-
-	/**
-	 * Initialize assets
-	 *
-	 * Hooks into WordPress to register assets when admin scripts are enqueued.
-	 *
-	 * @return void
-	 * @since 1.0.0
-	 */
-	public static function init(): void {
-		add_action( 'admin_enqueue_scripts', [ __CLASS__, 'register_assets' ] );
-	}
 
 	/**
 	 * Register all flyout assets

@@ -129,11 +129,38 @@ class RestApi {
 				'sanitize_callback' => 'sanitize_key',
 			],
 			'item_id' => [
-				'required' => false,
-				'type'     => [ 'integer', 'string' ],
-				'default'  => 0,
+				'required'          => false,
+				'type'              => [ 'integer', 'string' ],
+				'default'           => 0,
+				'sanitize_callback' => [ __CLASS__, 'sanitize_item_id' ],
 			],
 		];
+	}
+
+	/**
+	 * Clean an item id without deciding what shape it is.
+	 *
+	 * Ids here are whatever the consumer's `load` and `save` deal in: a post
+	 * id is an integer, a licence key or a UUID is a string, and the route
+	 * accepts both. An integer is kept as one, so a callback comparing
+	 * strictly against what it stored still matches; anything else is
+	 * reduced to a line of text, which is the most a string id can be.
+	 *
+	 * What this does not do is decide whether the current user may touch
+	 * the object the id names. It cannot: the library never sees the object.
+	 * That is the consumer's check, in the callbacks or through the
+	 * `wp_flyout_rest_capability_{prefix}` filter.
+	 *
+	 * @param mixed $value The submitted id.
+	 *
+	 * @return int|string
+	 */
+	public static function sanitize_item_id( $value ) {
+		if ( is_int( $value ) ) {
+			return $value;
+		}
+
+		return is_scalar( $value ) ? sanitize_text_field( (string) $value ) : '';
 	}
 
 	/**
@@ -439,13 +466,13 @@ class RestApi {
 			return $config;
 		}
 
-		$action_key = $request->get_param( 'action_key' );
+		$action_key = (string) $request->get_param( 'action_key' );
 		$item_id    = $request->get_param( 'item_id' );
 
-		// Find the action callback within the fields that declare one.
-		$callback = self::find_action_callback( $config['fields'], $action_key );
+		// Only an action a field declares, by the key it declared it under.
+		$action = self::find_action( $config, $action_key );
 
-		if ( ! $callback ) {
+		if ( null === $action ) {
 			return new WP_Error(
 				'flyout_action_not_found',
 				/* translators: %s: action key */
@@ -454,12 +481,23 @@ class RestApi {
 			);
 		}
 
+		// The action's own capability, on top of the flyout's. The
+		// permission callback has already asked whether this person may open
+		// the panel; a refund button on it may reasonably ask for more.
+		if ( ! current_user_can( $action['capability'] ) ) {
+			return new WP_Error(
+				'rest_forbidden',
+				__( 'You do not have permission to perform this action.', 'arraypress' ),
+				[ 'status' => 403 ]
+			);
+		}
+
 		// Action callbacks receive all request params.
-		$params               = $request->get_json_params();
+		$params               = (array) $request->get_json_params();
 		$params['id']         = $item_id;
 		$params['action_key'] = $action_key;
 
-		$result = self::run( $callback, $action_key, $params );
+		$result = self::run( $action['callback'], $action_key, $params );
 
 		if ( is_wp_error( $result ) ) {
 			return $result;
@@ -522,60 +560,113 @@ class RestApi {
 	// FIELD & ACTION RESOLUTION
 	// =========================================================================
 
-
 	/**
-	 * Find an action callback by action key within the fields array.
+	 * Resolve an action a flyout declares, with the capability it demands.
 	 *
-	 * Searches action_buttons and notes field types for matching action keys.
+	 * @param array<string, mixed> $config     Flyout configuration.
+	 * @param string               $action_key Action key to find.
 	 *
-	 * @param array  $fields     Flat fields array from flyout config.
-	 * @param string $action_key Action key to find.
-	 *
-	 * @return callable|null Callback or null if not found.
+	 * @return array{callback: callable, capability: string}|null Null when no field declares it.
 	 */
-	private static function find_action_callback( array $fields, string $action_key ): ?callable {
+	private static function find_action( array $config, string $action_key ): ?array {
 		// An empty key matches nothing. `required` on the route argument only
-		// rejects a *missing* parameter, so an empty string arrives here — and
-		// used to match the first field declaring no action at all, whose
-		// `callback` on a searching field is a search rather than an action.
+		// rejects a *missing* parameter, so an empty string arrives here.
 		if ( '' === $action_key ) {
 			return null;
 		}
 
-		foreach ( $fields as $field ) {
-			$type = $field['type'] ?? '';
-
-			// Direct callback on field (e.g. refund_form with action + callback).
-			if ( ! empty( $field['action'] ) && ( $field['action'] ?? '' ) === $action_key
-				&& ! empty( $field['callback'] ) && is_callable( $field['callback'] ) ) {
-				return $field['callback'];
-			}
-
-			// Convention-based: {action_key}_callback (e.g. add_callback, delete_callback).
-			$callback_key = $action_key . '_callback';
-			if ( ! empty( $field[ $callback_key ] ) && is_callable( $field[ $callback_key ] ) ) {
-				return $field[ $callback_key ];
-			}
-
-			// Action buttons: search within the buttons array.
-			if ( 'action_buttons' !== $type ) {
+		foreach ( (array) ( $config['fields'] ?? [] ) as $field ) {
+			if ( ! is_array( $field ) ) {
 				continue;
 			}
 
-			$items = $field['buttons'] ?? [];
+			$actions = self::field_actions( $field );
 
-			foreach ( $items as $item ) {
-				if ( isset( $item['type'] ) && $item['type'] === 'separator' ) {
-					continue;
-				}
-
-				$action = $item['action'] ?? '';
-				if ( $action === $action_key && ! empty( $item['callback'] ) && is_callable( $item['callback'] ) ) {
-					return $item['callback'];
-				}
+			if ( ! isset( $actions[ $action_key ] ) ) {
+				continue;
 			}
+
+			return [
+				'callback'   => $actions[ $action_key ],
+
+				// The same chain the kit's registration uses, ending at the
+				// flyout's own capability rather than at a fixed one, so a
+				// field that names nothing asks for what the panel asks for.
+				'capability' => (string) (
+					$field['action_capability']
+					?? $field['capability']
+					?? $config['capability']
+					?? 'manage_options'
+				),
+			];
 		}
 
 		return null;
+	}
+
+	/**
+	 * The actions one field declares, keyed as a request names them.
+	 *
+	 * Declared ones only. This used to accept `{action_key}_callback` on any
+	 * field, which made every callable a field carries into an action:
+	 * `action_key=search` ran a picker's `search_callback` with the raw
+	 * request body as its term, and `sanitize` ran a `sanitize_callback` the
+	 * same way. A field says which keys are actions -- a refund form's
+	 * `action`, a notes component's `add_action` and `delete_action`, a line
+	 * items component's `details_key`, each of an action button's `action`,
+	 * and the named `actions` it registers with the kit -- and a key it did
+	 * not declare is not one, whatever callable happens to share its name.
+	 *
+	 * @param array<string, mixed> $field Field configuration.
+	 *
+	 * @return array<string, callable>
+	 */
+	private static function field_actions( array $field ): array {
+		$type    = (string) ( $field['type'] ?? '' );
+		$actions = [];
+
+		// One action with one handler: the refund form.
+		if ( ! empty( $field['action'] ) ) {
+			$actions[ (string) $field['action'] ] = $field['callback'] ?? null;
+		}
+
+		// Components that name their action keys and carry each handler
+		// under `{key}_callback`. Notes has defaults for its two, which the
+		// component applies when it renders and so are applied here too.
+		$declared = [
+			'add_action'    => 'notes' === $type ? 'add' : '',
+			'delete_action' => 'notes' === $type ? 'delete' : '',
+			'details_key'   => '',
+		];
+
+		foreach ( $declared as $option => $default ) {
+			$key = (string) ( $field[ $option ] ?? $default );
+
+			if ( '' !== $key ) {
+				$actions[ $key ] = $field[ $key . '_callback' ] ?? null;
+			}
+		}
+
+		// The named handlers a field registers with the kit.
+		foreach ( (array) ( $field['actions'] ?? [] ) as $name => $callback ) {
+			$actions[ (string) $name ] = $callback;
+		}
+
+		if ( isset( $field['action_callback'] ) ) {
+			$actions['run'] = $field['action_callback'];
+		}
+
+		// Action buttons, each with an action of its own.
+		if ( 'action_buttons' === $type ) {
+			foreach ( (array) ( $field['buttons'] ?? [] ) as $button ) {
+				if ( ! is_array( $button ) || 'separator' === ( $button['type'] ?? '' ) || empty( $button['action'] ) ) {
+					continue;
+				}
+
+				$actions[ (string) $button['action'] ] = $button['callback'] ?? null;
+			}
+		}
+
+		return array_filter( $actions, 'is_callable' );
 	}
 }

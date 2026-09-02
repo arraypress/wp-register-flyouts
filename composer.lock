@@ -70,17 +70,17 @@
             "time": "2026-08-25T15:44:02+00:00"
         },
         {
-            "name": "arraypress/wp-field-kit",
+            "name": "arraypress/wp-countries",
             "version": "dev-main",
             "source": {
                 "type": "git",
-                "url": "https://github.com/arraypress/wp-field-kit.git",
-                "reference": "0c6ddb81922cda880c2e3c87cc32220ef71755d0"
+                "url": "https://github.com/arraypress/wp-countries.git",
+                "reference": "8a63415a606ab1d3a9fa7062838fa4e1982800ad"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/arraypress/wp-field-kit/zipball/0c6ddb81922cda880c2e3c87cc32220ef71755d0",
-                "reference": "0c6ddb81922cda880c2e3c87cc32220ef71755d0",
+                "url": "https://api.github.com/repos/arraypress/wp-countries/zipball/8a63415a606ab1d3a9fa7062838fa4e1982800ad",
+                "reference": "8a63415a606ab1d3a9fa7062838fa4e1982800ad",
                 "shasum": ""
             },
             "require": {
@@ -94,6 +94,78 @@
             },
             "default-branch": true,
             "type": "library",
+            "extra": {
+                "branch-alias": {
+                    "dev-main": "1.0.x-dev"
+                }
+            },
+            "autoload": {
+                "files": [
+                    "src/Functions.php"
+                ],
+                "psr-4": {
+                    "ArrayPress\\Countries\\": "src/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "GPL-2.0-or-later"
+            ],
+            "authors": [
+                {
+                    "name": "David Sherlock",
+                    "homepage": "https://arraypress.com/"
+                }
+            ],
+            "description": "A lightweight WordPress library for working with country codes and names with translation support.",
+            "homepage": "https://github.com/arraypress/wp-countries",
+            "keywords": [
+                "arraypress",
+                "countries",
+                "country-codes",
+                "country-list",
+                "country-names",
+                "i18n",
+                "iso-3166",
+                "translation",
+                "wordpress",
+                "wp"
+            ],
+            "support": {
+                "issues": "https://github.com/arraypress/wp-countries/issues",
+                "source": "https://github.com/arraypress/wp-countries"
+            },
+            "time": "2026-09-02T12:04:05+00:00"
+        },
+        {
+            "name": "arraypress/wp-field-kit",
+            "version": "dev-main",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/arraypress/wp-field-kit.git",
+                "reference": "524b8caa2f8b6d8759ba97e794a12096a767f017"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/arraypress/wp-field-kit/zipball/524b8caa2f8b6d8759ba97e794a12096a767f017",
+                "reference": "524b8caa2f8b6d8759ba97e794a12096a767f017",
+                "shasum": ""
+            },
+            "require": {
+                "arraypress/wp-countries": "dev-main",
+                "php": ">=8.3"
+            },
+            "require-dev": {
+                "phpcompatibility/phpcompatibility-wp": "^2.1",
+                "phpunit/phpunit": "^12.0",
+                "squizlabs/php_codesniffer": "^3.13.5",
+                "wp-coding-standards/wpcs": "^3.4"
+            },
+            "suggest": {
+                "arraypress/wp-money": "Supplies the currencies preset and the options of the currency field type."
+            },
+            "default-branch": true,
+            "type": "library",
             "autoload": {
                 "psr-4": {
                     "ArrayPress\\FieldKit\\": "src/"
@@ -104,7 +176,8 @@
                     "ArrayPress\\FieldKit\\Tests\\": "tests/"
                 },
                 "exclude-from-classmap": [
-                    "/tests/bootstrap.php"
+                    "/tests/bootstrap.php",
+                    "/tests/stubs/"
                 ]
             },
             "scripts": {
@@ -154,7 +227,7 @@
                 "issues": "https://github.com/arraypress/wp-field-kit/issues",
                 "source": "https://github.com/arraypress/wp-field-kit"
             },
-            "time": "2026-09-02T08:17:25+00:00"
+            "time": "2026-09-02T12:26:31+00:00"
         },
         {
             "name": "arraypress/wp-money",

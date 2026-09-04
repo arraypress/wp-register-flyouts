@@ -12,12 +12,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/arraypress/wp-composer-assets.git",
-                "reference": "efb53f624b2bae98bfab797e217e6f7768ac4670"
+                "reference": "737ba4c15c0fed2d3103c7cd06ba0743300344ab"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/arraypress/wp-composer-assets/zipball/efb53f624b2bae98bfab797e217e6f7768ac4670",
-                "reference": "efb53f624b2bae98bfab797e217e6f7768ac4670",
+                "url": "https://api.github.com/repos/arraypress/wp-composer-assets/zipball/737ba4c15c0fed2d3103c7cd06ba0743300344ab",
+                "reference": "737ba4c15c0fed2d3103c7cd06ba0743300344ab",
                 "shasum": ""
             },
             "require": {
@@ -31,6 +31,11 @@
             },
             "default-branch": true,
             "type": "library",
+            "extra": {
+                "branch-alias": {
+                    "dev-main": "1.0.x-dev"
+                }
+            },
             "autoload": {
                 "files": [
                     "src/Functions.php"
@@ -67,7 +72,7 @@
                 "issues": "https://github.com/arraypress/wp-composer-assets/issues",
                 "source": "https://github.com/arraypress/wp-composer-assets"
             },
-            "time": "2026-08-25T15:44:02+00:00"
+            "time": "2026-09-04T13:06:19+00:00"
         },
         {
             "name": "arraypress/wp-countries",
@@ -75,12 +80,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/arraypress/wp-countries.git",
-                "reference": "8a63415a606ab1d3a9fa7062838fa4e1982800ad"
+                "reference": "b2acc6234edea21f6d50a3c9efb57a00b73077db"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/arraypress/wp-countries/zipball/8a63415a606ab1d3a9fa7062838fa4e1982800ad",
-                "reference": "8a63415a606ab1d3a9fa7062838fa4e1982800ad",
+                "url": "https://api.github.com/repos/arraypress/wp-countries/zipball/b2acc6234edea21f6d50a3c9efb57a00b73077db",
+                "reference": "b2acc6234edea21f6d50a3c9efb57a00b73077db",
                 "shasum": ""
             },
             "require": {
@@ -135,14 +140,14 @@
                 "issues": "https://github.com/arraypress/wp-countries/issues",
                 "source": "https://github.com/arraypress/wp-countries"
             },
-            "time": "2026-09-02T12:04:05+00:00"
+            "time": "2026-09-02T16:26:05+00:00"
         },
         {
             "name": "arraypress/wp-field-kit",
             "version": "dev-main",
             "source": {
                 "type": "git",
-                "url": "https://github.com/arraypress/wp-field-kit.git",
+                "url": "git@github.com:arraypress/wp-field-kit.git",
                 "reference": "cbca8037efb264417aec98bbed20d72cb68aab16"
             },
             "dist": {

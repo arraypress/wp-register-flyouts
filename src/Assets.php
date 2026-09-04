@@ -139,7 +139,7 @@ class Assets {
 		$version   = defined( 'WP_DEBUG' ) && WP_DEBUG ? (string) time() : '1.0.0';
 
 		// Register core CSS (single consolidated file)
-		wp_register_composer_style(
+		arraypress_register_composer_style(
 			Runtime::handle(),
 			$base_file,
 			self::$core_style,
@@ -153,7 +153,7 @@ class Assets {
 		foreach ( self::$core_scripts as $js_file ) {
 			$handle = Runtime::handle( basename( $js_file, '.js' ) );
 
-			wp_register_composer_script(
+			arraypress_register_composer_script(
 				$handle,
 				$base_file,
 				$js_file,
@@ -197,7 +197,7 @@ class Assets {
 					[ 'jquery', self::$last_handles['script'] ],
 					$config['deps'] ?? []
 				);
-				wp_register_composer_script(
+				arraypress_register_composer_script(
 					$handle,
 					$base_file,
 					$config['script'],
@@ -210,7 +210,7 @@ class Assets {
 			if ( ! empty( $config['style'] ) ) {
 				$style_deps = [ self::$last_handles['style'] ];
 
-				wp_register_composer_style(
+				arraypress_register_composer_style(
 					$handle,
 					$base_file,
 					$config['style'],

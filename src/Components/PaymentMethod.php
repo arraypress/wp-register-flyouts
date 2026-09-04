@@ -146,7 +146,7 @@ class PaymentMethod implements Renderable {
      * @return string|false SVG content or false on failure
      */
     private function load_svg( string $filename ) {
-        return wp_get_composer_file(
+        return arraypress_get_composer_file(
                 __FILE__,
                 'images/payment-methods/' . $filename,
                 true

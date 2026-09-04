@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "6fae337705765e32fb96c0b5182152f3",
+    "content-hash": "caa851d1351134a40305788aa4fc816d",
     "packages": [
         {
             "name": "arraypress/wp-composer-assets",
@@ -236,16 +236,16 @@
         },
         {
             "name": "arraypress/wp-money",
-            "version": "v1.0.0",
+            "version": "dev-main",
             "source": {
                 "type": "git",
                 "url": "https://github.com/arraypress/wp-money.git",
-                "reference": "c25413d658cb5ae15a3d7d1cbf674e11ccaee080"
+                "reference": "8034084d01f60edb02e35fe72510d216dadd8d96"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/arraypress/wp-money/zipball/c25413d658cb5ae15a3d7d1cbf674e11ccaee080",
-                "reference": "c25413d658cb5ae15a3d7d1cbf674e11ccaee080",
+                "url": "https://api.github.com/repos/arraypress/wp-money/zipball/8034084d01f60edb02e35fe72510d216dadd8d96",
+                "reference": "8034084d01f60edb02e35fe72510d216dadd8d96",
                 "shasum": ""
             },
             "require": {
@@ -257,7 +257,13 @@
                 "squizlabs/php_codesniffer": "^3.13.5",
                 "wp-coding-standards/wpcs": "^3.4"
             },
+            "default-branch": true,
             "type": "library",
+            "extra": {
+                "branch-alias": {
+                    "dev-main": "1.0.x-dev"
+                }
+            },
             "autoload": {
                 "files": [
                     "src/Functions.php"
@@ -291,7 +297,7 @@
                 "issues": "https://github.com/arraypress/wp-money/issues",
                 "source": "https://github.com/arraypress/wp-money"
             },
-            "time": "2026-08-25T19:28:29+00:00"
+            "time": "2026-09-02T16:26:49+00:00"
         }
     ],
     "packages-dev": [
@@ -2622,7 +2628,8 @@
     "minimum-stability": "dev",
     "stability-flags": {
         "arraypress/wp-composer-assets": 20,
-        "arraypress/wp-field-kit": 20
+        "arraypress/wp-field-kit": 20,
+        "arraypress/wp-money": 20
     },
     "prefer-stable": true,
     "prefer-lowest": false,
